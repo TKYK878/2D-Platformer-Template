@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://b7dkr0pysapoe"]
+
+[ext_resource type="Script" path="res://_my/script/environment/script/CrumbleFloor.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(16, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_detector"]
+size = Vector2(16, 16)
+
+[node name="CrumbleFloor" type="Node2D" unique_id=992951332]
+script = ExtResource("1")
+
+[node name="Body" type="StaticBody2D" parent="." unique_id=641137908]
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body" unique_id=318996375]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=1464731031]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(0.56078434, 0.3372549, 0.23137255, 0.9843137)
+
+[node name="Detector" type="Area2D" parent="." unique_id=232552569]
+collision_layer = 0
+collision_mask = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Detector" unique_id=1190454189]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_detector")

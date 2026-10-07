@@ -1,0 +1,7 @@
+[gd_resource type="Theme" format=3 uid="uid://dh7u1k6sw3fjv"]
+
+[ext_resource type="FontFile" uid="uid://bgtc61lp5x2il" path="res://_my/my_art/fonts/Cubic_11.woff2" id="1_7sx83"]
+
+[resource]
+default_font = ExtResource("1_7sx83")
+default_font_size = 12
