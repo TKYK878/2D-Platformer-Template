@@ -16,7 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://b7dkr0pysapoe" path="res://_my/script/environment/CrumbleFloor.tscn" id="13_x8k52"]
 [ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="15_axfbn"]
 [ext_resource type="PackedScene" path="res://blocks/EnemyShooter.tscn" id="16_twqbj"]
-[ext_resource type="Texture2D" path="res://_my/my_art/u_get_a_cake.png" id="17_cake"]
+[ext_resource type="Texture2D" uid="uid://cc0wqunyt8kg0" path="res://_my/my_art/u_get_a_cake.png" id="17_cake"]
 
 [node name="Template" type="Node2D" unique_id=2133254585]
 
@@ -43,15 +43,20 @@ position = Vector2(264, -48)
 spawn_x = 9
 spawn_y = 5
 
+[node name="Enemy" parent="Environment/zone 1/Room 2" unique_id=939226458 instance=ExtResource("15_axfbn")]
+position = Vector2(208, 200)
+
+[node name="EnemyShooter" parent="Environment/zone 1/Room 2/Enemy" unique_id=1269354837 instance=ExtResource("16_twqbj")]
+
 [node name="Room 3" parent="Environment/zone 1" unique_id=1123521470 instance=ExtResource("2_vt36h")]
 position = Vector2(728, -112)
 spawn_x = 9
 spawn_y = 5
 
-[node name="Enemy" parent="Environment/zone 1" unique_id=939226458 instance=ExtResource("15_axfbn")]
-position = Vector2(472, 152)
-
-[node name="EnemyShooter" parent="Environment/zone 1/Enemy" unique_id=1269354837 instance=ExtResource("16_twqbj")]
+[node name="Room 4" parent="Environment/zone 1" unique_id=866276494 instance=ExtResource("2_vt36h")]
+position = Vector2(744, 160)
+spawn_x = 9
+spawn_y = 5
 
 [node name="zone EX" type="Node2D" parent="Environment" unique_id=2043179943]
 position = Vector2(0, 40)
@@ -116,12 +121,8 @@ big_scale = 1.5
 [node name="Extra_Molt" parent="Player/Mechanics" unique_id=445892033 instance=ExtResource("10_pinwj")]
 script = ExtResource("12_gad5q")
 start_inside = false
-prev_key = null
-next_key = null
 prev_action_name = &"prev_shell"
 next_action_name = &"next_shell"
-show_selected = 0
-on_death = 0
 
 [node name="RespawnHandler" parent="." unique_id=470765415 instance=ExtResource("7_nl00n")]
 
@@ -132,4 +133,6 @@ max_value = 5
 [node name="KeySettings" parent="." unique_id=1610486089 instance=ExtResource("9_cvgsk")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=225422157]
+zoom = Vector2(1.2, 1.2)
 script = ExtResource("6_fdp7u")
+mode = 1

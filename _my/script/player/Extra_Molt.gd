@@ -39,12 +39,7 @@ extends MechanicBase
 
 @export_group("切換殼")
 
-## 切換到上一種殼的按鍵（直接指定按鍵）
-@export var prev_key: Key = KEY_Q
-## 切換到下一種殼的按鍵（直接指定按鍵）
-@export var next_key: Key = KEY_E
 ## 上一首/上一種殼的 Input Map 動作名稱
-
 @export var prev_action_name: StringName = &"prev_shell"
 ## 下一首/下一種殼的 Input Map 動作名稱
 @export var next_action_name: StringName = &"next_shell"
@@ -120,9 +115,9 @@ var _side_lock_left: float = 0.0
 var _warning_timer: float = 0.0
 # 場景裡還在的殼（照脫出的順序，最舊的在前面），以及每顆殼是哪種、在哪個房間脫的
 var _shells: Array[Shell] = []
-var _shell_template: Dictionary = {}   # Shell -> 模板編號
-var _shell_room: Dictionary = {}       # Shell -> 房間（沒有房間的關卡是 null）
-var _uses: Dictionary = {}             # 模板編號 -> 已經脫了幾次
+var _shell_template: Dictionary = {}    # Shell -> 模板編號
+var _shell_room: Dictionary = {}        # Shell -> 房間（沒有房間的關卡是 null）
+var _uses: Dictionary = {}              # 模板編號 -> 已經脫了幾次
 var _head_icon: Node2D = null
 var _head_label: Label = null
 var _corner_icon: ColorRect = null
@@ -178,11 +173,6 @@ func _on_setup() -> void:
 		if input_type == 0:
 			InputRouter.warn_if_dangerous_key(key, "[脫殼]")
 		InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _on_key_pressed)
-	
-	InputRouter.warn_if_dangerous_key(prev_key, "[脫殼]")
-	InputRouter.warn_if_dangerous_key(next_key, "[脫殼]")
-	InputRouter.bind_key(self, prev_key, InputRouter.PRESSED, func(): return _switch(-1))
-	InputRouter.bind_key(self, next_key, InputRouter.PRESSED, func(): return _switch(1))
 
 	if on_death == _CLEAR_ON_DEATH:
 		Events.player_died.connect(clear_shells)
