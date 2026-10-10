@@ -22,6 +22,9 @@ extends Area2D
 ## 撿到時增加的數量
 @export_range(1, 99) var amount: int = 1
 
+## 撿到後是否在畫面左上角 HUD 顯示此數值
+@export var show_in_hud: bool = true
+
 ## 撿到時發出，給學員自己接特效／音效用
 signal collected
 
@@ -43,6 +46,8 @@ func _ready() -> void:
 		return
 	add_to_group("signal_source")
 	_stats_kind = _resolve_stats_kind()
+	if not show_in_hud and _stats_kind != "" and _stats_kind != Stats.HEALTH_KIND:
+		Stats.set_hud_visible(_stats_kind, false)
 	collision_layer = Layers.SENSOR
 	collision_mask = Layers.PLAYER
 	body_entered.connect(_on_body_entered)
@@ -68,6 +73,8 @@ func _on_body_entered(body: Node) -> void:
 		return
 	_collected = true
 	if _stats_kind != "":
+		if _stats_kind != Stats.HEALTH_KIND:
+			Stats.set_hud_visible(_stats_kind, show_in_hud)
 		Stats.add(_stats_kind, amount)
 	collected.emit()
 	Events.item_collected.emit(global_position)

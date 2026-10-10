@@ -75,9 +75,6 @@ const _ORDERS := [
 ]
 # 卡片底下沒有放殼時用的內建殼：蟬殼（什麼都不加）、塑膠殼（彈彈的）、蜘蛛殼（不受重力、推不動）
 const _BUILT_IN_SHELLS := [
-	"res://mechanics/_extra/_molt/Shell_Cicada.tscn",
-	"res://mechanics/_extra/_molt/Shell_Plastic.tscn",
-	"res://mechanics/_extra/_molt/Shell_Spider.tscn",
 ]
 const _SIZE_SHIFT_CARD := "Mechanic_SizeShift"
 const _SHOW_HEAD := 0
@@ -101,6 +98,8 @@ const _OVERLAP_MARGIN := 1.0
 const _WARNING_REFRESH_SECONDS := 1.0
 
 var _templates: Array[Shell] = []
+# process_mode 設成 Disabled 的殼視為「待解鎖」，不放進 _templates
+var _locked_shells: Array[Shell] = []
 var _collected: bool = false
 var _selected: int = 0
 var _facing: int = 1
@@ -132,7 +131,9 @@ func _validate_property(property: Dictionary) -> void:
 	elif property.name == "default_direction" and start_inside:
 		property.usage = PROPERTY_USAGE_NONE
 
-# 一進場景就把底下的殼收起來當模板（趁它們還沒啟動），不然它們會變成黏在玩家身上的真的殼
+# 一進場景就把底下的殼收起來當模板（趁它們還沒啟動），不然它們會變成黏在玩家身上的真的殼。
+# process_mode == PROCESS_MODE_DISABLED 的殼視為「待解鎖」，存進 _locked_shells，
+# 等 unlock_shell() 呼叫後才加入 _templates
 func _enter_tree() -> void:
 	if Engine.is_editor_hint() or _collected:
 		return
@@ -140,11 +141,14 @@ func _enter_tree() -> void:
 	for child in get_children():
 		if child is Shell:
 			remove_child(child)
-			_templates.append(child)
+			if child.process_mode == Node.PROCESS_MODE_DISABLED:
+				_locked_shells.append(child)
+			else:
+				_templates.append(child)
 		else:
 			push_warning("[脫殼] 卡片底下的「%s」不是殼（Shell），脫殼時不會用到" % child.name)
 			printerr("⚠ [脫殼] 卡片底下只能放殼（Shell），請把「%s」拖出去" % child.name)
-	if _templates.is_empty():
+	if _templates.is_empty() and _locked_shells.is_empty():
 		for path in _BUILT_IN_SHELLS:
 			_templates.append(load(path).instantiate())
 
@@ -155,10 +159,13 @@ func _ready() -> void:
 	set_process(false)
 	super._ready()
 
-# 卡片被刪掉時，一起刪掉收起來的殼模板
+# 卡片被刪掉時，一起刪掉收起來的殼模板（包含尚未解鎖的）
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
 		for t in _templates:
+			if is_instance_valid(t):
+				t.free()
+		for t in _locked_shells:
 			if is_instance_valid(t):
 				t.free()
 	elif what == NOTIFICATION_CHILD_ORDER_CHANGED and Engine.is_editor_hint():
@@ -181,6 +188,40 @@ func _on_setup() -> void:
 	InputRouter.bind(self, "move_down", InputRouter.HELD, func(_t: float): _down_held = true)
 	player.direction_changed.connect(func(dir: int): _facing = dir)
 	_remember_body()
+	_connect_shell_pickups()
+
+# 掃場景裡所有 Pickup，若其 custom_kind 對應到某個鎖定殼的名稱，就自動連接 collected 訊號
+func _connect_shell_pickups() -> void:
+	if _locked_shells.is_empty():
+		return
+	var root := get_tree().current_scene
+	if root == null:
+		return
+	# 建立鎖定殼名稱的快速查找表
+	var locked_names: Dictionary = {}
+	for shell in _locked_shells:
+		locked_names[shell.name] = true
+	# 掃場景裡有 get_value_kind() 方法的節點（即 Pickup）
+	for node in root.find_children("*", "", true, false):
+		if not node.has_method("get_value_kind"):
+			continue
+		var kind: String = node.get_value_kind()
+		if kind in locked_names and not node.collected.is_connected(unlock_shell.bind(kind)):
+			node.collected.connect(unlock_shell.bind(kind))
+			print("[脫殼] 已連接道具「%s」→ 解鎖殼「%s」" % [node.name, kind])
+
+# 將指定名稱的鎖定殼解鎖（恢復 process_mode 並加入 _templates）；
+# 用 Pickup 的 collected 訊號連過來，或在程式裡直接呼叫皆可
+func unlock_shell(shell_name: String) -> void:
+	for i in range(_locked_shells.size() - 1, -1, -1):
+		var shell := _locked_shells[i]
+		if shell.name == shell_name:
+			_locked_shells.remove_at(i)
+			shell.process_mode = Node.PROCESS_MODE_INHERIT
+			_templates.append(shell)
+			_refresh_display()
+			print("[脫殼] 已解鎖殼「%s」" % shell_name)
+			return
 
 # 處理這一幀要不要脫殼，並記住玩家現在的位置和大小（縮小之後還要知道縮小前多大）
 func apply(ctx: MoveContext) -> void:

@@ -82,6 +82,11 @@ func consume(kind: String, n: int) -> bool:
 	add(kind, -n)
 	return true
 
+# 設定某個種類是否顯示在 HUD
+func set_hud_visible(kind: String, visible: bool) -> void:
+	_hud_visible[kind] = visible
+	configured.emit(kind)
+
 # 查詢某個種類是否允許顯示在 HUD，沒被 ValueSettings 設定過的種類預設允許
 func is_hud_visible(kind: String) -> bool:
 	return _hud_visible.get(kind, true)
