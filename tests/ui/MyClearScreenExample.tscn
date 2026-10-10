@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/ClearStat.tscn" id="3"]
+
+[node name="MyClearScreenExample" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+kind = 2
+palette = 3
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="List" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" parent="Center/List" instance=ExtResource("2")]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.55, 0.88, 0.38, 1)
+theme_override_font_sizes/font_size = 36
+text = "破關啦！"
+
+[node name="Time" parent="Center/List" instance=ExtResource("3")]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Message" parent="Center/List" instance=ExtResource("3")]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "（製作者的話）"
+stat = 2
+
+[node name="Hint" parent="Center/List" instance=ExtResource("2")]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_type_variation = &"HintLabel"
+text = "R：再挑戰一次"

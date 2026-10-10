@@ -1,0 +1,156 @@
+[gd_scene format=4 uid="uid://csms3ufyy0d0m"]
+
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="1"]
+[ext_resource type="TileSet" uid="uid://6xyxoqkb30in" path="res://art/default_tile.tres" id="2"]
+[ext_resource type="Script" uid="uid://ddmv38ww06tgv" path="res://levels/_shared/CameraRig.gd" id="3"]
+[ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="4"]
+[ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="5"]
+[ext_resource type="PackedScene" path="res://blocks/Room.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://blocks/ValueSettings.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://blocks/KeySettings.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://blocks/Pickup.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://blocks/Spike.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://blocks/Goal.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://blocks/ClearScreen.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://blocks/Button.tscn" id="15"]
+[ext_resource type="Script" uid="uid://blg34qqbfnk45" path="res://levels/_shared/PracticeSign.gd" id="16"]
+
+[node name="W3_JuicePractice" type="Node2D" unique_id=1874015583]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=660480149]
+tile_map_data = PackedByteArray("AADw//v/AAADAAEAAAAtAPv/AAADAAEAAADw//z/AAADAAEAAAAtAPz/AAADAAEAAADw//3/AAADAAEAAAAtAP3/AAADAAEAAADw//7/AAADAAEAAAAtAP7/AAADAAEAAADw////AAADAAEAAAAtAP//AAADAAEAAADw/wAAAAADAAEAAAAtAAAAAAADAAEAAADw/wEAAAADAAEAAAAtAAEAAAADAAEAAADw/wIAAAADAAEAAAAtAAIAAAADAAEAAADw/wMAAAADAAEAAAAtAAMAAAADAAEAAADw/wQAAAADAAEAAAAtAAQAAAADAAEAAADw/wUAAAADAAEAAAAIAAUAAAADAAEAAAAJAAUAAAADAAEAAAAKAAUAAAADAAEAAAAtAAUAAAADAAEAAADw/wYAAAADAAEAAAAtAAYAAAADAAEAAADw/wcAAAADAAEAAAAtAAcAAAADAAEAAADw/wgAAAADAAEAAAACAAgAAAADAAEAAAADAAgAAAADAAEAAAAEAAgAAAADAAEAAAAFAAgAAAADAAEAAAAtAAgAAAADAAEAAADw/wkAAAADAAEAAAAkAAkAAAADAAEAAAAlAAkAAAADAAEAAAAtAAkAAAADAAEAAADw/woAAAADAAEAAAAkAAoAAAADAAEAAAAlAAoAAAADAAEAAAAtAAoAAAADAAEAAADw/wsAAAADAAEAAADx/wsAAAADAAEAAADy/wsAAAADAAEAAADz/wsAAAADAAEAAAD0/wsAAAADAAEAAAD1/wsAAAADAAEAAAD2/wsAAAADAAEAAAD3/wsAAAADAAEAAAD4/wsAAAADAAEAAAD5/wsAAAADAAEAAAD6/wsAAAADAAEAAAD7/wsAAAADAAEAAAD8/wsAAAADAAEAAAD9/wsAAAADAAEAAAD+/wsAAAADAAEAAAD//wsAAAADAAEAAAAAAAsAAAADAAEAAAABAAsAAAADAAEAAAACAAsAAAADAAEAAAADAAsAAAADAAEAAAAEAAsAAAADAAEAAAAFAAsAAAADAAEAAAAGAAsAAAADAAEAAAAHAAsAAAADAAEAAAAIAAsAAAADAAEAAAAJAAsAAAADAAEAAAAKAAsAAAADAAEAAAALAAsAAAADAAEAAAAMAAsAAAADAAEAAAANAAsAAAADAAEAAAAOAAsAAAADAAEAAAAPAAsAAAADAAEAAAAQAAsAAAADAAEAAAARAAsAAAADAAEAAAASAAsAAAADAAEAAAATAAsAAAADAAEAAAAUAAsAAAADAAEAAAAVAAsAAAADAAEAAAAWAAsAAAADAAEAAAAXAAsAAAADAAEAAAAYAAsAAAADAAEAAAAZAAsAAAADAAEAAAAaAAsAAAADAAEAAAAbAAsAAAADAAEAAAAcAAsAAAADAAEAAAAdAAsAAAADAAEAAAAeAAsAAAADAAEAAAAfAAsAAAADAAEAAAAgAAsAAAADAAEAAAAhAAsAAAADAAEAAAAiAAsAAAADAAEAAAAjAAsAAAADAAEAAAAkAAsAAAADAAEAAAAlAAsAAAADAAEAAAAmAAsAAAADAAEAAAAnAAsAAAADAAEAAAAoAAsAAAADAAEAAAApAAsAAAADAAEAAAAqAAsAAAADAAEAAAArAAsAAAADAAEAAAAsAAsAAAADAAEAAAAtAAsAAAADAAEAAAA=")
+tile_set = ExtResource("2")
+
+[node name="Room1" parent="." unique_id=1354238739 instance=ExtResource("6")]
+position = Vector2(-240, -80)
+width_in_tiles = 60
+spawn_x = 3
+spawn_y = 13
+
+[node name="Coin1" parent="Room1" unique_id=1067826836 instance=ExtResource("9")]
+position = Vector2(296, 184)
+
+[node name="Coin2" parent="Room1" unique_id=357027894 instance=ExtResource("9")]
+position = Vector2(312, 184)
+
+[node name="Coin3" parent="Room1" unique_id=745488072 instance=ExtResource("9")]
+position = Vector2(392, 136)
+
+[node name="Coin4" parent="Room1" unique_id=2070651416 instance=ExtResource("9")]
+position = Vector2(408, 136)
+
+[node name="Coin5" parent="Room1" unique_id=2068203687 instance=ExtResource("9")]
+position = Vector2(152, 232)
+
+[node name="Coin6" parent="Room1" unique_id=814350429 instance=ExtResource("9")]
+position = Vector2(168, 232)
+
+[node name="Coin7" parent="Room1" unique_id=1704600662 instance=ExtResource("9")]
+position = Vector2(184, 232)
+
+[node name="Coin8" parent="Room1" unique_id=2058345662 instance=ExtResource("9")]
+position = Vector2(712, 216)
+
+[node name="Coin9" parent="Room1" unique_id=1444791630 instance=ExtResource("9")]
+position = Vector2(728, 216)
+
+[node name="Coin10" parent="Room1" unique_id=809815885 instance=ExtResource("9")]
+position = Vector2(840, 200)
+
+[node name="Enemy1" parent="Room1" unique_id=623312213 instance=ExtResource("10")]
+position = Vector2(504, 240)
+
+[node name="Enemy2" parent="Room1" unique_id=691645627 instance=ExtResource("10")]
+position = Vector2(888, 240)
+
+[node name="Spike3" parent="Room1" unique_id=1119528992 instance=ExtResource("11")]
+position = Vector2(696, 248)
+
+[node name="Spike4" parent="Room1" unique_id=220603175 instance=ExtResource("11")]
+position = Vector2(712, 248)
+
+[node name="Spike5" parent="Room1" unique_id=14834715 instance=ExtResource("11")]
+position = Vector2(728, 248)
+
+[node name="Spike6" parent="Room1" unique_id=1426484119 instance=ExtResource("11")]
+position = Vector2(744, 248)
+
+[node name="Button" parent="Room1" unique_id=1805493022 instance=ExtResource("15")]
+position = Vector2(120, 252)
+
+[node name="Goal" parent="Room1" unique_id=1746293310 instance=ExtResource("12")]
+position = Vector2(936, 240)
+
+[node name="Player" parent="." unique_id=573226474 instance=ExtResource("1")]
+position = Vector2(-184, 159)
+
+[node name="Visual" type="Node2D" parent="Player" unique_id=1577225440]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual" unique_id=1002804474]
+texture = ExtResource("5")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 32)
+
+[node name="Mechanics" type="Node2D" parent="Player" unique_id=1160013837]
+
+[node name="Juice" type="Node2D" parent="Player" unique_id=528486991]
+
+[node name="Abilities" type="Node2D" parent="Player" unique_id=2059169590]
+
+[node name="Ability_Melee" parent="Player/Abilities" unique_id=486836771 instance=ExtResource("14")]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2124310099]
+position = Vector2(0, 56)
+script = ExtResource("3")
+mode = 1
+
+[node name="RespawnHandler" parent="." unique_id=905902223 instance=ExtResource("4")]
+
+[node name="ValueSettings_Health" parent="." unique_id=1715442539 instance=ExtResource("7")]
+
+[node name="KeySettings" parent="." unique_id=493489400 instance=ExtResource("8")]
+
+[node name="ClearScreen" parent="." unique_id=564478084 instance=ExtResource("13")]
+
+[node name="PracticeSigns" type="Node2D" parent="." unique_id=1441544047]
+
+[node name="Sign1" type="Node2D" parent="PracticeSigns" unique_id=277360704]
+position = Vector2(-232, -72)
+script = ExtResource("16")
+
+[node name="Sign2" type="Node2D" parent="PracticeSigns" unique_id=1451670481]
+position = Vector2(-112, -72)
+script = ExtResource("16")
+task = 1
+
+[node name="Sign3" type="Node2D" parent="PracticeSigns" unique_id=372049440]
+position = Vector2(8, -72)
+script = ExtResource("16")
+task = 2
+
+[node name="Sign4" type="Node2D" parent="PracticeSigns" unique_id=1665594939]
+position = Vector2(128, -72)
+script = ExtResource("16")
+task = 3
+
+[node name="Sign5" type="Node2D" parent="PracticeSigns" unique_id=2123734249]
+position = Vector2(248, -72)
+script = ExtResource("16")
+task = 4
+
+[node name="Sign6" type="Node2D" parent="PracticeSigns" unique_id=1599851008]
+position = Vector2(368, -72)
+script = ExtResource("16")
+task = 5
+
+[node name="Sign7" type="Node2D" parent="PracticeSigns" unique_id=1619234155]
+position = Vector2(488, -72)
+script = ExtResource("16")
+task = 6
+
+[node name="Sign8" type="Node2D" parent="PracticeSigns" unique_id=549946688]
+position = Vector2(608, -72)
+script = ExtResource("16")
+task = 7

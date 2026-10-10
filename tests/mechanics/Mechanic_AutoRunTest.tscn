@@ -5,7 +5,7 @@
 [ext_resource type="TileSet" uid="uid://6xyxoqkb30in" path="res://art/default_tile.tres" id="3"]
 [ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="4"]
 [ext_resource type="PackedScene" path="res://mechanics/Mechanic_AutoRun.tscn" id="5"]
-[ext_resource type="Script" path="res://tests/mechanics/_scripts/MechanicSignalPrinter.gd" id="signal_printer"]
+[ext_resource type="Script" uid="uid://biai0c13divjh" path="res://tests/mechanics/_scripts/MechanicSignalPrinter.gd" id="signal_printer"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(8, 40)
@@ -38,7 +38,7 @@ region_rect = Rect2(0, 0, 16, 32)
 position = Vector2(-40, 57)
 
 [node name="Wall_Left" type="StaticBody2D" parent="." unique_id=542237020]
-position = Vector2(-100, 87)
+position = Vector2(-232, 87)
 collision_layer = 2
 collision_mask = 0
 
@@ -46,12 +46,12 @@ collision_mask = 0
 shape = SubResource("RectangleShape2D_wall")
 
 [node name="Wall_Right" type="StaticBody2D" parent="." unique_id=2010192234]
-position = Vector2(20, 87)
+position = Vector2(233, 87)
 collision_layer = 2
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Wall_Right" unique_id=1631921822]
 shape = SubResource("RectangleShape2D_wall")
 
-[node name="MechanicSignalPrinter" type="Node" parent="."]
+[node name="MechanicSignalPrinter" type="Node" parent="." unique_id=302604732]
 script = ExtResource("signal_printer")

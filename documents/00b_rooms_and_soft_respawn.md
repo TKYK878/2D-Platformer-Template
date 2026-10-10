@@ -203,7 +203,7 @@ Timeline 也沒有 `reset()`：死亡時要不要從 0 重來由自己的 `on_de
 
 ```gdscript
 ## 要聽哪一個遊戲事件
-@export_enum("玩家死亡時", "玩家重生時", "玩家受傷時", "玩家跳躍時", "進入房間時", "過關時", "撿到道具時", "敵人被打倒時") var event: int = 0
+@export_enum("玩家死亡時", "玩家重生時", "玩家受傷時", "玩家跳躍時", "進入房間時", "過關時", "撿到道具時", "敵人被打倒時", "遊戲開始時", "整關重來時") var event: int = 0
 ## 事件發生後，隔多久才發出訊號（秒）
 @export_range(0.0, 3.0) var delay: float = 0.0
 ```
@@ -211,6 +211,19 @@ Timeline 也沒有 `reset()`：死亡時要不要從 0 重來由自己的 `on_de
 - 自動加入 `signal_source`，連線驗證器與虛線都適用；`triggered` 沒連到任何東西時印中文提醒。
 - 可以放很多個，各聽各的事件。W2、W5 要做「死了顯示結算畫面」之類的行為，也可以用它接。
 - `Events.item_collected` 由 Pickup、`Events.enemy_died` 由 Enemy 發出。
+- 「遊戲開始時」聽 `Events.level_started`（`Events` 開場等一幀、所有節點 `_ready` 完才發，換場景再發一次）；
+  「整關重來時」聽 `Events.whole_level_restarted`（`RespawnHandler._restart_level()` 發：整關重來模式的重生、`restart_level_now()`）。
+  原本的 `level_restarted` 每次重生都會發（勾 `send_restart_signal` 時），不分回房間或整關重來（講師決定 U155）。
+
+## 8.6 遊戲流程 `blocks/GameFlow.tscn`（講師決定 U156）
+
+跟 EventListener 一樣是轉接 `Events`，但一個節點把所有事件都變成自己**不帶參數**的訊號，學員選它在「節點」面板挑事件連出去：
+`game_started`、`whole_level_restarted`、`player_died`、`player_respawned`、`player_hurt`、`player_jumped`、`room_entered`、
+`item_collected`、`enemy_died`、`level_cleared`（每個訊號上方有 `##` 中文說明）。
+
+- 自動加入 `signal_source`；一條都沒連時印中文提醒；編輯器畫橘色方塊＋每條連線的虛線。
+- 學員自己拖，範本不預放；放兩個以上也能用、不警告。EventListener 保留（只聽一個事件、可以延遲）。
+- 之後若要管理「開始 → 進行中 → 過關／Game Over」狀態，加在 GameFlow 上，訊號名稱不變。
 
 ---
 

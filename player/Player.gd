@@ -25,6 +25,28 @@ signal stopped_moving
 ## 一格是 16 像素；速度到 960 差不多每幀走一整格
 @export_range(400.0, 2000.0) var max_speed: float = 1200.0
 
+@export_group("按鍵手感")
+## 晚一點按也能跳（又叫「土狼時間」）：走出平台邊緣之後，還有一小段時間按跳躍也跳得起來
+@export var late_jump_enabled: bool = true
+## 走出平台邊緣之後，還有幾秒可以跳
+@export_range(0.02, 0.3) var late_jump_time: float = 0.1
+## 早一點按也能跳（又叫「預輸入」）：快落地前就按跳躍，落地的瞬間自動跳起來
+@export var early_jump_enabled: bool = true
+## 落地前幾秒內按的跳躍，落地時還算數
+@export_range(0.02, 0.3) var early_jump_time: float = 0.1
+## 短按小跳、長按大跳：跳起來之後很快放開跳躍鍵，就只跳一點點高
+@export var short_jump_enabled: bool = true
+## 提早放開時往上的速度砍掉多少：0.1 = 只少一點點，0.9 = 幾乎馬上往下掉
+@export_range(0.1, 0.9) var short_jump_strength: float = 0.5
+## 頂頭修正：往上跳時頭只差幾個像素撞到天花板的邊角，就自動往旁邊推開讓你跳上去
+@export var corner_fix_enabled: bool = true
+## 差幾個像素以內會幫你推開（一格是 16 像素）
+@export_range(1, 8) var corner_fix_size: int = 4
+## 起跑加速：從停下到全速要一小段時間，比較有重量感（預設關，打開後角色會比較「滑」）
+@export var smooth_start_enabled: bool = false
+## 從停下到全速要幾秒
+@export_range(0.02, 0.5) var speed_up_time: float = 0.1
+
 var visual: Node2D = null
 var size_factor: float = 1.0
 
@@ -41,6 +63,10 @@ var _cached_input_locked: bool = false
 var _impulse_grace_left: float = 0.0
 var _frozen: bool = false
 var _juice_layer = null
+var _late_jump_left: float = 0.0    # 離開地面後還剩幾秒可以跳（土狼時間）
+var _early_jump_left: float = 0.0   # 空中按的跳躍還要記幾秒（預輸入）
+var _short_jump_armed: bool = false # 這一跳是按著跳躍鍵跳的，提早放開要砍掉往上的速度
+var _replaying_jump: bool = false   # 正在重播預輸入的跳躍鍵（這時跳起來也算「按著跳躍鍵跳的」）
 
 const _JuiceLayer := preload("res://player/JuiceLayer.gd")
 
@@ -67,8 +93,14 @@ func _ready() -> void:
 
 # 預設跳躍：地面上按下跳躍鍵就跳，除非被更高優先權的機制卡攔截掉（例如蓄力青蛙跳）
 func _on_jump_pressed() -> bool:
-	if _is_dead or _cached_input_locked or not is_on_floor():
+	if _is_dead or _cached_input_locked:
 		return false
+	if not can_ground_jump():
+		# 跳不起來：記下來，在 early_jump_time 秒內落地就自動跳（預輸入）
+		if early_jump_enabled:
+			_early_jump_left = early_jump_time
+		return false
+	_early_jump_left = 0.0
 	force_jump(_cached_jump_scale)
 	return true
 
@@ -144,12 +176,64 @@ func _physics_process(delta: float) -> void:
 
 	_apply_horizontal(ctx, delta)
 	_apply_vertical(ctx, delta)
+	_update_short_jump()
 	velocity = velocity.limit_length(max_speed)
+	_fix_corner(delta)
 
 	move_and_slide()
 
 	_emit_landing(pre_on_floor, pre_fall_speed)
 	_emit_wall_hit()
+	_update_jump_assist(delta)
+
+# 按鍵手感：站在地上時補滿土狼時間、離開地面後倒數；空中按過跳躍、在時間內落地就重播一次跳躍鍵
+func _update_jump_assist(delta: float) -> void:
+	if is_on_floor():
+		_late_jump_left = late_jump_time
+	else:
+		_late_jump_left = maxf(_late_jump_left - delta, 0.0)
+	if _early_jump_left <= 0.0:
+		return
+	_early_jump_left -= delta
+	if is_on_floor():
+		_early_jump_left = 0.0
+		# 透過 InputRouter 重播，讓蓄力青蛙跳這類卡照樣先收到；已經放開跳躍鍵就當作點一下
+		_replaying_jump = true
+		InputRouter.replay_press(&"jump", not Input.is_action_pressed("jump"))
+		_replaying_jump = false
+
+# 短按小跳：按著跳躍鍵跳起來、還在往上的時候放開，往上的速度砍掉 short_jump_strength；開始往下掉或落地就不再管
+func _update_short_jump() -> void:
+	if not _short_jump_armed:
+		return
+	var rising: float = velocity.dot(up_direction)
+	if rising <= 0.0:
+		_short_jump_armed = false
+		return
+	if not Input.is_action_pressed("jump"):
+		_short_jump_armed = false
+		velocity -= up_direction * rising * short_jump_strength
+
+# 頂頭修正：往上飛、這一幀頭會撞到天花板時，看看往左或往右推幾個像素能不能閃過邊角，能就推過去
+func _fix_corner(delta: float) -> void:
+	if not corner_fix_enabled:
+		return
+	var rising: float = velocity.dot(up_direction)
+	if rising <= 0.0:
+		return
+	var motion: Vector2 = up_direction * rising * delta
+	var hit := KinematicCollision2D.new()
+	if not test_move(global_transform, motion, hit) or hit.get_normal().dot(up_direction) > -0.7:
+		return
+	var side: Vector2 = up_direction.orthogonal()
+	for i in range(1, corner_fix_size + 1):
+		for dir in [1.0, -1.0]:
+			var shift: Vector2 = side * dir * i
+			if test_move(global_transform, shift):
+				continue
+			if not test_move(global_transform.translated(shift), motion):
+				global_position += shift
+				return
 
 # 依輸入或機制卡指定的方向計算水平速度
 func _apply_horizontal(ctx: MoveContext, delta: float) -> void:
@@ -172,7 +256,13 @@ func _apply_horizontal(ctx: MoveContext, delta: float) -> void:
 		input_dir = Input.get_axis("move_left", "move_right")
 
 	if input_dir != 0.0:
-		velocity.x = input_dir * move_speed * ctx.speed_scale
+		var target: float = input_dir * move_speed * ctx.speed_scale
+		# 起跑加速：還沒到全速（或正在轉向）就慢慢加上去；已經比全速快（被衝刺、彈射推出去）照舊直接變成全速
+		if smooth_start_enabled and (signf(velocity.x) != signf(target) or absf(velocity.x) < absf(target)):
+			var accel: float = move_speed * ctx.speed_scale / maxf(speed_up_time, 0.01)
+			velocity.x = move_toward(velocity.x, target, accel * delta)
+		else:
+			velocity.x = target
 		_update_facing(input_dir)
 		if not _was_moving:
 			_was_moving = true
@@ -280,6 +370,9 @@ func revive(at_position: Vector2) -> void:
 	_last_direction = 0
 	_impulse_grace_left = 0.0
 	_frozen = false
+	_late_jump_left = 0.0
+	_early_jump_left = 0.0
+	_short_jump_armed = false
 	for m in _mechanics:
 		if is_instance_valid(m) and m.has_method("on_respawn"):
 			m.on_respawn()
@@ -291,6 +384,9 @@ func is_dead() -> bool:
 
 # 強制角色跳一次，倍率可以調跳多高，跳躍相關卡用這個
 func force_jump(power_scale: float = 1.0) -> void:
+	_late_jump_left = 0.0
+	# 這一幀才剛放開也算（點得很快時，按下和放開可能落在同一幀）
+	_short_jump_armed = short_jump_enabled and (_replaying_jump or Input.is_action_pressed("jump") or Input.is_action_just_released("jump"))
 	velocity -= velocity.project(up_direction)
 	velocity += up_direction * jump_force * power_scale
 	jumped.emit()
@@ -342,6 +438,13 @@ func unfreeze() -> void:
 # 回傳角色現在是不是站在地面上
 func is_on_ground() -> bool:
 	return is_on_floor()
+
+# 回傳現在按跳躍能不能從地面起跳：站在地上，或剛走出平台邊緣還在「晚一點按也能跳」的時間內（往上飛的時候不算）。
+# 二段跳、蹬牆跳這類卡用這個判斷「現在算不算在地上」，才不會把土狼時間裡的跳躍當成空中跳
+func can_ground_jump() -> bool:
+	if is_on_floor():
+		return true
+	return late_jump_enabled and _late_jump_left > 0.0 and velocity.dot(up_direction) <= 0.0
 
 # 回傳玩家目前輸入的水平方向，範圍 -1 到 1
 func get_move_input() -> float:

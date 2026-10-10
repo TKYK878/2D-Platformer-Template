@@ -37,5 +37,5 @@ func _unhandled_input(event: InputEvent) -> void:
 			Events.shake_requested.emit(2.0, 1.0)
 			print("[測試] 強震 12 → 弱震 2")
 		KEY_C:
-			Events.zoom_requested.emit(0.5, 0.5)
+			Events.zoom_requested.emit(0.5, 0.5, $Player, 0)
 			print("[測試] 推近 0.5 倍、0.5 秒")

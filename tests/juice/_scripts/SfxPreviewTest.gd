@@ -17,6 +17,7 @@ var _player := AudioStreamPlayer.new()
 
 # 建立播放器，印出操作說明
 func _ready() -> void:
+	_player.bus = &"SFX"
 	add_child(_player)
 	var names := []
 	for i in _SOUNDS.size():

@@ -120,6 +120,7 @@ var _head_icon: Node2D = null
 var _head_label: Label = null
 var _corner_icon: ColorRect = null
 var _corner_label: Label = null
+var _corner_row: HBoxContainer = null
 
 # 只在「觸發時機」選按下按鍵時顯示按鍵欄位；選滑鼠按鍵時也隱藏 key 欄位；窩在殼裡時隱藏預設方向
 func _validate_property(property: Dictionary) -> void:
@@ -330,17 +331,10 @@ func _make_display() -> void:
 		_head_label.position = Vector2(_HEAD_ICON_SIZE / 2.0 + 2.0, -9.0)
 		_head_icon.add_child(_head_label)
 	if show_selected == _SHOW_CORNER or show_selected == _SHOW_BOTH:
-		var layer := CanvasLayer.new()
-		layer.name = "SelectedShellHud"
-		add_child(layer)
 		var row := HBoxContainer.new()
-		row.anchor_left = 1.0
-		row.anchor_right = 1.0
-		row.offset_left = -240.0
-		row.offset_right = -4.0
-		row.offset_top = 4.0
-		row.alignment = BoxContainer.ALIGNMENT_END
-		layer.add_child(row)
+		row.name = "SelectedShellHud"
+		StatsHud.get_corner(StatsHud.CORNER_TOP_RIGHT).add_child(row)
+		_corner_row = row
 		_corner_icon = ColorRect.new()
 		_corner_icon.custom_minimum_size = Vector2(10, 10)
 		_corner_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -349,12 +343,16 @@ func _make_display() -> void:
 		row.add_child(_corner_label)
 	_refresh_display()
 
-# 把頭上小方塊和右上角那一列更新成目前選中的殼、剩下的次數
+# 把頭上小方塊和右上角那一列更新成目前選中的殼、剩下的次數，剩下的次數也公開給 HUD（不限次數時是 0／0）；
+# 學員的 HUD 有顯示脫殼次數時，右上角那一列讓位（頭上小方塊不是 HUD，照常顯示）
 func _refresh_display() -> void:
 	if _templates.is_empty():
 		return
 	var template := _templates[clampi(_selected, 0, _templates.size() - 1)]
 	var left_text := _uses_left_text(template)
+	HudData.publish(HudData.MOLT, float(left_text) if left_text != "" else 0.0, float(maxi(template.max_uses, 0)))
+	if _corner_row != null:
+		_corner_row.visible = not HudData.is_claimed(HudData.MOLT)
 	if _head_icon != null:
 		# 只有一種殼又不限次數時，頭上不用顯示
 		_head_icon.visible = _templates.size() > 1 or template.max_uses > 0
@@ -365,6 +363,13 @@ func _refresh_display() -> void:
 		_corner_label.text = "殼：%s" % template.name
 		if left_text != "":
 			_corner_label.text += "（剩 %s 次）" % left_text
+
+# 卡片被拔掉時，脫殼次數不再是顯示來源，右上角那一列也一起拿掉
+func _exit_tree() -> void:
+	if not Engine.is_editor_hint():
+		HudData.remove_source(HudData.MOLT)
+		if is_instance_valid(_corner_row):
+			_corner_row.queue_free()
 
 # 這種殼還能脫幾次，不限次數回傳空字串
 func _uses_left_text(template: Shell) -> String:

@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://blocks/Goal.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://blocks/ClearScreen.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://blocks/Pickup.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Sound.tscn" id="10"]
 
 [node name="ClearScreenTest" type="Node2D"]
 script = ExtResource("1")
@@ -30,6 +31,10 @@ region_rect = Rect2(0, 0, 16, 32)
 [node name="Mechanics" type="Node2D" parent="Player"]
 
 [node name="Juice" type="Node2D" parent="Player"]
+
+[node name="Juice_Sound" parent="Player/Juice" instance=ExtResource("10")]
+sound = 5
+timing = 11
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(-15, 50)

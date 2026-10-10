@@ -29,9 +29,9 @@ func apply(_ctx: MoveContext) -> void:
 func on_respawn() -> void:
 	_jumps_left = extra_jumps
 
-# 地面上不攔截，讓 Player 自己的跳躍照常運作；空中還有次數就跳一次並扣一次
+# 地面上（含剛走出平台邊緣還能跳的那一下）不攔截，讓 Player 自己的跳躍照常運作；空中還有次數就跳一次並扣一次
 func _on_jump_pressed() -> bool:
-	if player.is_on_ground() or _jumps_left <= 0:
+	if player.can_ground_jump() or _jumps_left <= 0:
 		return false
 	_jumps_left -= 1
 	air_jumped.emit()

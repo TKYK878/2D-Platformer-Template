@@ -110,6 +110,9 @@ InputRouter.bind_key(owner: Node, key: Key, phase: int, callback: Callable, prio
 InputRouter.bind_mouse(owner: Node, button: MouseButton, phase: int, callback: Callable, priority: int = 0)
 ## 依「按鍵種類」下拉選單綁定：input_type 0 用 key，1~3 是滑鼠左鍵／右鍵／中鍵
 InputRouter.bind_input(owner: Node, input_type: int, key: Key, phase: int, callback: Callable, priority: int = 0)
+## 假裝這個動作現在被按了一下，依優先權重新派發一次按下（also_release 時接著派發一次放開）；學員綁定收不到。
+## Player 的「早一點按也能跳」落地時用這個，讓攔截跳躍鍵的卡（蓄力青蛙跳…）照樣先收到
+InputRouter.replay_press(action: StringName, also_release: bool)
 ```
 
 學員按鍵觸發器對應的只聽不搶版本是 `bind_student()`／`bind_student_key()`／`bind_student_mouse()`（見 §3.5）。
@@ -171,7 +174,8 @@ signal value_changed(kind: String, old_value: int, new_value: int)
 
 | 欄位 | 說明 |
 |---|---|
-| `kind` | 種類名稱（字串，學員自己打；打字防呆見 4.1） |
+| `kind` | 種類名稱（字串，學員自己打；打字防呆見 4.1）。打成 `HP`、`health`、`生命`、`生命值`、`血`、`血條`、`血值`、`血量值` 這類血量別名時，編輯器黃色驚嘆號＋執行時中文警告（那會變成新的數值，不是血量） |
+| `display_name` | HUD、跳字上顯示的名字（顯示文字例外：空白就顯示 `kind`、只去頭尾空白）；想把血量顯示成「HP」用這個，不要改 `kind` |
 | `start_value` | 初始值 |
 | `max_value` | 上限（0 為不限） |
 | `show_in_hud` | 打勾一開場就顯示在 HUD；不勾永遠不顯示 |
@@ -185,7 +189,7 @@ signal value_changed(kind: String, old_value: int, new_value: int)
   `Stats` 本身只管數值，不知道也不在意畫面有沒有人在監聽，兩者分開避免混在一起。
 - 有 `ValueSettings` 且 `show_in_hud` 打勾的種類一開場就出現；沒有 `ValueSettings` 的種類，第一次在場景中
   被用到時才出現。
-- 血量顯示為血條，其他顯示為圖示加數字。
+- 血量顯示為血條，其他顯示為圖示加數字；名字用 `Stats.get_display_name(kind)`（`display_name` 空白就是種類名稱）。
 
 ### 4.5 血量與傷害
 
@@ -318,7 +322,7 @@ Player 提供幾個不帶參數、給學員從任何訊號（零件、按鍵觸�
 | `Events.level_cleared` | 終點、存活計時 | 既有 |
 | `Events.mechanic_event(card, event)` | 主限制卡 | 既有（見 `01b_mechanic_cards.md`） |
 | `Events.shake_requested(strength, duration)` | W3 Juice（螢幕震動） | 鏡頭震動；同時有好幾個時取比較強的 |
-| `Events.zoom_requested(strength, duration)` | W3 Juice（鏡頭推近） | 鏡頭放大到 `1 + strength` 倍再回到原本大小 |
+| `Events.zoom_requested(strength, duration, focus, focus_style)` | W3 Juice（鏡頭推近） | 鏡頭放大到 `1 + strength` 倍再回到原本大小，往放大中心 `focus` 偏 |
 
 `Events` 是系統之間的溝通管道；第 6 節各零件的訊號是給學員連接用的，兩者分開。
 

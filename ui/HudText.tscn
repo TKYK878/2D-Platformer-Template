@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="HudText" type="Label"]
+offset_right = 60.0
+offset_bottom = 14.0
+text = "文字"

@@ -8,7 +8,8 @@ extends Camera2D
 #   場景裡沒有 Room 時就是一般的跟著玩家跑。
 # - 自由跟隨：忽略房間，一直跟著玩家跑（例如展示間那種一路橫向走的長場地）。
 # 震動是疊加在鏡頭位置上的偏移（offset），不會改到鏡頭位置；同時有好幾個震動請求時取比較強的那個。
-# 推近是放大到 1 + strength 倍再回到原本大小，放大時畫面往玩家偏一點，偏移的限制範圍用放大後的畫面大小計算
+# 推近是放大到 1 + strength 倍再回到原本大小，放大時畫面往請求指定的放大中心偏（偏一點／定在原地／拉到正中央），
+# 偏移的限制範圍用放大後的畫面大小計算
 # （鏡頭本身的跟隨範圍不變，推近結束時不會露出房間外）。Juice 總開關關掉、玩家重生時，進行中的震動與推近立刻停止。
 
 ## 鏡頭模式：瞬切（每個房間一個固定畫面）、房間內跟隨（跟著玩家但不超出房間）、自由跟隨（不管房間，一直跟著玩家）
@@ -17,8 +18,10 @@ extends Camera2D
 const _MODE_SNAP := 0
 const _MODE_ROOM_FOLLOW := 1
 const _MODE_FREE_FOLLOW := 2
-# 推近時畫面往玩家偏多少：1 = 玩家在畫面上的位置完全不動，0 = 只從畫面中心放大
-const _ZOOM_LEAN := 0.5
+# 推近時畫面往放大中心偏多少的三種方式（對應 Juice_CameraZoom.focus_style）
+const _STYLE_LEAN := 0      # 偏一點：放大中心在畫面上的位置移動一半
+const _STYLE_PIN := 1       # 定在原地：放大中心在畫面上的位置完全不動
+const _STYLE_CENTER := 2    # 拉到正中央：放大到最大時放大中心在畫面正中間
 # 推近的前面這段比例時間用來放大，剩下的時間慢慢回到原本大小
 const _ZOOM_IN_PART := 0.25
 
@@ -28,6 +31,8 @@ var _shake_time_left: float = 0.0
 var _zoom_strength: float = 0.0
 var _zoom_duration: float = 0.0
 var _zoom_time_left: float = 0.0
+var _zoom_focus: Variant = null   # 放大中心：Node2D 跟著它、Vector2 固定位置、null 畫面中心
+var _zoom_style: int = _STYLE_LEAN
 var _base_zoom: Vector2 = Vector2.ONE
 var _follow_target: Node2D = null
 var _room: Node = null
@@ -70,12 +75,14 @@ func _on_shake_requested(strength: float, duration: float) -> void:
 	_shake_time_left = duration
 
 # 接到推近請求：比正在進行的推近現在的放大量還大才換成新的，不然維持原本的
-func _on_zoom_requested(strength: float, duration: float) -> void:
+func _on_zoom_requested(strength: float, duration: float, focus: Variant, focus_style: int) -> void:
 	if duration <= 0.0 or strength <= 0.0 or strength < _current_zoom_amount():
 		return
 	_zoom_strength = strength
 	_zoom_duration = duration
 	_zoom_time_left = duration
+	_zoom_focus = focus
+	_zoom_style = focus_style
 
 # Juice 總開關關掉時，停掉進行中的震動與推近
 func _on_juice_switch_toggled(on: bool) -> void:
@@ -122,17 +129,27 @@ func _process(delta: float) -> void:
 		_shake_time_left = maxf(_shake_time_left - delta, 0.0)
 	offset = _zoom_lean(zoom_amount) + shake
 
-# 推近時畫面往玩家偏一點；不是自由跟隨的話，偏移後的畫面也不能超出目前的房間
+# 推近時畫面往放大中心偏；不是自由跟隨的話，偏移後的畫面也不能超出目前的房間
 func _zoom_lean(zoom_amount: float) -> Vector2:
 	if zoom_amount <= 0.0:
 		return Vector2.ZERO
-	if not is_instance_valid(_follow_target):
-		_follow_target = get_tree().get_first_node_in_group("player")
-		if _follow_target == null:
-			return Vector2.ZERO
+	var focus_position: Vector2
+	if _zoom_focus is Vector2:
+		focus_position = _zoom_focus
+	elif is_instance_valid(_zoom_focus) and _zoom_focus is Node2D:
+		focus_position = _zoom_focus.global_position
+	else:
+		return Vector2.ZERO
 	var center := get_screen_center_position() - offset
-	var lean_ratio: float = _ZOOM_LEAN * (1.0 - 1.0 / (1.0 + zoom_amount))
-	var target := center + (_follow_target.global_position - center) * lean_ratio
+	var lean_ratio: float
+	match _zoom_style:
+		_STYLE_PIN:
+			lean_ratio = 1.0 - 1.0 / (1.0 + zoom_amount)
+		_STYLE_CENTER:
+			lean_ratio = zoom_amount / _zoom_strength
+		_:
+			lean_ratio = 0.5 * (1.0 - 1.0 / (1.0 + zoom_amount))
+	var target := center + (focus_position - center) * lean_ratio
 	if mode != _MODE_FREE_FOLLOW and is_instance_valid(_room):
 		target = _clamp_to_room(target, _room.get_rect(), zoom)
 	return target - center

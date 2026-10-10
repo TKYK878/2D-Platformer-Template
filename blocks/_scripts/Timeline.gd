@@ -59,6 +59,7 @@ func _ready() -> void:
 	if show_time:
 		_create_time_label()
 	_running = start_on
+	_update_time_label()
 
 # 每個物理幀：時間往前走，到了就觸發還沒觸發過的事件；loop 開啟時全部觸發完就從頭再來
 func _physics_process(delta: float) -> void:
@@ -132,25 +133,33 @@ func _refresh_editor() -> void:
 	update_configuration_warnings()
 	queue_redraw()
 
-# 在畫面右上角建立顯示秒數的文字；場景裡有好幾個時間軸時往下排
+# 在畫面右上角的共用容器加一行顯示秒數的文字；場景裡有好幾個時間軸、或有其他卡的預設 UI 時自動往下排
 func _create_time_label() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
 	_time_label = Label.new()
 	_time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_time_label.anchor_left = 1.0
-	_time_label.anchor_right = 1.0
-	_time_label.offset_left = -160.0
-	_time_label.offset_right = -4.0
-	var index := get_tree().get_nodes_in_group("timeline").find(self)
-	_time_label.offset_top = 4.0 + index * 14.0
-	layer.add_child(_time_label)
+	StatsHud.get_corner(StatsHud.CORNER_TOP_RIGHT).add_child(_time_label)
 	_update_time_label()
 
-# 更新畫面上的秒數
+# 更新畫面上的秒數；場景裡第一個時間軸把秒數公開給 HUD，學員的 HUD 有顯示時間軸時預設的秒數讓位
 func _update_time_label() -> void:
+	if _is_first_timeline():
+		HudData.publish(HudData.TIMELINE, _elapsed)
 	if _time_label != null:
 		_time_label.text = "%s：%.1f 秒" % [name, _elapsed]
+		_time_label.visible = not HudData.is_claimed(HudData.TIMELINE)
+
+# 是不是場景裡第一個時間軸（只有它的秒數會公開給 HUD）
+func _is_first_timeline() -> bool:
+	return get_tree().get_first_node_in_group("timeline") == self
+
+# 被拔掉時，時間軸的秒數不再是顯示來源（是第一個時間軸才拿掉），右上角的秒數也一起拿掉
+func _exit_tree() -> void:
+	if Engine.is_editor_hint():
+		return
+	if _is_first_timeline():
+		HudData.remove_source(HudData.TIMELINE)
+	if is_instance_valid(_time_label):
+		_time_label.queue_free()
 
 # 編輯畫面持續重畫，讓清單跟著改名、改秒數、訊號連接即時更新
 func _process(_delta: float) -> void:

@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/VolumeSlider.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://ui/MenuAction.tscn" id="4"]
+
+[node name="MyPauseMenuExample" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+kind = 1
+palette = 4
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="List" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" parent="Center/List" instance=ExtResource("2")]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "休息一下～"
+horizontal_alignment = 1
+
+[node name="Volumes" type="GridContainer" parent="Center/List"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+columns = 2
+
+[node name="MasterName" parent="Center/List/Volumes" instance=ExtResource("2")]
+layout_mode = 2
+text = "主音量"
+
+[node name="Master" parent="Center/List/Volumes" instance=ExtResource("3")]
+layout_mode = 2
+
+[node name="BgmName" parent="Center/List/Volumes" instance=ExtResource("2")]
+layout_mode = 2
+text = "音樂"
+
+[node name="Bgm" parent="Center/List/Volumes" instance=ExtResource("3")]
+layout_mode = 2
+bus = 2
+
+[node name="Buttons" type="HBoxContainer" parent="Center/List"]
+layout_mode = 2
+alignment = 1
+
+[node name="Resume" parent="Center/List/Buttons" instance=ExtResource("4")]
+layout_mode = 2
+text = "繼續玩"
+
+[node name="Restart" parent="Center/List/Buttons" instance=ExtResource("4")]
+layout_mode = 2
+text = "從頭來"
+action = 1
+
+[node name="Hint" parent="Center/List" instance=ExtResource("2")]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Esc／P 繼續"

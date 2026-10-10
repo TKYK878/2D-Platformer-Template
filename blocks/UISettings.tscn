@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://blocks/_scripts/UISettings.gd" id="1"]
+
+[node name="UISettings" type="Node"]
+script = ExtResource("1")

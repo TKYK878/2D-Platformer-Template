@@ -103,6 +103,7 @@ func _restart_level(player: Node) -> void:
 		_reset_objects(player, null, false)
 	RespawnMemory.restart_level()
 	_revive(player, _start_position)
+	Events.whole_level_restarted.emit()
 
 # 通知大家要重生了，再請玩家復活到指定位置
 func _revive(player: Node, at_position: Vector2) -> void:

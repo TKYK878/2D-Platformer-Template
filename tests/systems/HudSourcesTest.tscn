@@ -1,0 +1,68 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/systems/_scripts/HudSourcesTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="3"]
+[ext_resource type="PackedScene" path="res://mechanics/Mechanic_Stamina.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://mechanics/Mechanic_SurvivalTimer.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://mechanics/_extra/Extra_Molt.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://blocks/Timeline.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://blocks/TimelineEvent.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://mechanics/_extra/_molt/Shell.tscn" id="9"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
+size = Vector2(600, 16)
+
+[node name="HudSourcesTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(0, 103)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="Visual" type="ColorRect" parent="Floor"]
+offset_left = -300.0
+offset_top = -8.0
+offset_right = 300.0
+offset_bottom = 8.0
+color = Color(0.4, 0.35, 0.3, 1)
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(0, 75)
+
+[node name="Visual" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual"]
+texture = ExtResource("3")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 32)
+
+[node name="Mechanics" type="Node2D" parent="Player"]
+
+[node name="Mechanic_Stamina" parent="Player/Mechanics" instance=ExtResource("4")]
+
+[node name="Mechanic_SurvivalTimer" parent="Player/Mechanics" instance=ExtResource("5")]
+target_seconds = 60.0
+
+[node name="Extra_Molt" parent="Player/Mechanics" instance=ExtResource("6")]
+trigger_timing = 1
+show_selected = 2
+
+[node name="Shell" parent="Player/Mechanics/Extra_Molt" instance=ExtResource("9")]
+max_uses = 3
+
+[node name="Juice" type="Node2D" parent="Player"]
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+position = Vector2(0, -30)
+zoom = Vector2(0.8, 0.8)
+
+[node name="Timeline" parent="." instance=ExtResource("7")]
+show_time = true
+
+[node name="TimelineEvent" parent="Timeline" instance=ExtResource("8")]
+time = 100.0

@@ -49,6 +49,11 @@ func get_facing() -> int:
 func hold_still(duration: float) -> void:
 	_hold_time_left = maxf(_hold_time_left, duration)
 
+# 被推一下（不扣血），推力器這類零件用這個；推的這一小段時間不巡邏，不然速度馬上被蓋掉
+func add_impulse(v: Vector2) -> void:
+	velocity += v
+	_stun_time_left = _STUN_DURATION
+
 # 被攻擊打到：扣血並被擊退一下，歸零時消失
 func take_hit(hit_damage: int, knockback: Vector2, source: Node) -> void:
 	Events.hit.emit(self, source)

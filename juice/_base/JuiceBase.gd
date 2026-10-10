@@ -70,6 +70,25 @@ func play(..._args: Array) -> void:
 		return
 	_trigger(player.global_position, 1.0)
 
+# 清掉這個效果：停掉正在播的、撤掉它對角色外觀的影響，之後照常觸發（訊號帶的參數會被忽略）
+func clear(..._args: Array) -> void:
+	_on_reset()
+	if is_instance_valid(player):
+		player.clear_juice(self)
+
+# 打開這個 Juice（跟 Inspector 勾 enabled 一樣），訊號帶的參數會被忽略
+func turn_on(..._args: Array) -> void:
+	enabled = true
+	if _is_continuous():
+		visible = JuiceSwitch.is_on()
+
+# 關掉這個 Juice（跟 Inspector 取消勾 enabled 一樣），順便清掉它的效果；之後要 turn_on 才會再作用
+func turn_off(..._args: Array) -> void:
+	enabled = false
+	clear()
+	if _is_continuous():
+		visible = false
+
 # Juice 組件在這裡做初始化，例如設定初始狀態
 func _on_setup() -> void:
 	pass

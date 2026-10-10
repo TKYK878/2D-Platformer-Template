@@ -91,6 +91,21 @@ func bind_student_mouse(owner: Node, button: MouseButton, phase: int, callback: 
 func bind_student(owner: Node, action: StringName, phase: int, callback: Callable) -> void:
 	_add_binding(owner, action, phase, callback, STUDENT_PRIORITY, &"", true)
 
+# 假裝這個動作「現在被按了一下」，依優先權重新派發一次按下（also_release 為 true 時接著派發一次放開，當作點一下就放開）。
+# 預輸入（早一點按也能跳）落地時用這個，讓蓄力青蛙跳這類攔截跳躍的卡一樣先收到；學員的按鍵觸發器不會收到重播
+func replay_press(action: StringName, also_release: bool) -> void:
+	_replay_phase(action, PRESSED, null)
+	if also_release:
+		_replay_phase(action, RELEASED, 0.0)
+
+# 依優先權派發某個動作某個時機的所有一般綁定（跳過學員綁定），重播用
+func _replay_phase(action: StringName, phase: int, arg) -> void:
+	var group: Array = _bindings.filter(func(b): return b.trigger == action and b.phase == phase and not b.is_student)
+	group.sort_custom(func(a, b): return a.priority > b.priority)
+	for binding in group:
+		if _is_active(binding) and _call_binding(binding, arg):
+			return
+
 # 幫某個實體按鍵建立（或沿用）一個只在記憶體裡存在的臨時動作
 func _ensure_key_action(key: Key) -> StringName:
 	var event := InputEventKey.new()

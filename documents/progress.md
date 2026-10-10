@@ -558,11 +558,203 @@
 	  `Extra_Dash` 加 `dash_ended` 訊號）
 　　→ 講師決定：規格外新增，跟分身殘影分開成兩個組件（欄位不同，合在一起會超過 4 個）；不用 `GPUParticles2D` 的拖尾（網頁版、弱電腦會卡）
 　　→ 講師決定：加「用訊號開關」模式；拿掉 `width` 欄位（固定 6），粗細、寬度曲線、漸層改用 `Line2D` 子節點樣板調
-- [ ] U143 `Juice_GooglyEyes` 咕嚕眼（`@tool` 編輯器預覽、拖節點決定眼睛位置、彈簧眼珠、跟著翻轉／體型）
+- [x] U143 `Juice_GooglyEyes` 咕嚕眼（`@tool` 編輯器預覽、拖節點決定眼睛位置、彈簧眼珠、跟著翻轉／體型）
+　　→ 講師決定：加 `look` 下拉（跟著移動方向轉頭／擺正中間，預設轉頭）：轉頭＝眼睛整組滑到臉朝前進方向的那一側，停下來留在最後那一側；
+　　　眼珠要有慣性（牛頓第一定律：起跑時往後甩、急停落地時往前衝）
+　　→ 講師決定：所有組件（機制卡、零件、能力、Juice）都取消「最多 4 個欄位」的限制，學員程度不錯，盡量讓學員做出想要的效果
 
 ## 階段 34：備品與收尾
 
-- [ ] U144 備品 `Juice_TextPopup` 跳字、`Juice_ScreenFlash` 全螢幕閃光
-- [ ] U145 備品 `Juice_Tilt` 傾斜、`Juice_DeathBurst` 死亡爆散
-- [ ] U146 `levels/_starts/W3_JuiceBox.tscn` 起始場景、`Gym.tscn` 示範佈置
-- [ ] U147 煙霧測試補上 §6 的項目、零件手冊／速查表／README 補 W3，跑一次煙霧測試
+- [x] U144 備品 `Juice_TextPopup` 跳字、`Juice_ScreenFlash` 全螢幕閃光
+　　→ 講師決定：跳字的種類用下拉（全部數值／只有血量／自訂）＋選「自訂」才出現的打字欄位 `custom_kind`；全螢幕閃光預設受傷時閃紅
+- [x] U145 備品 `Juice_Tilt` 傾斜、`Juice_DeathBurst` 死亡爆散
+- [x] U146 `levels/_starts/W3_JuiceBox.tscn` 起始場景、`Gym.tscn` 示範佈置
+　　→ 講師決定：W3_JuiceBox 打中東西時噴紅色碎片（血）、頓幀改成打倒敵人時（0.12 秒）、打倒敵人不推近鏡頭（鏡頭推近改成過關時）；
+　　　加音效：打中（落地聲）、打倒敵人（爆炸）、撿到東西（金幣，由低到高）、受傷、過關（撿東西）
+- [x] U146b `Juice_Sound` 音高模式：`pitch_mode`（隨機／固定／由低到高），由低到高時 `notes`（五聲音階／大調音階／半音／琶音）、`steps`、`at_top`、`reset_delay`
+　　→ 講師決定：隨機音高之外要能「由低到高」聽起來比較和諧，音階用內建下拉（不做自訂曲線）
+- [x] U147 煙霧測試補上 §6 的項目、零件手冊／速查表／README 補 W3，跑一次煙霧測試
+
+## 階段 35：按鍵手感（W3 增補）
+
+> 講師決定：W3 做完後追加「按鍵手感」。做進 Player 的 Inspector（「按鍵手感」分組），每一項都有勾選框可以開關、拉桿調時間或強度，
+> 預設開著（「起跑加速」預設關，避免改到 W1 已經調好的手感）。這是玩法層，不是 Juice：按 0 關 Juice 不影響它。
+> 跳躍相關的卡片（二段跳、蹬牆跳、蓄力青蛙跳…）要一起確認不打架。
+
+- [x] U148 晚一點按也能跳（土狼時間）`late_jump_enabled`／`late_jump_time`、早一點按也能跳（預輸入）`early_jump_enabled`／`early_jump_time`；
+	  Player 新增 `can_ground_jump()`（站在地上或還在土狼時間內），二段跳、蹬牆跳改用它判斷；預輸入落地時透過 `InputRouter.replay_press()`
+	  重播一次按鍵，讓蓄力青蛙跳這類攔截跳躍的卡照樣先收到（驗證：`tests/systems/InputFeelTest.tscn`）
+- [x] U149 短按小跳、長按大跳 `short_jump_enabled`／`short_jump_strength`（放開跳躍鍵時往上的速度砍掉一截，二段跳也適用）
+- [x] U150 頂頭修正 `corner_fix_enabled`／`corner_fix_size`（往上跳時頭差幾個像素撞到天花板邊角，自動往旁邊推開）
+- [x] U151 起跑加速 `smooth_start_enabled`／`speed_up_time`（從停下到全速要一小段時間，預設關）
+- [x] U152 文件（README、零件手冊、速查表、`03` 規格）＋煙霧測試補上按鍵手感，跑一次煙霧測試
+
+## 階段 36：音訊匯流排
+
+> 講師決定：音訊分成 Master／SFX／BGM 三條匯流排（SFX、BGM 都送進 Master），音效一律走 SFX，之後的背景音樂走 BGM。
+
+- [x] U153 `default_bus_layout.tres` 建立 SFX、BGM 匯流排；`Juice_Sound` 與 `SfxPreviewTest` 的播放器改走 SFX
+- [x] U154 背景音樂 Juice `juice/Juice_BGM.tscn`（掛在 Player → Juice 底下）：一個節點一首歌（`music` 拖音檔、`play_on_start`、`volume`、
+	  `fade_time`、`on_died`、`on_cleared`），走 BGM 匯流排；同一時間只播一首，`timing` 選的時機發生、或訊號連到 `play()` 時
+	  淡出淡入換成這一首，`stop()` 淡出停止；過關停掉後再玩一次會播回開場那首；Juice 總開關關掉時淡出靜音
+	  （驗證：`tests/juice/Juice_BGMTest.tscn`）
+	  　　→ 講師決定：沒有內建曲目，只能拖自己的音檔（空白時黃色驚嘆號＋中文警告、不播放）；換歌由學員用 timing 或訊號觸發；
+	  　　　死亡與過關時的反應做成下拉讓學員選；BGM 跟音效一樣歸類在 Juice，按 0 關總開關時跟著靜音
+
+## 階段 37：遊戲流程事件
+
+> 講師決定：先不做有狀態的 GameManager，在 Events 補「遊戲開始」「整關重來」兩個事件，讓 EventListener 選得到；
+> 另外做一個 GameFlow 節點把所有事件一次變成自己的訊號，學員自己用訊號接。EventListener 保留（只聽一個事件、可以延遲）。
+> 原本的 `level_restarted` 每次重生都會發（不分回房間或整關重來），名不副實但維持原樣，另外新增 `whole_level_restarted`。
+
+- [x] U155 `Events` 新增 `level_started`（開場等所有節點準備好後發一次，換場景再發）與 `whole_level_restarted`
+	  （`RespawnHandler` 整關重來時發：選「整關重來」的重生、過關畫面按再玩一次）；EventListener 下拉加上「遊戲開始時」
+	  「整關重來時」（排在最後，原本的選項編號不變）（驗證：`tests/blocks/EventListenerFlowTest.tscn`）
+- [x] U156 遊戲流程 `blocks/GameFlow.tscn`：把 Events 的事件（遊戲開始、整關重來、玩家死亡／重生／受傷／跳躍、進入房間、
+	  撿到道具、敵人被打倒、過關）全部變成自己不帶參數的訊號，學員選它在「節點」面板挑事件連到任何零件；一條都沒連時印中文提醒；
+	  編輯器畫橘色方塊＋連線虛線（驗證：`tests/blocks/GameFlowTest.tscn`）
+	  　　→ 講師決定：學員自己拖，範本不預放；放兩個以上也能用、不警告
+
+## 階段 38：暫停選單
+
+> 講師決定：做成自動載入，每一關都有、學員不用擺；Esc 和 P 都能暫停（網頁版全螢幕時 Esc 會先被瀏覽器拿去）；
+> 選單有主音量／音效／音樂三條拉桿、繼續遊戲、整關重來、離開遊戲；音量記在 user:// 的設定檔，下次開遊戲還是一樣。
+
+- [x] U157 暫停選單 `autoload/PauseMenu.gd`：Esc／P 開關、暫停遊戲；Master／SFX／BGM 音量拉桿（拉到 0 靜音，存在
+	  `user://settings.cfg`；拉音效拉桿時播一下試聽音效）；繼續遊戲、整關重來（關卡裡沒有 RespawnHandler 就不顯示並印提醒）、離開遊戲（網頁版不顯示）；
+	  過關畫面這類別人造成的暫停中不會打開；P 被按鍵觸發器／按鍵設定用掉時讓給它、只用 Esc（驗證：`tests/systems/PauseMenuTest.tscn`）
+
+## 階段 39：文件補上音訊與遊戲流程
+
+- [x] U158 README（W3 背景音樂、拖到哪裡加 GameFlow、暫停選單、沒反應怎麼辦）、零件手冊（GameFlow、EventListener 新選項、
+	  Juice_BGM、音量）、速查表（Esc／P、GameFlow 訊號、Juice_BGM）、規格書（`00_foundation` Events 清單、`00b` §8.5 補選項／
+	  §8.6 GameFlow、`03` 組件表加 Juice_BGM、§4 音訊匯流排）
+
+## 階段 40：W3 練習關
+
+> 講師決定：練 W3 Juice；題目寫在關卡裡的告示牌上，按 F6 自動檢查、做對變綠；8 題由淺到深。
+> 沒有內建音樂檔，所以不出背景音樂題，最後一題改成「自訂音效」（可以先拖 `sfx/` 裡的音檔）。
+
+- [x] U159 `levels/_starts/W3_JuicePractice.tscn`（W3_JuiceBox 的路線、Player → Juice 清空、加一顆按鈕）＋告示牌
+	  `levels/_shared/PracticeSign.gd`（`task` 下拉選題目，執行時檢查 Player → Juice 的設定）：1 落地震動、2 跳躍音效、
+	  3 撿金幣噴星星（改 timing＋style）、4 撿金幣叮一聲（同一種拖第二個）、5 震得更用力（strength ≥ 8）、6 打倒敵人頓幀、
+	  7 按鈕 turned_on 連到「不自動觸發」的 CameraZoom 的 play、8 撞牆播自訂音檔；全部完成印恭喜；README §3.1 補練習關
+
+## 階段 41：Juice 互相蓋掉與用訊號控制
+
+> 講師決定：學員回報閃黃閃到一半死掉閃紅，兩個顏色相乘混在一起。閃色加「後閃的停掉先閃的」（可以取消）；
+> 另外所有 Juice 都可以用訊號清掉效果、關掉、打開。
+
+- [x] U160 `Juice_Flash` 新增 `stop_others`（預設勾）：開始閃時把同一個角色身上其他還在閃的 `Juice_Flash` 清掉
+- [x] U161 `JuiceBase` 新增 `clear()`／`turn_off()`／`turn_on()`（接任意參數，可以連任何訊號）；`Juice_BGM` 覆寫成淡出淡入；
+	  煙霧測試總開關測試輪流呼叫；零件手冊、速查表、`03` §2.3b 補上（驗證：`tests/juice/Juice_ControlTest.tscn`）
+
+## 階段 42：推力器
+
+> 講師決定：學員想要「撿到道具就往左飛」。不用連線對話框的「進階」額外參數傳 Vector2（要打字、驗證器會誤報），
+> 做成零件用下拉選方向、拉桿調力道；推法、重力翻轉都做成選項；可以推玩家、箱子、敵人（通用）。
+
+- [x] U162 推力器 `blocks/Pusher.tscn`：`activate()` 把目標往指定方向推一下；`target`（玩家／範圍內全部／玩家／箱子／敵人）、
+	  範圍大小、八方向＋自訂（`custom_x`／`custom_y` 拉桿）、`strength`、`push_mode`（疊加／先停住再推）、`on_gravity_flip`
+	  （跟著翻轉／不翻轉）；`pushed(body)` 訊號；編輯器畫箭頭與範圍方框；Enemy 新增公開 `add_impulse()`；零件手冊、速查表、
+	  `01c` §2.2 補上（驗證：`tests/blocks/PusherTest.tscn`）
+
+## 階段 43：鏡頭推近的放大中心
+
+> 講師決定：學員希望鏡頭推近可以調整放大中心，例如放大在玩家身上。下拉選放大中心（畫面中心／玩家／觸發位置，
+> 預設玩家），再一個下拉選偏多少（偏一點／定在原地／拉到正中央，預設偏一點＝原本的效果，舊關卡不變）。
+
+- [x] U163 `Juice_CameraZoom` 新增 `focus`（畫面中心／玩家／觸發位置）、`focus_style`（偏一點／定在原地／拉到正中央，
+	  選畫面中心時隱藏）；`Events.zoom_requested` 多兩個參數 `focus`、`focus_style`，`CameraRig` 依此計算偏移；
+	  `00`、`01a`、`03`、零件手冊補上（驗證：`tests/juice/Juice_CameraZoomTest.tscn`，Q／E 切換）
+
+## 階段 44：過關時音效被暫停吃掉
+
+> 講師決定：學員回報踩到終點叫出 ClearScreen 時聲音發不出來。原因是過關畫面把遊戲暫停，`Juice_Sound` 的播放器跟著暫停；
+> 改成播放器暫停時照樣播（`Juice_BGM` 原本就是）；學員可以勾選要不要暫停時截斷，「過關時」一律播完（不然又是沒聲音）。
+
+- [x] U164 `Juice_Sound` 新增 `play_when_paused`（預設勾：暫停時照樣播完；不勾：暫停時停住，繼續後接著播；觸發時機「過關時」
+	  隱藏、一律播完）；`ClearScreenTest` 加一個「過關時」播金幣聲的 `Juice_Sound`；`03` §4、零件手冊補上
+	  （驗證：`tests/blocks/ClearScreenTest.tscn`）
+
+## 階段 45：只能往前的重生方向與改方向函式
+
+> 講師決定：學員回報重生後跑的方向有時跟設定不一樣，也想要可以直接連訊號改成往左／往右。
+> 原因是死掉期間 Player 不跑物理，`is_on_wall()` 停在死掉那一刻，貼著右牆死、重生又往右時第一幀就被當成撞牆轉向。
+
+- [x] U165 `Mechanic_AutoRun` 重生後第一幀不檢查撞牆；新增可以連訊號的 `run_left()`／`run_right()`／`turn_around()`
+	  （不發 `turned_around`）；`01b` §2、零件手冊補上（驗證：`tests/mechanics/Mechanic_AutoRunTest.tscn`，K／1／2／3）
+
+## 階段 46：數值的顯示名稱
+
+> 講師決定：學員回報「血量的顯示名稱無法修改」「血量不勾 show_in_hud 仍會顯示」，同一個原因：學員把 `kind` 改成 HP
+> 想改名，結果設定到新的數值 HP，真正的血量照預設顯示，而且沒有任何警告（HP 跟血量字面不像，打錯字檢查抓不到）。
+> `ValueSettings` 加 `display_name`（顯示文字例外，同 `ClearScreen.message`）；`kind` 打成血量別名時編輯器黃色驚嘆號＋執行時警告。
+
+- [x] U166 `ValueSettings` 新增 `display_name`，`Stats.configure()` 多一個參數、新增 `get_display_name()`；`StatsHud`、
+	  `Juice_TextPopup` 改顯示 `display_name`；`kind` 打成 HP／health／生命／生命值／血／血條／血值／血量值時
+	  `_get_configuration_warnings()`＋`push_warning()`；CLAUDE.md 顯示文字例外、`01a` §4.3／§4.4、零件手冊補上
+	  （驗證：`tests/blocks/ValueSettingsTest.tscn`）
+
+# W4：套皮與 UI（`04_skin_and_ui.md`）
+
+> 講師決定：UI 改成可以再製到 `_my/` 修改的範本場景，兩種接法都做（`UISettings` 欄位／直接拖進場景樹）；
+> 提供通用顯示零件，學員自己選要顯示哪個數值；舊版 UI 改由範本實作（一套程式），學員的 HUD 有綁的來源才讓位；
+> `UIRoot` 整套換字型與配色；範本用右鍵「再製」；零件換皮靜態 `Skin` 與動畫 `SkinAnimated` 都做；
+> 角色動畫用方案一（固定動畫名稱，`AnimationPlayer`／`AnimatedSprite2D` 都支援）；要有練習關。
+
+## 階段 47：顯示來源
+
+- [x] U167 自動載入 `HudData`（`publish`／`get_value`／`get_max_value`／`has_source`／`source_changed`、`is_claimed`），
+	  `Stats` 數值自動成為來源，內建遊玩時間、死亡次數；`ClearScreen` 改讀 `HudData`（`tests/systems/HudDataTest.tscn`）
+- [x] U168 體力、存活倒數、脫殼次數、時間軸公開到 `HudData`；預設 UI 顯示前先問 `is_claimed()`
+	  （驗證：`tests/systems/HudSourcesTest.tscn`）
+　　→ 講師決定：右上角的預設 UI（存活倒數、脫殼、時間軸）原本各自擺固定位置會疊在一起，併進這個單元修：
+　　　`StatsHud.get_corner()` 提供右上角／左下角共用容器，這幾張卡的預設 UI 都放進去自動上下排
+
+## 階段 48：UI 通用零件
+
+- [x] U169 `UIRoot`（`kind`、`font`、`font_size`、`palette`，執行時建 Theme、編輯器即時預覽、暫停中也能動）
+	  （驗證：`tests/ui/UIRootTest.tscn`）
+- [x] U170 顯示零件共通部分（`source`／`kind`、打字防呆、編輯器假資料預覽、找不到來源的警告、`flash_on_change`／`shake_on_decrease`、
+	  `amount_changed` 等訊號）＋ `HudNumber`、`HudText`（驗證：`tests/ui/HudNumberTest.tscn`）
+- [x] U171 `HudBar`（驗證：`tests/ui/HudBarTest.tscn`）
+- [x] U172 `HudIcons`（驗證：`tests/ui/HudIconsTest.tscn`）
+
+## 階段 49：範本與接法
+
+- [x] U173 `HudTemplate`；`StatsHud` 改成實例化範本；接法 B（直接拖進場景樹）、多放的警告
+	  （驗證：`tests/ui/HudTemplateTest.tscn`）
+- [x] U174 `UISettings`＋接法 A（欄位、類型檢查、跟接法 B 同時接的警告）
+	  （驗證：`tests/ui/UISettingsTest.tscn`、`tests/ui/UISettingsConflictTest.tscn`）
+- [x] U175 `MenuAction`、`VolumeSlider`、`PauseMenuTemplate`；`PauseMenu` 改成實例化範本或學員的場景
+	  （驗證：`tests/ui/PauseMenuTemplateTest.tscn`、`tests/systems/PauseMenuTest.tscn`）
+- [x] U176 `ClearStat`、`ClearScreenTemplate`；`ClearScreen` 改成實例化範本或學員的場景
+	  （驗證：`tests/ui/ClearScreenTemplateTest.tscn`、`tests/blocks/ClearScreenTest.tscn`）
+
+## 階段 50：換皮
+
+- [x] U177 `Skin`、`SkinAnimated`（欄位、編輯器畫原本色塊的外框、放錯地方的警告、動畫名稱檢查）；零件端的共用接法
+	  （驗證：`tests/skins/SkinTest.tscn`）
+- [ ] U178 零件逐一支援皮：終點、按鈕、重生點、門、開關方塊、道具、尖刺、岩漿（狀態回饋改作用在皮上）
+- [ ] U179 零件逐一支援皮：其餘有色塊的零件（箱子、可破壞、崩塌地板、彈射、風扇、移動平台、單向平台、傳送門…）
+- [ ] U180 敵人支援皮（轉向跟著翻、走路／受傷／死亡動畫）
+- [ ] U181 `Ability_Ranged`／`EnemyShooter` 的 `bullet_texture`、`Ability_Melee` 的 `slash_texture`
+
+## 階段 51：角色動畫
+
+- [ ] U182 `Ability_Melee`／`Ability_Ranged` 新增 `attacked` 訊號
+- [ ] U183 `Juice_Animator`（找播放器、依狀態切換、缺動畫的退路、名稱檢查、動畫改了 scale／modulate 的警告、`play_custom`）
+
+## 階段 52：地形與收尾
+
+- [ ] U184 `art/tile_template.png` 範本圖
+- [ ] U185 `W4_SkinBox` 起始場景（示範用的自訂 UI、皮、角色動畫）
+- [ ] U186 `W4_SkinPractice` 練習關（`PracticeSign` 加 W4 題目）
+- [ ] U187 煙霧測試補上 W4 項目；README、零件手冊、速查表補 W4（含 §9 課堂 SOP、背景圖做法）；跑一次煙霧測試
+
+## 之後再做（構想，還沒排進單元）
+
+- GameFlow 加上狀態：管理「開始 → 進行中 → 過關／Game Over」，學員可以聽狀態變化的訊號；
+  可能一起做命數、Game Over 條件（命用完或某個數值歸零）與 Game Over 畫面，會牽涉 RespawnHandler、ClearScreen。
+  U156 的訊號名稱不用變，學員已經連好的線不用重連。

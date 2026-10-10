@@ -1,0 +1,173 @@
+[gd_scene format=4 uid="uid://cvacjjkregojb"]
+
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="1"]
+[ext_resource type="TileSet" uid="uid://6xyxoqkb30in" path="res://art/default_tile.tres" id="2"]
+[ext_resource type="Script" uid="uid://ddmv38ww06tgv" path="res://levels/_shared/CameraRig.gd" id="3"]
+[ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="4"]
+[ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="5"]
+[ext_resource type="PackedScene" path="res://blocks/Room.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://blocks/ValueSettings.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://blocks/KeySettings.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://blocks/Pickup.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://blocks/Spike.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://blocks/Goal.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://blocks/ClearScreen.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://juice/Juice_ScreenShake.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://juice/Juice_HitStop.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://juice/Juice_SquashStretch.tscn" id="22"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Flash.tscn" id="23"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Particles.tscn" id="24"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Sound.tscn" id="25"]
+[ext_resource type="PackedScene" path="res://juice/Juice_CameraZoom.tscn" id="26"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Trail.tscn" id="27"]
+[ext_resource type="PackedScene" path="res://juice/Juice_TrailLine.tscn" id="28"]
+[ext_resource type="PackedScene" path="res://juice/Juice_GooglyEyes.tscn" id="29"]
+
+[node name="W3_JuiceBox" type="Node2D" unique_id=1874015583]
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=660480149]
+tile_map_data = PackedByteArray("AADw//v/AAADAAEAAAAtAPv/AAADAAEAAADw//z/AAADAAEAAAAtAPz/AAADAAEAAADw//3/AAADAAEAAAAtAP3/AAADAAEAAADw//7/AAADAAEAAAAtAP7/AAADAAEAAADw////AAADAAEAAAAtAP//AAADAAEAAADw/wAAAAADAAEAAAAtAAAAAAADAAEAAADw/wEAAAADAAEAAAAtAAEAAAADAAEAAADw/wIAAAADAAEAAAAtAAIAAAADAAEAAADw/wMAAAADAAEAAAAtAAMAAAADAAEAAADw/wQAAAADAAEAAAAtAAQAAAADAAEAAADw/wUAAAADAAEAAAAIAAUAAAADAAEAAAAJAAUAAAADAAEAAAAKAAUAAAADAAEAAAAtAAUAAAADAAEAAADw/wYAAAADAAEAAAAtAAYAAAADAAEAAADw/wcAAAADAAEAAAAtAAcAAAADAAEAAADw/wgAAAADAAEAAAACAAgAAAADAAEAAAADAAgAAAADAAEAAAAEAAgAAAADAAEAAAAFAAgAAAADAAEAAAAtAAgAAAADAAEAAADw/wkAAAADAAEAAAAkAAkAAAADAAEAAAAlAAkAAAADAAEAAAAtAAkAAAADAAEAAADw/woAAAADAAEAAAAkAAoAAAADAAEAAAAlAAoAAAADAAEAAAAtAAoAAAADAAEAAADw/wsAAAADAAEAAADx/wsAAAADAAEAAADy/wsAAAADAAEAAADz/wsAAAADAAEAAAD0/wsAAAADAAEAAAD1/wsAAAADAAEAAAD2/wsAAAADAAEAAAD3/wsAAAADAAEAAAD4/wsAAAADAAEAAAD5/wsAAAADAAEAAAD6/wsAAAADAAEAAAD7/wsAAAADAAEAAAD8/wsAAAADAAEAAAD9/wsAAAADAAEAAAD+/wsAAAADAAEAAAD//wsAAAADAAEAAAAAAAsAAAADAAEAAAABAAsAAAADAAEAAAACAAsAAAADAAEAAAADAAsAAAADAAEAAAAEAAsAAAADAAEAAAAFAAsAAAADAAEAAAAGAAsAAAADAAEAAAAHAAsAAAADAAEAAAAIAAsAAAADAAEAAAAJAAsAAAADAAEAAAAKAAsAAAADAAEAAAALAAsAAAADAAEAAAAMAAsAAAADAAEAAAANAAsAAAADAAEAAAAOAAsAAAADAAEAAAAPAAsAAAADAAEAAAAQAAsAAAADAAEAAAARAAsAAAADAAEAAAASAAsAAAADAAEAAAATAAsAAAADAAEAAAAUAAsAAAADAAEAAAAVAAsAAAADAAEAAAAWAAsAAAADAAEAAAAXAAsAAAADAAEAAAAYAAsAAAADAAEAAAAZAAsAAAADAAEAAAAaAAsAAAADAAEAAAAbAAsAAAADAAEAAAAcAAsAAAADAAEAAAAdAAsAAAADAAEAAAAeAAsAAAADAAEAAAAfAAsAAAADAAEAAAAgAAsAAAADAAEAAAAhAAsAAAADAAEAAAAiAAsAAAADAAEAAAAjAAsAAAADAAEAAAAkAAsAAAADAAEAAAAlAAsAAAADAAEAAAAmAAsAAAADAAEAAAAnAAsAAAADAAEAAAAoAAsAAAADAAEAAAApAAsAAAADAAEAAAAqAAsAAAADAAEAAAArAAsAAAADAAEAAAAsAAsAAAADAAEAAAAtAAsAAAADAAEAAAA=")
+tile_set = ExtResource("2")
+
+[node name="Room1" parent="." unique_id=1354238739 instance=ExtResource("6")]
+position = Vector2(-240, -80)
+width_in_tiles = 60
+spawn_x = 3
+spawn_y = 13
+
+[node name="Coin1" parent="Room1" unique_id=1067826836 instance=ExtResource("9")]
+position = Vector2(296, 184)
+
+[node name="Coin2" parent="Room1" unique_id=357027894 instance=ExtResource("9")]
+position = Vector2(312, 184)
+
+[node name="Coin3" parent="Room1" unique_id=745488072 instance=ExtResource("9")]
+position = Vector2(392, 136)
+
+[node name="Coin4" parent="Room1" unique_id=2070651416 instance=ExtResource("9")]
+position = Vector2(408, 136)
+
+[node name="Coin5" parent="Room1" unique_id=2068203687 instance=ExtResource("9")]
+position = Vector2(152, 232)
+
+[node name="Coin6" parent="Room1" unique_id=814350429 instance=ExtResource("9")]
+position = Vector2(168, 232)
+
+[node name="Coin7" parent="Room1" unique_id=1704600662 instance=ExtResource("9")]
+position = Vector2(184, 232)
+
+[node name="Coin8" parent="Room1" unique_id=2058345662 instance=ExtResource("9")]
+position = Vector2(712, 216)
+
+[node name="Coin9" parent="Room1" unique_id=1444791630 instance=ExtResource("9")]
+position = Vector2(728, 216)
+
+[node name="Coin10" parent="Room1" unique_id=809815885 instance=ExtResource("9")]
+position = Vector2(840, 200)
+
+[node name="Enemy1" parent="Room1" unique_id=623312213 instance=ExtResource("10")]
+position = Vector2(504, 240)
+
+[node name="Enemy2" parent="Room1" unique_id=691645627 instance=ExtResource("10")]
+position = Vector2(888, 240)
+
+[node name="Spike3" parent="Room1" unique_id=1119528992 instance=ExtResource("11")]
+position = Vector2(696, 248)
+
+[node name="Spike4" parent="Room1" unique_id=220603175 instance=ExtResource("11")]
+position = Vector2(712, 248)
+
+[node name="Spike5" parent="Room1" unique_id=14834715 instance=ExtResource("11")]
+position = Vector2(728, 248)
+
+[node name="Spike6" parent="Room1" unique_id=1426484119 instance=ExtResource("11")]
+position = Vector2(744, 248)
+
+[node name="Goal" parent="Room1" unique_id=1746293310 instance=ExtResource("12")]
+position = Vector2(936, 240)
+
+[node name="Player" parent="." unique_id=573226474 instance=ExtResource("1")]
+position = Vector2(-184, 159)
+
+[node name="Visual" type="Node2D" parent="Player" unique_id=1577225440]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual" unique_id=1002804474]
+texture = ExtResource("5")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 32)
+
+[node name="Mechanics" type="Node2D" parent="Player" unique_id=1160013837]
+
+[node name="Juice" type="Node2D" parent="Player" unique_id=528486991]
+
+[node name="Juice_ScreenShake" parent="Player/Juice" unique_id=1952533422 instance=ExtResource("20")]
+
+[node name="Juice_HitStop" parent="Player/Juice" unique_id=1088057519 instance=ExtResource("21")]
+duration = 0.12
+timing = 9
+
+[node name="Juice_SquashStretch" parent="Player/Juice" unique_id=670159032 instance=ExtResource("22")]
+
+[node name="Juice_Flash" parent="Player/Juice" unique_id=282024558 instance=ExtResource("23")]
+
+[node name="Juice_Particles" parent="Player/Juice" unique_id=1665281436 instance=ExtResource("24")]
+
+[node name="Juice_Particles_Blood" parent="Player/Juice" unique_id=1500682994 instance=ExtResource("24")]
+style = 3
+amount = 16
+color = 3
+spawn_at = 2
+timing = 8
+
+[node name="Juice_Sound" parent="Player/Juice" unique_id=584131665 instance=ExtResource("25")]
+
+[node name="Juice_Sound_Hit" parent="Player/Juice" unique_id=768168710 instance=ExtResource("25")]
+sound = 1
+timing = 8
+
+[node name="Juice_Sound_EnemyDied" parent="Player/Juice" unique_id=399001381 instance=ExtResource("25")]
+sound = 3
+timing = 9
+
+[node name="Juice_Sound_Coin" parent="Player/Juice" unique_id=1942623031 instance=ExtResource("25")]
+sound = 5
+pitch_mode = 2
+steps = 3
+timing = 10
+
+[node name="Juice_Sound_Hurt" parent="Player/Juice" unique_id=395453875 instance=ExtResource("25")]
+sound = 2
+timing = 2
+
+[node name="Juice_Sound_Clear" parent="Player/Juice" unique_id=536633314 instance=ExtResource("25")]
+sound = 4
+timing = 11
+
+[node name="Juice_CameraZoom" parent="Player/Juice" unique_id=1398274293 instance=ExtResource("26")]
+timing = 11
+
+[node name="Juice_Trail" parent="Player/Juice" unique_id=72101832 instance=ExtResource("27")]
+
+[node name="Juice_TrailLine" parent="Player/Juice" unique_id=1131866354 instance=ExtResource("28")]
+
+[node name="Juice_GooglyEyes" parent="Player/Juice" unique_id=1488802768 instance=ExtResource("29")]
+position = Vector2(0, -9)
+
+[node name="Abilities" type="Node2D" parent="Player" unique_id=2059169590]
+
+[node name="Ability_Melee" parent="Player/Abilities" unique_id=486836771 instance=ExtResource("14")]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2124310099]
+position = Vector2(0, 56)
+script = ExtResource("3")
+mode = 1
+
+[node name="RespawnHandler" parent="." unique_id=905902223 instance=ExtResource("4")]
+
+[node name="ValueSettings_Health" parent="." unique_id=1715442539 instance=ExtResource("7")]
+
+[node name="KeySettings" parent="." unique_id=493489400 instance=ExtResource("8")]
+
+[node name="ClearScreen" parent="." unique_id=564478084 instance=ExtResource("13")]

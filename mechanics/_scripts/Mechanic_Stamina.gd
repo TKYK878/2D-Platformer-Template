@@ -33,7 +33,7 @@ var _stamina: float = 0.0
 var _exhausted: bool = false
 var _jump_drain_mode: bool = false
 
-var _hud: CanvasLayer = null
+var _row: HBoxContainer = null
 var _bar: ProgressBar = null
 
 # 套用滿體力、偵測「只能往前」要不要換成跳躍扣體力模式、視需要生成體力條
@@ -92,27 +92,31 @@ func _has_sibling(script_path: String) -> bool:
 			return true
 	return false
 
-# 建立體力條用的 CanvasLayer，畫面左下角，避免跟 Stats HUD（左上角）疊在一起
+# 在畫面左下角的共用容器加一列體力條，避免跟 Stats HUD（左上角）、其他卡的預設 UI 疊在一起
 func _ensure_hud() -> void:
-	if _hud != null:
+	if _row != null:
 		return
-	_hud = CanvasLayer.new()
-	add_child(_hud)
-	var box := HBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	box.position = Vector2(4, -20)
-	_hud.add_child(box)
+	_row = HBoxContainer.new()
 	var title := Label.new()
 	title.text = "體力"
 	_bar = ProgressBar.new()
 	_bar.custom_minimum_size = Vector2(80, 12)
 	_bar.show_percentage = false
 	_bar.max_value = stamina_seconds
-	box.add_child(title)
-	box.add_child(_bar)
+	_row.add_child(title)
+	_row.add_child(_bar)
+	StatsHud.get_corner(StatsHud.CORNER_BOTTOM_LEFT).add_child(_row)
 
-# 把體力條同步成目前的體力值
+# 把體力公開給 HUD，並把預設體力條同步成目前的體力值；學員的 HUD 有顯示體力時預設體力條讓位
 func _refresh_bar() -> void:
+	HudData.publish(HudData.STAMINA, _stamina, stamina_seconds)
 	if _bar == null:
 		return
 	_bar.value = _stamina
+	_row.visible = not HudData.is_claimed(HudData.STAMINA)
+
+# 卡片被拔掉時，體力不再是顯示來源，左下角的體力條也一起拿掉
+func _exit_tree() -> void:
+	HudData.remove_source(HudData.STAMINA)
+	if is_instance_valid(_row):
+		_row.queue_free()

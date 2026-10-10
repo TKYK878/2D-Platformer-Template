@@ -1,7 +1,7 @@
 extends MechanicBase
 
 # 存活計時：從掛上這張卡開始計時，存活到 target_seconds 就算過關，發出
-# Events.level_cleared。倒數計時 UI 由組件自己生成 CanvasLayer，學員不用擺。
+# Events.level_cleared。倒數計時 UI 由組件自己加到畫面右上角的共用容器，學員不用擺。
 # 拖進 Player → Mechanics 底下就能用，不用連任何線。
 
 ## 存活幾秒後算過關
@@ -16,14 +16,13 @@ signal cleared
 var _elapsed: float = 0.0
 var _cleared: bool = false
 
-var _hud: CanvasLayer = null
 var _label: Label = null
 
-# 視需要生成倒數計時的 UI
+# 視需要生成倒數計時的 UI，把剩餘秒數公開給 HUD
 func _on_setup() -> void:
 	if show_timer:
 		_ensure_hud()
-		_refresh_label()
+	_refresh_label()
 
 # 累計存活時間，達標就發出過關事件，只觸發一次
 func apply(ctx: MoveContext) -> void:
@@ -43,20 +42,24 @@ func on_respawn() -> void:
 	_cleared = false
 	_refresh_label()
 
-# 建立倒數計時用的 CanvasLayer，畫面右上角，避免跟 Stats HUD（左上角）疊在一起
+# 在畫面右上角的共用容器加一行倒數計時，避免跟 Stats HUD（左上角）、其他卡的預設 UI 疊在一起
 func _ensure_hud() -> void:
-	_hud = CanvasLayer.new()
-	add_child(_hud)
-	var box := HBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	box.position = Vector2(-90, 4)
-	_hud.add_child(box)
+	if _label != null:
+		return
 	_label = Label.new()
-	box.add_child(_label)
+	StatsHud.get_corner(StatsHud.CORNER_TOP_RIGHT).add_child(_label)
 
-# 把倒數計時文字同步成剩餘秒數
+# 把剩餘秒數公開給 HUD，並同步預設的倒數計時文字；學員的 HUD 有顯示存活倒數時預設的讓位
 func _refresh_label() -> void:
+	var remaining: float = maxf(0.0, target_seconds - _elapsed)
+	HudData.publish(HudData.SURVIVAL, remaining, target_seconds)
 	if _label == null:
 		return
-	var remaining: float = maxf(0.0, target_seconds - _elapsed)
 	_label.text = "存活 %.1f" % remaining
+	_label.visible = not HudData.is_claimed(HudData.SURVIVAL)
+
+# 卡片被拔掉時，存活倒數不再是顯示來源，右上角的倒數計時也一起拿掉
+func _exit_tree() -> void:
+	HudData.remove_source(HudData.SURVIVAL)
+	if is_instance_valid(_label):
+		_label.queue_free()

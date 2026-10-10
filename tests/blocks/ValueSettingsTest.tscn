@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://tests/blocks/_scripts/ValueSettingsTest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://blocks/ValueSettings.tscn" id="2"]
@@ -8,12 +8,19 @@ script = ExtResource("1")
 
 [node name="ValueSettings_血量" parent="." instance=ExtResource("2")]
 kind = "血量"
+display_name = "HP"
 start_value = 5
 max_value = 5
 show_in_hud = true
 
 [node name="ValueSettings_金幣" parent="." instance=ExtResource("2")]
 kind = "金幣"
+start_value = 0
+max_value = 0
+show_in_hud = false
+
+[node name="ValueSettings_打錯" parent="." instance=ExtResource("2")]
+kind = "生命"
 start_value = 0
 max_value = 0
 show_in_hud = false

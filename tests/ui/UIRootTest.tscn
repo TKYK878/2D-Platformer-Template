@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://hsmnljgg4sa8"]
+
+[ext_resource type="Script" uid="uid://qocx5xh06r6x" path="res://tests/ui/_scripts/UIRootTest.gd" id="1"]
+[ext_resource type="Script" uid="uid://w61x3i18lq1x" path="res://ui/_scripts/UIRoot.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="3"]
+
+[node name="UIRootTest" type="Node2D" unique_id=596210855]
+script = ExtResource("1")
+
+[node name="Ground" type="Sprite2D" parent="." unique_id=1524312886]
+modulate = Color(0.4, 0.35, 0.3, 1)
+position = Vector2(240, 200)
+scale = Vector2(40, 1)
+texture = ExtResource("3")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=685448389]
+position = Vector2(240, 135)
+
+[node name="UIRoot" type="Control" parent="." unique_id=1921495217]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
+mouse_filter = 2
+script = ExtResource("2")
+
+[node name="PanelContainer" type="PanelContainer" parent="UIRoot" unique_id=1553286637]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 40.0
+offset_right = 360.0
+offset_bottom = 230.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UIRoot/PanelContainer" unique_id=55789855]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UIRoot/PanelContainer/VBoxContainer" unique_id=1775663372]
+layout_mode = 2
+text = "標題文字 ABC 123"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="UIRoot/PanelContainer/VBoxContainer" unique_id=483644796]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+value = 60.0
+show_percentage = false
+
+[node name="HSlider" type="HSlider" parent="UIRoot/PanelContainer/VBoxContainer" unique_id=665391753]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.4
+
+[node name="Button1" type="Button" parent="UIRoot/PanelContainer/VBoxContainer" unique_id=495055273]
+layout_mode = 2
+text = "按鈕一"
+
+[node name="Button2" type="Button" parent="UIRoot/PanelContainer/VBoxContainer" unique_id=685636078]
+layout_mode = 2
+text = "按鈕二"
+
+[node name="Override" type="Label" parent="UIRoot/PanelContainer/VBoxContainer" unique_id=1912826600]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+text = "這行有主題覆寫（永遠是紅字）"
+horizontal_alignment = 1

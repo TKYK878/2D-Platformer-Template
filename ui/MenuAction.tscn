@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/MenuAction.gd" id="1"]
+
+[node name="MenuAction" type="Button"]
+offset_right = 60.0
+offset_bottom = 18.0
+text = "繼續遊戲"
+script = ExtResource("1")

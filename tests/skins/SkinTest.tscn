@@ -1,0 +1,103 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/skins/_scripts/SkinTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://tests/skins/SkinTestBlock.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://skins/Skin.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://skins/SkinAnimated.tscn" id="4"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="5"]
+[ext_resource type="Texture2D" path="res://art/blocks.png" id="6"]
+
+[sub_resource type="AtlasTexture" id="Atlas_a"]
+atlas = ExtResource("6")
+region = Rect2(0, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_b"]
+atlas = ExtResource("6")
+region = Rect2(16, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_c"]
+atlas = ExtResource("6")
+region = Rect2(32, 0, 16, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_d"]
+atlas = ExtResource("6")
+region = Rect2(48, 0, 16, 32)
+
+[sub_resource type="SpriteFrames" id="Frames_ok"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_a")}, {"duration": 1.0, "texture": SubResource("Atlas_b")}],
+"loop": true,
+"name": &"平常",
+"speed": 3.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_c")}, {"duration": 1.0, "texture": SubResource("Atlas_d")}],
+"loop": true,
+"name": &"啟動",
+"speed": 6.0
+}]
+
+[sub_resource type="SpriteFrames" id="Frames_typo"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_a")}],
+"loop": true,
+"name": &"平",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("Atlas_c")}],
+"loop": true,
+"name": &"啟動",
+"speed": 5.0
+}]
+
+[node name="SkinTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(3, 3)
+
+[node name="Block1_StaticTint" parent="." instance=ExtResource("2")]
+position = Vector2(-75, 0)
+
+[node name="Skin" parent="Block1_StaticTint" instance=ExtResource("3")]
+scale = Vector2(0.125, 0.125)
+texture_normal = ExtResource("5")
+
+[node name="Block2_StaticActive" parent="." instance=ExtResource("2")]
+position = Vector2(-45, 0)
+
+[node name="Skin" parent="Block2_StaticActive" instance=ExtResource("3")]
+texture_normal = SubResource("Atlas_a")
+texture_active = SubResource("Atlas_c")
+follow_facing = false
+
+[node name="Block3_Animated" parent="." instance=ExtResource("2")]
+position = Vector2(-15, 0)
+
+[node name="SkinAnimated" parent="Block3_Animated" instance=ExtResource("4")]
+sprite_frames = SubResource("Frames_ok")
+
+[node name="Block4_AnimTypo" parent="." instance=ExtResource("2")]
+position = Vector2(15, 0)
+
+[node name="SkinAnimated" parent="Block4_AnimTypo" instance=ExtResource("4")]
+sprite_frames = SubResource("Frames_typo")
+
+[node name="Block5_NoTexture" parent="." instance=ExtResource("2")]
+position = Vector2(45, 0)
+
+[node name="Skin" parent="Block5_NoTexture" instance=ExtResource("3")]
+
+[node name="Block6_TwoSkins" parent="." instance=ExtResource("2")]
+position = Vector2(75, 0)
+
+[node name="Skin" parent="Block6_TwoSkins" instance=ExtResource("3")]
+scale = Vector2(0.125, 0.125)
+texture_normal = ExtResource("5")
+
+[node name="Skin2" parent="Block6_TwoSkins" instance=ExtResource("3")]
+texture_normal = SubResource("Atlas_b")
+
+[node name="LostSkin" parent="." instance=ExtResource("3")]
+position = Vector2(0, 40)
+scale = Vector2(0.125, 0.125)
+texture_normal = ExtResource("5")

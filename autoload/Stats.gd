@@ -16,6 +16,7 @@ var _max_values: Dictionary = {}   # kind(String) -> int，0 代表不限
 var _known_kinds: Array[String] = []
 var _hud_visible: Dictionary = {}  # kind(String) -> bool，沒設定過的種類預設 true
 var _reset_on_death: Dictionary = {}  # kind(String) -> bool，沒設定過的種類預設 true
+var _display_names: Dictionary = {}   # kind(String) -> String，畫面上顯示的名字，沒設定過就顯示種類名稱
 
 # 血量是系統內建的預設種類，其他種類都是第一次用到才出現，初始 0、不限。
 # 用 has() 檢查而不是直接覆蓋：遊戲第一次啟動時，主場景裡 ValueSettings 的 _enter_tree
@@ -45,9 +46,10 @@ func add(kind: String, amount: int) -> void:
 	if kind == HEALTH_KIND and new_value <= 0:
 		_kill_player()
 
-# 場景設定節點 ValueSettings 用這個套用初始值、上限、要不要顯示在 HUD、死亡要不要退回重生點，
+# 場景設定節點 ValueSettings 用這個套用初始值、上限、要不要顯示在 HUD、死亡要不要退回重生點、畫面上顯示的名字（空白＝種類名稱），
 # 搶在同場景其他節點用到這個數值之前生效（ValueSettings 在 _enter_tree 呼叫，比一般 _ready 早）
-func configure(kind: String, start_value: int, max_value: int, show_in_hud: bool, reset_on_death: bool = true) -> void:
+func configure(kind: String, start_value: int, max_value: int, show_in_hud: bool, reset_on_death: bool = true,
+		display_name: String = "") -> void:
 	_check_typo(kind)
 	_max_values[kind] = max_value
 	var clamped := start_value
@@ -57,6 +59,7 @@ func configure(kind: String, start_value: int, max_value: int, show_in_hud: bool
 	_values[kind] = clamped
 	_hud_visible[kind] = show_in_hud
 	_reset_on_death[kind] = reset_on_death
+	_display_names[kind] = display_name
 	configured.emit(kind)
 
 # 查詢目前數值
@@ -82,6 +85,11 @@ func consume(kind: String, n: int) -> bool:
 # 查詢某個種類是否允許顯示在 HUD，沒被 ValueSettings 設定過的種類預設允許
 func is_hud_visible(kind: String) -> bool:
 	return _hud_visible.get(kind, true)
+
+# 查詢某個種類在畫面上要顯示的名字，ValueSettings 沒設定 display_name 就是種類名稱本身
+func get_display_name(kind: String) -> String:
+	var shown: String = _display_names.get(kind, "")
+	return shown if shown != "" else kind
 
 # 查詢某個種類死亡時要不要退回重生點當下的數值，沒被 ValueSettings 設定過的種類預設要
 func is_reset_on_death(kind: String) -> bool:

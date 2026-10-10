@@ -87,15 +87,21 @@ Claude Code 在這個專案裡的所有對話回覆、進度回報、驗收結�
 
 名稱的整理與近似比對一律呼叫共用工具 `NameCheck`，不要在組件裡各寫一份。
 目前的打字欄位：`ValueSettings.kind`（數值種類，見 `documents/01a_shared_systems.md` §4.1）、
-`Button.tag`、`Pickup.custom_kind`（種類選「自訂」才出現）、`Door.custom_kind`（開門方式選「自訂數值」才出現）（見 `documents/01c_blocks_and_abilities.md`）。新增打字欄位時要補進這份清單。
+`Button.tag`、`Pickup.custom_kind`（種類選「自訂」才出現）、`Door.custom_kind`（開門方式選「自訂數值」才出現）（見 `documents/01c_blocks_and_abilities.md`）、`Juice_TextPopup.custom_kind`（種類選「自訂」才出現，見 `documents/03_game_feel_juice.md` §3.2）。新增打字欄位時要補進這份清單。
 
 **顯示文字例外（講師決定）**：`ClearScreen.message`（過關畫面最下面製作者選填的一行字）是純顯示用的文字，不拿去比對任何東西，
 所以只需要做到「不打字也能用（空白就不顯示）」和「去掉頭尾空白」，不需要編輯器檢查與近似建議。
+`ValueSettings.display_name`（數值在 HUD、跳字上顯示的名字，空白就顯示 `kind`）同屬顯示文字例外（見 `documents/progress.md` U166）。
 
 **資源欄位例外（講師決定）**：`Juice_Sound.custom_sound`（`AudioStream`）讓學員把自己的音檔從檔案系統拖進欄位，屬於「拖」而不是打字。
 只在下拉選「自訂」時出現；空白時編輯器黃色驚嘆號＋執行時中文警告，並改用預設值照常運作（見 `documents/03_game_feel_juice.md` §3.1）。
 `Juice_Particles.custom_particles`（`PackedScene`）同一套規則：學員把自己做的粒子場景拖進欄位，只在樣式選「自訂場景」時出現，
 空白或根節點不是 `CPUParticles2D` 時黃色驚嘆號＋中文警告，改用塵土照常運作。
+`Juice_BGM.music`（`AudioStream`）同屬資源欄位例外：學員把自己的音樂檔拖進來；沒有內建曲目，空白時黃色驚嘆號＋執行時中文警告、不播放（見 `documents/progress.md` U154）。
+`UISettings.hud_scene`／`pause_menu_scene`／`clear_screen_scene`（`PackedScene`）同屬資源欄位例外：學員把從 `ui/templates/` 再製改好的場景拖進來；
+空白就用預設的（不警告）；最上層不是 `UIRoot`、種類拖錯欄位、跟直接放進關卡的同一種畫面重複時，黃色驚嘆號＋執行時中文警告，改用預設的（見 `documents/04_skin_and_ui.md` §3.1）。
+`Skin.texture_normal`／`texture_active`（`Texture2D`）同屬資源欄位例外：學員把圖片拖進來；`texture_normal` 空白時黃色驚嘆號＋執行時中文警告，零件照舊顯示色塊；
+`texture_active` 空白就把平常的圖變色，不警告（見 `documents/04_skin_and_ui.md` §6.1）。
 
 ### 5. 組件之間不准打架
 
@@ -109,7 +115,7 @@ Claude Code 在這個專案裡的所有對話回覆、進度回報、驗收結�
 | 對象 | 規範 | 範例 |
 |---|---|---|
 | 檔案／節點名 | 英文 PascalCase | `Mechanic_GravityFlip.tscn` |
-| 組件檔案位置 | `.tscn` 放外層給學員拖，`.gd` 放同層 `_scripts/`（`mechanics/`、`juice/`、`blocks/`、`abilities/`，含 `_extra/`；見 `documents/00_foundation.md` §1） | `mechanics/Mechanic_GravityFlip.tscn`<br>`mechanics/_scripts/Mechanic_GravityFlip.gd` |
+| 組件檔案位置 | `.tscn` 放外層給學員拖，`.gd` 放同層 `_scripts/`（`mechanics/`、`juice/`、`blocks/`、`abilities/`、`ui/`、`skins/`，含 `_extra/`；見 `documents/00_foundation.md` §1） | `mechanics/Mechanic_GravityFlip.tscn`<br>`mechanics/_scripts/Mechanic_GravityFlip.gd` |
 | 腳本內部變數、函式 | 英文 snake_case | `_on_landed`, `impact_force` |
 | `@export` 欄位 | 英文 snake_case + 上方 `##` 中文 doc comment | `## 影響跳躍高度，數值越大跳越高`<br>`@export_range(0.0, 2.0) var strength` |
 | `@export_enum` 選項字串 | **繁體中文** | `@export_enum("跳躍時", "落地時")` |
@@ -176,7 +182,8 @@ godot --headless --path . res://_tests/SmokeTest.tscn
    - `documents/01c_blocks_and_abilities.md` — 零件（`blocks/`）與攻擊能力（`abilities/`）
    - `documents/01d_showroom_and_toybox.md` — 展示間與玩具箱
 3. W3：`documents/03_game_feel_juice.md` — 手感果汁（Juice 組件、表現層 API、音效素材）
-4. 之後的週次規格會在該週開課前才提供
+4. W4：`documents/04_skin_and_ui.md` — 套皮與 UI（UI 範本與通用顯示零件、零件換皮、角色動畫、地形圖塊）
+5. 之後的週次規格會在該週開課前才提供
 
 ---
 
@@ -187,7 +194,7 @@ godot --headless --path . res://_tests/SmokeTest.tscn
 - **一次只做一個單元**，做完就停，等使用者說「繼續」才做下一個。只改這個單元需要的檔案，不順手重構別的地方。
 - **規格不清楚、或需要做決定時，停下來問**，不要自己猜。講師的決定寫進 progress.md 該單元底下（`　　→ 講師決定：…`）。
 - 系統層級的單元（自動載入、跨組件機制）要附一個 `tests/` 底下的測試場景，讓使用者按 F6 手動驗證。
-  `tests/` 依類別分資料夾（`systems/`、`mechanics/`、`mechanics/_extra/`、`blocks/`、`abilities/`、`juice/`、`juice/_extra/`），
+  `tests/` 依類別分資料夾（`systems/`、`mechanics/`、`mechanics/_extra/`、`blocks/`、`abilities/`、`juice/`、`juice/_extra/`、`ui/`、`skins/`），
   `.tscn` 放在類別資料夾，`.gd` 放在同層 `_scripts/`；場景腳本用 `print("[測試] …")` 印出操作步驟與預期結果。
 - **做完回報**：做了什麼（1～2 句）、改了哪些檔案、怎麼驗證（哪個場景、做什麼、應該看到什麼）、已知限制。
 - **使用者在編輯器驗收通過才 commit**，同一批把 progress.md 該單元打勾（`- [ ]` → `- [x]`）。

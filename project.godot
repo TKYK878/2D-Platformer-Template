@@ -24,7 +24,9 @@ InputRouter="*res://autoload/InputRouter.gd"
 JuiceSwitch="*res://autoload/JuiceSwitch.gd"
 RespawnMemory="*res://autoload/RespawnMemory.gd"
 Stats="*res://autoload/Stats.gd"
+HudData="*res://autoload/HudData.gd"
 StatsHud="*res://autoload/StatsHud.gd"
+PauseMenu="*res://autoload/PauseMenu.gd"
 
 [display]
 

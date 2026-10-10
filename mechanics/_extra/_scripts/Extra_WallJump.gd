@@ -35,7 +35,7 @@ func on_respawn() -> void:
 # 站在地面上、沒貼牆、或還在冷卻就不攔截，讓 Player 自己的跳躍照常運作；
 # 否則往牆壁反方向蹬出去，同時往上跳
 func _on_jump_pressed() -> bool:
-	if player.is_on_ground() or not player.is_on_wall() or _cooldown_left > 0.0:
+	if player.can_ground_jump() or not player.is_on_wall() or _cooldown_left > 0.0:
 		return false
 	var normal: Vector2 = player.get_wall_normal()
 	wall_jumped.emit()
