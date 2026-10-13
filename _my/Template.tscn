@@ -56,7 +56,6 @@ input_type = 4
 action_name = &"toggle_size"
 small_scale = 0.475
 big_scale = 1.45
-size_affects_stats = false
 
 [node name="Extra_Molt" parent="Player/Mechanics" unique_id=445892033 instance=ExtResource("10_pinwj")]
 script = ExtResource("12_gad5q")

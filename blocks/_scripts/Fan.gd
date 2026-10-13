@@ -7,7 +7,7 @@ extends Area2D
 @export_enum("上", "下", "左", "右") var direction: int = 0
 
 ## 風力大小，數值越大吹得越用力
-@export_range(0, 800.0) var force: float = 300.0
+@export_range(50, 800.0) var force: float = 300.0
 
 ## 影響範圍，單位是格（1 格 = 16 像素），從風扇本體往吹的方向延伸
 @export_range(1, 20) var range_tiles: int = 5
