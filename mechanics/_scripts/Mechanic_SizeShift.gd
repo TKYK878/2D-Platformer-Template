@@ -19,8 +19,24 @@ extends MechanicBase
 ## 變大時的體型倍率
 @export_range(1.0, 2.5) var big_scale: float = 1.8
 
-## 體型是否連動推力、擊退、跳躍力
+@export_group("體型連動")
+## 體型是否連動推力、擊退、跳躍力（不勾的話，下面的拉桿都沒有作用）
 @export var size_affects_stats: bool = true
+
+## 變大時的跳躍力倍率，1 是正常，小於 1 跳得比較低
+@export_range(0.2, 2.0, 0.05) var big_jump: float = 0.7
+
+## 變小時的跳躍力倍率，1 是正常，大於 1 跳得比較高
+@export_range(0.2, 2.0, 0.05) var small_jump: float = 1.3
+
+## 變大時推箱子的力氣倍率，1 是正常，越大越推得動
+@export_range(0.5, 3.0, 0.05) var big_push: float = 1.6
+
+## 變大時被敵人撞飛的程度，1 是正常，越小越不容易被撞飛
+@export_range(0.0, 3.0, 0.05) var big_knockback: float = 0.6
+
+## 變小時被敵人撞飛的程度，1 是正常，越大越容易被撞飛
+@export_range(0.0, 3.0, 0.05) var small_knockback: float = 1.6
 
 ## 變大之後發出
 signal grew
@@ -130,16 +146,16 @@ func _would_overlap_terrain(target_factor: float) -> bool:
 	var space_state: PhysicsDirectSpaceState2D = player.get_world_2d().direct_space_state
 	return not space_state.intersect_shape(query, 1).is_empty()
 
-# 依目前體型調整推力、擊退、跳躍力倍率：大隻推得動箱子、比較不容易被擊退、跳得比較低；
+# 依目前體型調整推力、擊退、跳躍力倍率（數值照「體型連動」群組的拉桿）：預設大隻推得動箱子、比較不容易被擊退、跳得比較低；
 # 小隻跳得比較高、比較容易被敵人撞飛
 func _apply_stat_scales(ctx: MoveContext) -> void:
 	var f: float = player.size_factor
 	if f > 1.0 and big_scale > 1.0:
 		var t := (f - 1.0) / (big_scale - 1.0)
-		ctx.push_scale *= lerpf(1.0, 1.6, t)
-		ctx.knockback_scale *= lerpf(1.0, 0.6, t)
-		ctx.jump_scale *= lerpf(1.0, 0.7, t)
+		ctx.push_scale *= lerpf(1.0, big_push, t)
+		ctx.knockback_scale *= lerpf(1.0, big_knockback, t)
+		ctx.jump_scale *= lerpf(1.0, big_jump, t)
 	elif f < 1.0 and small_scale < 1.0:
 		var t := (1.0 - f) / (1.0 - small_scale)
-		ctx.jump_scale *= lerpf(1.0, 1.3, t)
-		ctx.knockback_scale *= lerpf(1.0, 1.6, t)
+		ctx.jump_scale *= lerpf(1.0, small_jump, t)
+		ctx.knockback_scale *= lerpf(1.0, small_knockback, t)

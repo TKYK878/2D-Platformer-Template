@@ -35,12 +35,15 @@ zoom = Vector2(0.65, 0.65)
 
 [node name="Fan_Up" parent="." unique_id=1608835164 instance=ExtResource("6")]
 position = Vector2(-90, 95)
+mode = 1
+speed = 20.0
 range_tiles = 6
 
 [node name="Fan_Side" parent="." unique_id=1409057980 instance=ExtResource("6")]
 position = Vector2(0, 95)
 direction = 3
-force = 250.0
+mode = 1
+speed = 0.1
 range_tiles = 8
 
 [node name="Button_Toggle" parent="." unique_id=818118675 instance=ExtResource("5")]
@@ -49,6 +52,20 @@ mode = 1
 
 [node name="Fan_Toggle" parent="." unique_id=1156589848 instance=ExtResource("6")]
 position = Vector2(100, 95)
-force = 350.0
+mode = 1
+speed = 0.0
 range_tiles = 6
 start_on = false
+
+[node name="Fan_SlowUp" parent="." unique_id=1734920561 instance=ExtResource("6")]
+position = Vector2(-200, 95)
+mode = 1
+speed = 0.1
+range_tiles = 6
+
+[node name="Fan_FixedSide" parent="." unique_id=1288410397 instance=ExtResource("6")]
+position = Vector2(150, 95)
+direction = 3
+mode = 1
+speed = 2.0
+range_tiles = 4

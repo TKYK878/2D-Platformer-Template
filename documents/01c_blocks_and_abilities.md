@@ -73,7 +73,7 @@
 |---|---|---|---|---|---|
 | 門 | `Door.tscn` | 實心 | `open_mode`（由訊號控制／鑰匙／金幣數量／自訂數值）、`custom_kind`（自訂的數值種類名稱，選「自訂數值」才出現，可打字）、`required_amount`（需要數量）、`consume`（打開時消耗）、`start_open`（一開始是開的） | `activate`、`deactivate`、`toggle` | `opened`、`closed` |
 | 移動平台 | `MovingPlatform.tscn` | 會動 | `direction`（水平／垂直）、`distance_tiles`（移動格數）、`speed`（速度）、`start_active`（一開始就在動） | `activate`、`deactivate`、`toggle` | 無 |
-| 風扇 | `Fan.tscn` | 感應 | `direction`（上／下／左／右）、`force`（力道）、`range_tiles`（範圍格數）、`start_on`（一開始就開） | `activate`、`deactivate`、`toggle` | 無 |
+| 風扇 | `Fan.tscn` | 感應 | `direction`（上／下／左／右，整個風扇旋轉也會跟著轉）、`mode`（吹法：越吹越快／固定速度）、`force`（力道，越吹越快才出現）、`speed`（每秒推幾格，固定速度才出現）、`friction_enabled`（風裡也有摩擦力，越吹越快才出現）、`range_tiles`（範圍格數）、`start_on`（一開始就開） | `activate`、`deactivate`、`toggle` | 無 |
 | 推力器（講師決定 U162） | `Pusher.tscn` | 無（範圍模式用感應區） | `target`（玩家／範圍內全部／範圍內的玩家／範圍內的箱子／範圍內的敵人）、`range_width`／`range_height`（範圍格數，選範圍才出現）、`direction`（八方向＋自訂）、`custom_x`／`custom_y`（-1～1 拉桿，選自訂才出現）、`strength`、`push_mode`（疊加在原本的速度上／先停住再推）、`on_gravity_flip`（跟著翻轉／不翻轉，只影響玩家） | `activate`（接任意參數） | `pushed(body)` |
 
 - 門開啟時關閉碰撞、變半透明。鑰匙、金幣與自訂數值模式由玩家碰到門時檢查 `Stats`（見 `01a_shared_systems.md` §4）。

@@ -319,10 +319,12 @@ func _emit_ceiling_hit() -> void:
 func flip_gravity() -> void:
 	up_direction = -up_direction
 
-# 施加一次性衝量，擊退、彈跳這類卡用這個
-func add_impulse(v: Vector2) -> void:
+# 施加一次性衝量，擊退、彈跳這類卡用這個。keep_friction 傳 true 的話地面摩擦力照常算
+# （不給衝量保護期），風扇勾「風裡也有摩擦力」時用這個
+func add_impulse(v: Vector2, keep_friction: bool = false) -> void:
 	velocity += v
-	_impulse_grace_left = _IMPULSE_GRACE_DURATION
+	if not keep_friction:
+		_impulse_grace_left = _IMPULSE_GRACE_DURATION
 
 # 縮放角色大小，變大變小卡用這個。不縮放整個物理節點（CharacterBody2D 的 scale
 # 對碰撞判定不可靠），只縮放視覺節點，碰撞形狀直接改尺寸；

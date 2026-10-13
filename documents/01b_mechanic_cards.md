@@ -289,6 +289,9 @@ group 定義）。
 - 大隻：`ctx.push_scale` 提高（推得動箱子）、`ctx.knockback_scale` 降低、`ctx.jump_scale` 降低
 - 小隻：`ctx.jump_scale` 提高、`ctx.knockback_scale` 提高（容易被敵人撞飛）
 
+倍率放在 `@export_group("體型連動")` 的拉桿（U200）：`big_jump`（0.7）、`small_jump`（1.3）、`big_push`（1.6）、
+`big_knockback`（0.6）、`small_knockback`（1.6），括號內為預設值＝原本寫死的數字。體型在中間時從 1 線性變到拉桿的值。
+
 事件：`grew`、`shrank`、`grow_canceled`
 
 ### 規則卡

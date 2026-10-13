@@ -197,7 +197,7 @@ W3 的 SquashStretch 等組件透過 `player.visual` 操作，所以換皮後仍
 
 ```gdscript
 func flip_gravity() -> void          # 重力翻轉
-func add_impulse(v: Vector2) -> void # 施加瞬間衝量（後座力、彈跳）
+func add_impulse(v: Vector2, keep_friction: bool = false) -> void # 施加瞬間衝量（後座力、彈跳）；keep_friction＝不給衝量保護期，地面摩擦力照算
 func set_size_factor(f: float) -> void
 func take_damage(amount: float = 1.0) -> void
 func kill() -> void
