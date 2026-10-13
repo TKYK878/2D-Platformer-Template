@@ -196,3 +196,7 @@ func _draw() -> void:
 		return
 	SignalLines.draw(self, opened)
 	SignalLines.draw(self, closed)
+
+
+func _on_button_turned_off() -> void:
+	pass # Replace with function body.

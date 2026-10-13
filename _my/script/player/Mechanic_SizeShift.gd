@@ -148,7 +148,7 @@ func _apply_stat_scales(ctx: MoveContext) -> void:
 		var t := (f - 1.0) / (big_scale - 1.0)
 		ctx.push_scale *= lerpf(1.0, 1.6, t)
 		ctx.knockback_scale *= lerpf(1.0, 0.6, t)
-		ctx.jump_scale *= lerpf(1.0, 0.7, t)
+		ctx.jump_scale *= lerpf(1.0, 0.75, t)
 	elif f < 1.0 and small_scale < 1.0:
 		var t := (1.0 - f) / (1.0 - small_scale)
 		ctx.jump_scale *= lerpf(1.0, 1.3, t)
