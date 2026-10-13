@@ -7,9 +7,20 @@ extends Node
 
 const _DANGEROUS_METHODS := ["queue_free", "free", "set_script"]
 
-# 等一幀讓所有 signal_source 零件都進場，再開始掃描
+var _checked_scene_id: int = 0   # 已經檢查過的場景，同一個場景不檢查兩次
+
+# 等一幀讓所有 signal_source 零件都進場，再開始掃描；之後換場景（標題 → 關卡）也檢查新場景
 func _ready() -> void:
+	get_tree().scene_changed.connect(_check_scene)
+	_check_scene()
+
+# 等一幀讓場景裡的零件都進場，目前場景還沒檢查過就檢查一次
+func _check_scene() -> void:
 	await get_tree().process_frame
+	var scene := get_tree().current_scene
+	if scene == null or scene.get_instance_id() == _checked_scene_id:
+		return
+	_checked_scene_id = scene.get_instance_id()
 	_check_missing_targets()
 	_check_live_connections()
 

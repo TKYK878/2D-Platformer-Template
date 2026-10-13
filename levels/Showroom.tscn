@@ -62,7 +62,7 @@ offset_left = 1280.0
 offset_top = 120.0
 offset_right = 1360.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "按鈕"
 
@@ -74,7 +74,7 @@ offset_left = 1376.0
 offset_top = 120.0
 offset_right = 1456.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "按鍵觸發器（按1）"
 
@@ -84,13 +84,14 @@ pair = NodePath("../Show_Portal_B")
 
 [node name="Show_Portal_B" parent="." instance=ExtResource("9")]
 position = Vector2(1552, 144)
+pair = NodePath("../Show_Portal_A")
 
 [node name="Label_Portal" type="Label" parent="."]
 offset_left = 1472.0
 offset_top = 120.0
 offset_right = 1552.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "傳送門"
 
@@ -102,7 +103,7 @@ offset_left = 1568.0
 offset_top = 120.0
 offset_right = 1648.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "重生點"
 
@@ -116,7 +117,7 @@ offset_left = 1664.0
 offset_top = 120.0
 offset_right = 1744.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "終點"
 
@@ -128,7 +129,7 @@ offset_left = 1760.0
 offset_top = 120.0
 offset_right = 1840.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "門"
 
@@ -142,7 +143,7 @@ offset_left = 1856.0
 offset_top = 120.0
 offset_right = 1936.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "移動平台"
 
@@ -155,7 +156,7 @@ offset_left = 1952.0
 offset_top = 120.0
 offset_right = 2032.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "風扇"
 
@@ -167,7 +168,7 @@ offset_left = 2048.0
 offset_top = 120.0
 offset_right = 2128.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "崩塌地板"
 
@@ -179,7 +180,7 @@ offset_left = 2144.0
 offset_top = 120.0
 offset_right = 2224.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "單向平台"
 
@@ -191,7 +192,7 @@ offset_left = 2240.0
 offset_top = 120.0
 offset_right = 2320.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "岩漿"
 
@@ -203,7 +204,7 @@ offset_left = 2336.0
 offset_top = 120.0
 offset_right = 2416.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "可破壞方塊"
 
@@ -215,7 +216,7 @@ offset_left = 2432.0
 offset_top = 120.0
 offset_right = 2512.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "開關方塊"
 
@@ -227,7 +228,7 @@ offset_left = 2528.0
 offset_top = 120.0
 offset_right = 2608.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "箱子"
 
@@ -239,7 +240,7 @@ offset_left = 2624.0
 offset_top = 120.0
 offset_right = 2704.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "道具"
 
@@ -251,7 +252,7 @@ offset_left = 2720.0
 offset_top = 120.0
 offset_right = 2800.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "彈射台"
 
@@ -263,7 +264,7 @@ offset_left = 2816.0
 offset_top = 120.0
 offset_right = 2896.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "尖刺"
 
@@ -275,7 +276,7 @@ offset_left = 2912.0
 offset_top = 120.0
 offset_right = 2992.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "笨敵人"
 
@@ -293,7 +294,7 @@ offset_left = 3020.0
 offset_top = 120.0
 offset_right = 3220.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "箱子壓住按鈕 → 門開"
 
@@ -311,7 +312,7 @@ offset_left = 3228.0
 offset_top = 120.0
 offset_right = 3428.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "按鈕 → 移動平台"
 
@@ -330,7 +331,7 @@ offset_left = 3452.0
 offset_top = 120.0
 offset_right = 3652.0
 offset_bottom = 140.0
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 12
 horizontal_alignment = 1
 text = "按 E → 風扇吹起"
 

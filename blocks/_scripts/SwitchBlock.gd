@@ -12,12 +12,12 @@ const _RED := Color(0.85, 0.25, 0.25, 1)
 const _BLUE := Color(0.25, 0.45, 0.9, 1)
 
 @onready var _shape: CollisionShape2D = $Body/CollisionShape2D
-@onready var _visual: ColorRect = $Visual
 @onready var _detector: Area2D = $Detector
 
 var _active: bool = true
 var _player_overlapping: bool = false
 var _pending_activate: bool = false
+var _skin: SkinLink = null
 
 # 開關世界卡用這個切換方塊是不是實心；玩家正站在裡面時，開啟會延後到玩家離開再套用
 func set_active(active: bool) -> void:
@@ -28,10 +28,12 @@ func set_active(active: bool) -> void:
 	_active = active
 	_apply_state()
 
-# 依顏色加入對應的 group、換外觀顏色，設定碰撞層／遮罩，套用一開始的實心狀態
+# 依顏色加入對應的 group、換外觀顏色，設定碰撞層／遮罩，套用一開始的實心狀態；底下有皮就換上皮
 func _ready() -> void:
 	add_to_group("switch_red" if color == _COLOR_RED else "switch_blue")
-	_visual.color = _RED if color == _COLOR_RED else _BLUE
+	var visual: ColorRect = $Visual
+	visual.color = _RED if color == _COLOR_RED else _BLUE
+	_skin = SkinLink.new(self, visual)
 	_detector.collision_layer = 0
 	_detector.collision_mask = Layers.PLAYER
 	_detector.body_entered.connect(_on_detector_entered)
@@ -53,7 +55,7 @@ func _on_detector_exited(body: Node) -> void:
 		_active = true
 		_apply_state()
 
-# 把目前的開關狀態套用到碰撞與外觀上
+# 把目前的開關狀態套用到碰撞與外觀上（關掉時藏起來，有皮就換皮的樣子）
 func _apply_state() -> void:
 	_shape.set_deferred("disabled", not _active)
-	_visual.visible = _active
+	_skin.show_hidden(not _active)

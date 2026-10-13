@@ -80,6 +80,19 @@ func get_corner(corner: int) -> VBoxContainer:
 	_corners[corner] = box
 	return box
 
+# 換場景時呼叫：預設 HUD 整個拿掉（上一個場景多生的列、出現過的紀錄一起清掉），新場景用到時再重新生；
+# 角落容器裡卡片放的東西也清掉（卡片已經跟著舊場景不見了）
+func reset_for_new_scene() -> void:
+	if _hud != null:
+		_hud.queue_free()
+	_hud = null
+	_rows_box = null
+	_rows.clear()
+	_seen.clear()
+	for box in _corners.values():
+		for child in box.get_children():
+			child.queue_free()
+
 # 第一次真的需要顯示東西時，把範本生出來放進自己的 CanvasLayer；範本裡每一列先藏起來，記下是哪個種類
 func _ensure_hud() -> void:
 	if _hud != null:

@@ -25,6 +25,8 @@ signal defeated
 
 const _GRAVITY := 980.0
 const _STUN_DURATION := 0.25
+const _ANIM_HURT := "受傷"
+const _ANIM_DIE := "死亡"
 
 @onready var _hurtbox: Area2D = $Hurtbox
 @onready var _ledge_check_left: RayCast2D = $LedgeCheckLeft
@@ -36,6 +38,8 @@ var _stun_time_left: float = 0.0
 var _start_position: Vector2 = Vector2.ZERO
 var _defeated: bool = false
 var _hold_time_left: float = 0.0
+var _skin: SkinLink = null
+var _life: int = 0  # 每次復活加一，讓上一條命排好的「死亡動畫播完再藏起來」失效
 
 # 回傳這個敵人是不是已經被打倒了，攻擊組件用這個決定要不要停手
 func is_defeated() -> bool:
@@ -54,7 +58,7 @@ func add_impulse(v: Vector2) -> void:
 	velocity += v
 	_stun_time_left = _STUN_DURATION
 
-# 被攻擊打到：扣血並被擊退一下，歸零時消失
+# 被攻擊打到：扣血並被擊退一下（皮播「受傷」），歸零時消失
 func take_hit(hit_damage: int, knockback: Vector2, source: Node) -> void:
 	Events.hit.emit(self, source)
 	_health_left -= maxi(hit_damage, 1)
@@ -62,6 +66,8 @@ func take_hit(hit_damage: int, knockback: Vector2, source: Node) -> void:
 	_stun_time_left = _STUN_DURATION
 	if _health_left <= 0:
 		_defeat()
+	elif not _defeated:
+		_skin.play(_ANIM_HURT)
 
 # 被打倒：藏起來、關掉碰撞與傷害判定、停止巡邏（不刪除節點，重生時才能復活）
 func _defeat() -> void:
@@ -78,6 +84,8 @@ func reset() -> void:
 	global_position = _start_position
 	velocity = Vector2.ZERO
 	_direction = 1
+	_skin.set_facing(false)
+	_skin.reset_anim()
 	_health_left = health
 	_stun_time_left = 0.0
 	_hold_time_left = 0.0
@@ -86,19 +94,32 @@ func reset() -> void:
 			child.on_reset()
 	if _defeated:
 		_defeated = false
+		_life += 1
 		add_to_group("enemy")
 		_set_alive(true)
 
-# 切換「活著」的狀態：看不看得見、有沒有碰撞、會不會傷害玩家、會不會動
+# 切換「活著」的狀態：看不看得見、有沒有碰撞、會不會傷害玩家、會不會動。
+# 死掉時皮有「死亡」動畫就先播完再藏起來（這段時間已經沒有碰撞、不會傷人）
 func _set_alive(alive: bool) -> void:
-	visible = alive
+	var die_length := 0.0 if alive else _skin.anim_length(_ANIM_DIE)
+	if die_length > 0.0:
+		_skin.play(_ANIM_DIE)
+		var life := _life
+		get_tree().create_timer(die_length).timeout.connect(func():
+			if life == _life and _defeated:
+				visible = false
+		)
+	else:
+		visible = alive
 	$CollisionShape2D.set_deferred("disabled", not alive)
 	_hurtbox.set_deferred("monitoring", alive)
 	set_physics_process(alive)
 
-# 加入 enemy group，設定碰撞層／遮罩、Hurtbox，套用一開始的血量
+# 加入 enemy group，設定碰撞層／遮罩、Hurtbox，套用一開始的血量；底下有皮就換上皮
 func _ready() -> void:
 	add_to_group("enemy")
+	_skin = SkinLink.new(self, $Visual)
+	_skin.set_facing(_direction < 0)
 	_health_left = health
 	_start_position = global_position
 	collision_layer = Layers.ENEMY
@@ -149,6 +170,7 @@ func _has_ground_ahead() -> bool:
 	ray.force_raycast_update()
 	return ray.is_colliding()
 
-# 反轉巡邏方向
+# 反轉巡邏方向，皮跟著翻面
 func _turn_around() -> void:
 	_direction *= -1
+	_skin.set_facing(_direction < 0)

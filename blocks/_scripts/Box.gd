@@ -14,9 +14,11 @@ const _HEAVY_MASS := 4.0
 
 var _start_position: Vector2 = Vector2.ZERO
 
-# 依重量套用質量，鎖住旋轉讓箱子不會被撞得團團轉，加入 box group 讓其他系統辨識
+# 依重量套用質量，鎖住旋轉讓箱子不會被撞得團團轉，加入 box group 讓其他系統辨識；底下有皮就換上皮
+#（箱子沒有狀態變化，不用留著 SkinLink）
 func _ready() -> void:
 	add_to_group("box")
+	SkinLink.new(self, $Visual)
 	mass = _LIGHT_MASS if weight == 0 else _HEAVY_MASS
 	lock_rotation = true
 	collision_layer = Layers.BOX

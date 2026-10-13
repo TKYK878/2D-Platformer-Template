@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/ui/_scripts/StylePresetTest.gd" id="1"]
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="2"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://ui/VolumeSlider.tscn" id="4"]
+
+[node name="StylePresetTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Sky" type="ColorRect" parent="."]
+offset_right = 480.0
+offset_bottom = 270.0
+color = Color(0.45, 0.7, 0.9, 1)
+
+[node name="Hill" type="ColorRect" parent="."]
+offset_top = 170.0
+offset_right = 480.0
+offset_bottom = 270.0
+color = Color(0.35, 0.6, 0.3, 1)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(240, 135)
+
+[node name="UIRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
+mouse_filter = 2
+script = ExtResource("2")
+
+[node name="Center" type="CenterContainer" parent="UIRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="UIRoot/Center"]
+layout_mode = 2
+
+[node name="List" type="VBoxContainer" parent="UIRoot/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Title" parent="UIRoot/Center/Panel/List" instance=ExtResource("3")]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "風格測試"
+horizontal_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="UIRoot/Center/Panel/List"]
+custom_minimum_size = Vector2(160, 12)
+layout_mode = 2
+value = 60.0
+show_percentage = false
+
+[node name="Volume" parent="UIRoot/Center/Panel/List" instance=ExtResource("4")]
+layout_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="UIRoot/Center/Panel/List"]
+layout_mode = 2
+alignment = 1
+
+[node name="Normal" type="Button" parent="UIRoot/Center/Panel/List/Buttons"]
+layout_mode = 2
+text = "按鈕"
+
+[node name="Other" type="Button" parent="UIRoot/Center/Panel/List/Buttons"]
+layout_mode = 2
+text = "另一顆"
+
+[node name="Disabled" type="Button" parent="UIRoot/Center/Panel/List/Buttons"]
+layout_mode = 2
+disabled = true
+text = "停用"
+
+[node name="Hint" parent="UIRoot/Center/Panel/List" instance=ExtResource("3")]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Q／W／E 換風格、1～5 換配色"
+horizontal_alignment = 1

@@ -1,0 +1,460 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="1"]
+[ext_resource type="TileSet" uid="uid://6xyxoqkb30in" path="res://art/default_tile.tres" id="2"]
+[ext_resource type="Script" uid="uid://ddmv38ww06tgv" path="res://levels/_shared/CameraRig.gd" id="3"]
+[ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://blocks/Room.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://blocks/ValueSettings.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://blocks/KeySettings.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://blocks/Pickup.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://blocks/Spike.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://blocks/Goal.tscn" id="12"]
+[ext_resource type="PackedScene" path="res://blocks/ClearScreen.tscn" id="13"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://juice/Juice_ScreenShake.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://juice/Juice_HitStop.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://juice/Juice_SquashStretch.tscn" id="22"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Flash.tscn" id="23"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Particles.tscn" id="24"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Sound.tscn" id="25"]
+[ext_resource type="PackedScene" path="res://juice/Juice_CameraZoom.tscn" id="26"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Trail.tscn" id="27"]
+[ext_resource type="PackedScene" path="res://juice/Juice_TrailLine.tscn" id="28"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Animator.tscn" id="w4_animator"]
+[ext_resource type="PackedScene" path="res://skins/Skin.tscn" id="w4_skin"]
+[ext_resource type="PackedScene" path="res://skins/SkinAnimated.tscn" id="w4_skin_anim"]
+[ext_resource type="PackedScene" path="res://blocks/UISettings.tscn" id="w4_ui_settings"]
+[ext_resource type="PackedScene" path="res://tests/skins/_bad/BadHud.tscn" id="w4_hud"]
+[ext_resource type="Script" path="res://tests/skins/_scripts/W4_BadExample.gd" id="bad_script"]
+[ext_resource type="PackedScene" path="res://skins/SkinBackground.tscn" id="bad_bg"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Background/Yellow.png" id="bad_yellow"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/coin.png" id="bad_ai_coin"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Items/Fruits/Apple.png" id="bad_apple_sheet"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Traps/Blocks/Idle.png" id="bad_block"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/goal.png" id="bad_ai_goal"]
+[ext_resource type="PackedScene" path="res://levels/_starts/_W4SkinBox/ui/PauseMenuDemo.tscn" id="w4_pause"]
+[ext_resource type="PackedScene" path="res://levels/_starts/_W4SkinBox/ui/ClearScreenDemo.tscn" id="w4_clear"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_idle.png" id="w4_player_idle"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_run.png" id="w4_player_run"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_jump.png" id="w4_player_jump"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_hurt.png" id="w4_player_hurt"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_die.png" id="w4_player_die"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_attack.png" id="w4_player_attack"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/enemy_walk.png" id="w4_enemy_walk"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/coin.png" id="w4_coin"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/spike.png" id="w4_spike"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/goal.png" id="w4_goal"]
+
+[sub_resource type="AtlasTexture" id="bad_apple"]
+atlas = ExtResource("bad_apple_sheet")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_idle_0"]
+atlas = ExtResource("w4_player_idle")
+region = Rect2(0, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_idle_1"]
+atlas = ExtResource("w4_player_idle")
+region = Rect2(33, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_idle_2"]
+atlas = ExtResource("w4_player_idle")
+region = Rect2(66, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_idle_3"]
+atlas = ExtResource("w4_player_idle")
+region = Rect2(99, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_run_0"]
+atlas = ExtResource("w4_player_run")
+region = Rect2(0, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_run_1"]
+atlas = ExtResource("w4_player_run")
+region = Rect2(33, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_run_2"]
+atlas = ExtResource("w4_player_run")
+region = Rect2(66, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_run_3"]
+atlas = ExtResource("w4_player_run")
+region = Rect2(99, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_run_4"]
+atlas = ExtResource("w4_player_run")
+region = Rect2(132, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_run_5"]
+atlas = ExtResource("w4_player_run")
+region = Rect2(165, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_attack_0"]
+atlas = ExtResource("w4_player_attack")
+region = Rect2(0, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_attack_1"]
+atlas = ExtResource("w4_player_attack")
+region = Rect2(33, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_attack_2"]
+atlas = ExtResource("w4_player_attack")
+region = Rect2(66, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_attack_3"]
+atlas = ExtResource("w4_player_attack")
+region = Rect2(99, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_hurt_0"]
+atlas = ExtResource("w4_player_hurt")
+region = Rect2(0, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_hurt_1"]
+atlas = ExtResource("w4_player_hurt")
+region = Rect2(33, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_die_0"]
+atlas = ExtResource("w4_player_die")
+region = Rect2(0, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_die_1"]
+atlas = ExtResource("w4_player_die")
+region = Rect2(33, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_die_2"]
+atlas = ExtResource("w4_player_die")
+region = Rect2(66, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_die_3"]
+atlas = ExtResource("w4_player_die")
+region = Rect2(99, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_die_4"]
+atlas = ExtResource("w4_player_die")
+region = Rect2(132, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_player_die_5"]
+atlas = ExtResource("w4_player_die")
+region = Rect2(165, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_jump_up"]
+atlas = ExtResource("w4_player_jump")
+region = Rect2(0, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_jump_down"]
+atlas = ExtResource("w4_player_jump")
+region = Rect2(33, 0, 33, 32)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_0"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(0, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_1"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(38, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_2"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(76, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_3"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(114, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_4"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(152, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_5"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(190, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_6"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(228, 0, 38, 38)
+
+[sub_resource type="AtlasTexture" id="w4_enemy_walk_7"]
+atlas = ExtResource("w4_enemy_walk")
+region = Rect2(266, 0, 38, 38)
+
+[sub_resource type="SpriteFrames" id="w4_player_frames"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("w4_player_idle_0")}, {"duration": 1.0, "texture": SubResource("w4_player_idle_1")}, {"duration": 1.0, "texture": SubResource("w4_player_idle_2")}, {"duration": 1.0, "texture": SubResource("w4_player_idle_3")}],
+"loop": true,
+"name": &"待機",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("w4_player_run_0")}, {"duration": 1.0, "texture": SubResource("w4_player_run_1")}, {"duration": 1.0, "texture": SubResource("w4_player_run_2")}, {"duration": 1.0, "texture": SubResource("w4_player_run_3")}, {"duration": 1.0, "texture": SubResource("w4_player_run_4")}, {"duration": 1.0, "texture": SubResource("w4_player_run_5")}],
+"loop": true,
+"name": &"跑步",
+"speed": 12.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("w4_player_attack_0")}, {"duration": 1.0, "texture": SubResource("w4_player_attack_1")}, {"duration": 1.0, "texture": SubResource("w4_player_attack_2")}, {"duration": 1.0, "texture": SubResource("w4_player_attack_3")}],
+"loop": false,
+"name": &"攻擊",
+"speed": 16.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("w4_player_hurt_0")}, {"duration": 1.0, "texture": SubResource("w4_player_hurt_1")}],
+"loop": false,
+"name": &"受傷",
+"speed": 8.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("w4_player_die_0")}, {"duration": 1.0, "texture": SubResource("w4_player_die_1")}, {"duration": 1.0, "texture": SubResource("w4_player_die_2")}, {"duration": 1.0, "texture": SubResource("w4_player_die_3")}, {"duration": 1.0, "texture": SubResource("w4_player_die_4")}, {"duration": 1.0, "texture": SubResource("w4_player_die_5")}],
+"loop": false,
+"name": &"死亡",
+"speed": 10.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("w4_jump_up")}],
+"loop": true,
+"name": &"跳起",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("w4_jump_down")}],
+"loop": true,
+"name": &"落下",
+"speed": 5.0
+}]
+
+[sub_resource type="SpriteFrames" id="w4_enemy_frames"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("w4_enemy_walk_0")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_1")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_2")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_3")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_4")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_5")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_6")}, {"duration": 1.0, "texture": SubResource("w4_enemy_walk_7")}],
+"loop": true,
+"name": &"走路",
+"speed": 16.0
+}]
+
+[node name="W4_BadExample" type="Node2D"]
+script = ExtResource("bad_script")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_map_data = PackedByteArray("AADw//v/AAADAAEAAAAtAPv/AAADAAEAAADw//z/AAADAAEAAAAtAPz/AAADAAEAAADw//3/AAADAAEAAAAtAP3/AAADAAEAAADw//7/AAADAAEAAAAtAP7/AAADAAEAAADw////AAADAAEAAAAtAP//AAADAAEAAADw/wAAAAADAAEAAAAtAAAAAAADAAEAAADw/wEAAAADAAEAAAAtAAEAAAADAAEAAADw/wIAAAADAAEAAAAtAAIAAAADAAEAAADw/wMAAAADAAEAAAAtAAMAAAADAAEAAADw/wQAAAADAAEAAAAtAAQAAAADAAEAAADw/wUAAAADAAEAAAAIAAUAAAADAAEAAAAJAAUAAAADAAEAAAAKAAUAAAADAAEAAAAtAAUAAAADAAEAAADw/wYAAAADAAEAAAAtAAYAAAADAAEAAADw/wcAAAADAAEAAAAtAAcAAAADAAEAAADw/wgAAAADAAEAAAACAAgAAAADAAEAAAADAAgAAAADAAEAAAAEAAgAAAADAAEAAAAFAAgAAAADAAEAAAAtAAgAAAADAAEAAADw/wkAAAADAAEAAAAkAAkAAAADAAEAAAAlAAkAAAADAAEAAAAtAAkAAAADAAEAAADw/woAAAADAAEAAAAkAAoAAAADAAEAAAAlAAoAAAADAAEAAAAtAAoAAAADAAEAAADw/wsAAAADAAEAAADx/wsAAAADAAEAAADy/wsAAAADAAEAAADz/wsAAAADAAEAAAD0/wsAAAADAAEAAAD1/wsAAAADAAEAAAD2/wsAAAADAAEAAAD3/wsAAAADAAEAAAD4/wsAAAADAAEAAAD5/wsAAAADAAEAAAD6/wsAAAADAAEAAAD7/wsAAAADAAEAAAD8/wsAAAADAAEAAAD9/wsAAAADAAEAAAD+/wsAAAADAAEAAAD//wsAAAADAAEAAAAAAAsAAAADAAEAAAABAAsAAAADAAEAAAACAAsAAAADAAEAAAADAAsAAAADAAEAAAAEAAsAAAADAAEAAAAFAAsAAAADAAEAAAAGAAsAAAADAAEAAAAHAAsAAAADAAEAAAAIAAsAAAADAAEAAAAJAAsAAAADAAEAAAAKAAsAAAADAAEAAAALAAsAAAADAAEAAAAMAAsAAAADAAEAAAANAAsAAAADAAEAAAAOAAsAAAADAAEAAAAPAAsAAAADAAEAAAAQAAsAAAADAAEAAAARAAsAAAADAAEAAAASAAsAAAADAAEAAAATAAsAAAADAAEAAAAUAAsAAAADAAEAAAAVAAsAAAADAAEAAAAWAAsAAAADAAEAAAAXAAsAAAADAAEAAAAYAAsAAAADAAEAAAAZAAsAAAADAAEAAAAaAAsAAAADAAEAAAAbAAsAAAADAAEAAAAcAAsAAAADAAEAAAAdAAsAAAADAAEAAAAeAAsAAAADAAEAAAAfAAsAAAADAAEAAAAgAAsAAAADAAEAAAAhAAsAAAADAAEAAAAiAAsAAAADAAEAAAAjAAsAAAADAAEAAAAkAAsAAAADAAEAAAAlAAsAAAADAAEAAAAmAAsAAAADAAEAAAAnAAsAAAADAAEAAAAoAAsAAAADAAEAAAApAAsAAAADAAEAAAAqAAsAAAADAAEAAAArAAsAAAADAAEAAAAsAAsAAAADAAEAAAAtAAsAAAADAAEAAAA=")
+tile_set = ExtResource("2")
+
+[node name="Room1" parent="." instance=ExtResource("6")]
+position = Vector2(-240, -80)
+width_in_tiles = 60
+spawn_x = 3
+spawn_y = 13
+
+[node name="Coin1" parent="Room1" instance=ExtResource("9")]
+position = Vector2(296, 184)
+
+[node name="Skin" parent="Room1/Coin1" instance=ExtResource("w4_skin")]
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("bad_ai_coin")
+
+[node name="Coin2" parent="Room1" instance=ExtResource("9")]
+position = Vector2(312, 184)
+
+[node name="Skin" parent="Room1/Coin2" instance=ExtResource("w4_skin")]
+texture_filter = 2
+scale = Vector2(0.4, 0.4)
+texture_normal = SubResource("bad_apple")
+
+[node name="Coin3" parent="Room1" instance=ExtResource("9")]
+position = Vector2(392, 136)
+
+[node name="Skin" parent="Room1/Coin3" instance=ExtResource("w4_skin")]
+texture_normal = ExtResource("w4_coin")
+
+[node name="Coin4" parent="Room1" instance=ExtResource("9")]
+position = Vector2(408, 136)
+
+[node name="Skin" parent="Room1/Coin4" instance=ExtResource("w4_skin")]
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("bad_ai_coin")
+
+[node name="Coin5" parent="Room1" instance=ExtResource("9")]
+position = Vector2(152, 232)
+
+[node name="Skin" parent="Room1/Coin5" instance=ExtResource("w4_skin")]
+texture_filter = 2
+scale = Vector2(0.4, 0.4)
+texture_normal = SubResource("bad_apple")
+
+[node name="Coin6" parent="Room1" instance=ExtResource("9")]
+position = Vector2(168, 232)
+
+[node name="Skin" parent="Room1/Coin6" instance=ExtResource("w4_skin")]
+texture_normal = ExtResource("w4_coin")
+
+[node name="Coin7" parent="Room1" instance=ExtResource("9")]
+position = Vector2(184, 232)
+
+[node name="Skin" parent="Room1/Coin7" instance=ExtResource("w4_skin")]
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("bad_ai_coin")
+
+[node name="Coin8" parent="Room1" instance=ExtResource("9")]
+position = Vector2(712, 216)
+
+[node name="Skin" parent="Room1/Coin8" instance=ExtResource("w4_skin")]
+texture_filter = 2
+scale = Vector2(0.4, 0.4)
+texture_normal = SubResource("bad_apple")
+
+[node name="Coin9" parent="Room1" instance=ExtResource("9")]
+position = Vector2(728, 216)
+
+[node name="Skin" parent="Room1/Coin9" instance=ExtResource("w4_skin")]
+texture_normal = ExtResource("w4_coin")
+
+[node name="Coin10" parent="Room1" instance=ExtResource("9")]
+position = Vector2(840, 200)
+
+[node name="Skin" parent="Room1/Coin10" instance=ExtResource("w4_skin")]
+scale = Vector2(1.5, 1.5)
+texture_normal = ExtResource("bad_ai_coin")
+
+[node name="Enemy1" parent="Room1" instance=ExtResource("10")]
+position = Vector2(504, 240)
+
+[node name="SkinAnimated" parent="Room1/Enemy1" instance=ExtResource("w4_skin_anim")]
+sprite_frames = SubResource("w4_enemy_frames")
+animation = &"走路"
+fill_style = 1
+
+[node name="Enemy2" parent="Room1" instance=ExtResource("10")]
+position = Vector2(888, 240)
+
+[node name="SkinAnimated" parent="Room1/Enemy2" instance=ExtResource("w4_skin_anim")]
+sprite_frames = SubResource("w4_enemy_frames")
+animation = &"走路"
+fill_style = 1
+
+[node name="Spike3" parent="Room1" instance=ExtResource("11")]
+position = Vector2(696, 248)
+
+[node name="Skin" parent="Room1/Spike3" instance=ExtResource("w4_skin")]
+position = Vector2(0, 3)
+texture_filter = 2
+scale = Vector2(0.7, 0.7)
+texture_normal = ExtResource("bad_block")
+
+[node name="Spike4" parent="Room1" instance=ExtResource("11")]
+position = Vector2(712, 248)
+
+[node name="Skin" parent="Room1/Spike4" instance=ExtResource("w4_skin")]
+position = Vector2(0, 3)
+texture_filter = 2
+scale = Vector2(0.7, 0.7)
+texture_normal = ExtResource("bad_block")
+
+[node name="Spike5" parent="Room1" instance=ExtResource("11")]
+position = Vector2(728, 248)
+
+[node name="Skin" parent="Room1/Spike5" instance=ExtResource("w4_skin")]
+position = Vector2(0, 3)
+texture_filter = 2
+scale = Vector2(0.7, 0.7)
+texture_normal = ExtResource("bad_block")
+
+[node name="Spike6" parent="Room1" instance=ExtResource("11")]
+position = Vector2(744, 248)
+
+[node name="Skin" parent="Room1/Spike6" instance=ExtResource("w4_skin")]
+position = Vector2(0, 3)
+texture_filter = 2
+scale = Vector2(0.7, 0.7)
+texture_normal = ExtResource("bad_block")
+
+[node name="Goal" parent="Room1" instance=ExtResource("12")]
+position = Vector2(936, 240)
+
+[node name="Skin" parent="Room1/Goal" instance=ExtResource("w4_skin")]
+scale = Vector2(1.3, 1.3)
+texture_normal = ExtResource("bad_ai_goal")
+
+[node name="Player" parent="." instance=ExtResource("1")]
+position = Vector2(-184, 159)
+
+[node name="Visual" type="Node2D" parent="Player"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player/Visual"]
+sprite_frames = SubResource("w4_player_frames")
+animation = &"待機"
+
+[node name="Mechanics" type="Node2D" parent="Player"]
+
+[node name="Juice" type="Node2D" parent="Player"]
+
+[node name="Juice_ScreenShake" parent="Player/Juice" instance=ExtResource("20")]
+
+[node name="Juice_HitStop" parent="Player/Juice" instance=ExtResource("21")]
+duration = 0.12
+timing = 9
+
+[node name="Juice_SquashStretch" parent="Player/Juice" instance=ExtResource("22")]
+
+[node name="Juice_Flash" parent="Player/Juice" instance=ExtResource("23")]
+
+[node name="Juice_Particles" parent="Player/Juice" instance=ExtResource("24")]
+
+[node name="Juice_Particles_Blood" parent="Player/Juice" instance=ExtResource("24")]
+style = 3
+amount = 16
+color = 3
+spawn_at = 2
+timing = 8
+
+[node name="Juice_Sound" parent="Player/Juice" instance=ExtResource("25")]
+
+[node name="Juice_Sound_Hit" parent="Player/Juice" instance=ExtResource("25")]
+sound = 1
+timing = 8
+
+[node name="Juice_Sound_EnemyDied" parent="Player/Juice" instance=ExtResource("25")]
+sound = 3
+timing = 9
+
+[node name="Juice_Sound_Coin" parent="Player/Juice" instance=ExtResource("25")]
+sound = 5
+pitch_mode = 2
+steps = 3
+timing = 10
+
+[node name="Juice_Sound_Hurt" parent="Player/Juice" instance=ExtResource("25")]
+sound = 2
+timing = 2
+
+[node name="Juice_Sound_Clear" parent="Player/Juice" instance=ExtResource("25")]
+sound = 4
+timing = 11
+
+[node name="Juice_CameraZoom" parent="Player/Juice" instance=ExtResource("26")]
+timing = 11
+
+[node name="Juice_Trail" parent="Player/Juice" instance=ExtResource("27")]
+
+[node name="Juice_TrailLine" parent="Player/Juice" instance=ExtResource("28")]
+
+[node name="Juice_Animator" parent="Player/Juice" instance=ExtResource("w4_animator")]
+
+[node name="Abilities" type="Node2D" parent="Player"]
+
+[node name="Ability_Melee" parent="Player/Abilities" instance=ExtResource("14")]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, 56)
+script = ExtResource("3")
+mode = 1
+
+[node name="RespawnHandler" parent="." instance=ExtResource("4")]
+
+[node name="ValueSettings_Health" parent="." instance=ExtResource("7")]
+
+[node name="KeySettings" parent="." instance=ExtResource("8")]
+
+[node name="ClearScreen" parent="." instance=ExtResource("13")]
+
+[node name="BadHud" parent="." instance=ExtResource("w4_hud")]
+
+[node name="UISettings" parent="." instance=ExtResource("w4_ui_settings")]
+pause_menu_scene = ExtResource("w4_pause")
+clear_screen_scene = ExtResource("w4_clear")
+
+[node name="Background_TooBright" parent="." instance=ExtResource("bad_bg")]
+modulate = Color(1.3, 1.3, 1.1, 1)
+texture = ExtResource("bad_yellow")

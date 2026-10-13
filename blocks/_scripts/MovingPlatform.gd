@@ -18,8 +18,6 @@ extends AnimatableBody2D
 const _TILE_SIZE := 16.0
 const _AXIS_HORIZONTAL := 0
 
-@onready var _visual: ColorRect = $Visual
-
 var _start_position: Vector2
 var _end_position: Vector2
 var _moving_to_end: bool = true
@@ -37,8 +35,9 @@ func deactivate() -> void:
 func toggle() -> void:
 	_active = not _active
 
-# 記錄起點跟終點，套用一開始要不要動
+# 記錄起點跟終點，套用一開始要不要動；底下有皮就換上皮（平台沒有狀態變化，不用留著 SkinLink）
 func _ready() -> void:
+	SkinLink.new(self, $Visual)
 	_start_position = global_position
 	var offset := distance_tiles * _TILE_SIZE
 	var axis := Vector2.RIGHT if direction == _AXIS_HORIZONTAL else Vector2.DOWN

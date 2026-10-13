@@ -20,8 +20,8 @@ extends JuiceBase
 		update_configuration_warnings()
 ## 字的顏色：「加綠減紅」= 變多是綠色、變少是紅色
 @export_enum("加綠減紅", "白", "黃") var color: int = 0
-## 字的大小
-@export_range(8, 32) var size: int = 11
+## 字的大小：像素字只能放大成原本的整數倍，不然會糊或高低不齊
+@export_enum("原本大小 12:12", "2 倍 24:24", "3 倍 36:36") var size: int = 12
 ## 字飄多久才消失（秒）
 @export_range(0.3, 2.0) var duration: float = 0.8
 

@@ -35,28 +35,31 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="List" type="VBoxContainer" parent="Center"]
+[node name="Panel" type="PanelContainer" parent="Center"]
+layout_mode = 2
+
+[node name="List" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Title" parent="Center/List" instance=ExtResource("2")]
+[node name="Title" parent="Center/Panel/List" instance=ExtResource("2")]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_colors/font_color = Color(0.55, 0.88, 0.38, 1)
 theme_override_font_sizes/font_size = 36
 text = "破關啦！"
 
-[node name="Time" parent="Center/List" instance=ExtResource("3")]
+[node name="Time" parent="Center/Panel/List" instance=ExtResource("3")]
 layout_mode = 2
 size_flags_horizontal = 4
 
-[node name="Message" parent="Center/List" instance=ExtResource("3")]
+[node name="Message" parent="Center/Panel/List" instance=ExtResource("3")]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "（製作者的話）"
 stat = 2
 
-[node name="Hint" parent="Center/List" instance=ExtResource("2")]
+[node name="Hint" parent="Center/Panel/List" instance=ExtResource("2")]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_type_variation = &"HintLabel"

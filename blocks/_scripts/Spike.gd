@@ -18,9 +18,9 @@ extends Area2D
 
 const _PENALTY_HEALTH := 0
 
-@onready var _visual: ColorRect = $Visual
 
 var _active: bool = true
+var _skin: SkinLink = null
 
 ## 開啟：開始傷人；開啟當下已經站在上面的玩家也會被刺到
 func activate() -> void:
@@ -41,21 +41,22 @@ func toggle() -> void:
 	else:
 		activate()
 
-# 設定碰撞層／遮罩，只偵測玩家，套用一開始要不要開
+# 設定碰撞層／遮罩，只偵測玩家，套用一開始要不要開；底下有皮就換上皮
 func _ready() -> void:
+	_skin = SkinLink.new(self, $Visual)
 	collision_layer = Layers.SENSOR
 	collision_mask = Layers.PLAYER
 	body_entered.connect(_on_body_entered)
 	_set_active(start_on)
 
-# 切換開關狀態：開著才加入 hazard group（彈珠台、碰觸即死認這個），關掉時變暗
+# 切換開關狀態：開著才加入 hazard group（彈珠台、碰觸即死認這個），關掉時變暗（有皮就換皮的樣子）
 func _set_active(is_active: bool) -> void:
 	_active = is_active
 	if _active:
 		add_to_group("hazard")
 	else:
 		remove_from_group("hazard")
-	_visual.modulate = Color.WHITE if _active else Color(0.45, 0.45, 0.45)
+	_skin.show_dark(not _active)
 
 # 玩家碰到：依 penalty 打玩家一下（扣血＋把玩家往外、往上彈開）或直接死亡；關著時不會怎樣
 func _on_body_entered(body: Node) -> void:

@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skins/_scripts/ColorGrade.gd" id="1"]
+
+[node name="ColorGrade" type="CanvasModulate"]
+color = Color(1, 0.925, 0.825, 1)
+script = ExtResource("1")

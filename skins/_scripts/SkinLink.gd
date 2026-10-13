@@ -9,18 +9,44 @@ extends RefCounted
 # 零件裡色塊的節點名稱（風扇的本體叫 BodyVisual）
 const BLOCK_VISUAL_NAMES := ["Visual", "BodyVisual"]
 # 這些零件是敵人：動畫名稱用「走路」「受傷」「死亡」
-const _ENEMY_SCRIPTS := ["res://blocks/_scripts/Enemy.gd", "res://blocks/_scripts/EnemyShooter.gd"]
+const _ENEMY_SCRIPTS := ["res://blocks/_scripts/Enemy.gd"]
+# 這些零件有方向（direction 下拉），皮勾了 follow_direction 會跟著轉；值是每個選項要轉幾度（圖畫成朝上）
+const _DIRECTIONAL_SCRIPTS := {
+	"res://blocks/_scripts/Fan.gd": [0.0, 180.0, -90.0, 90.0],  # 上、下、左、右
+}
 # 狀態改變後沒有另外的圖時，平常的圖往狀態顏色染多少（0～1）
 const _TINT_STRENGTH := 0.6
+# SkinEvent「什麼時候」下拉顯示的中文：零件訊號名稱 → 中文（沒列到的照訊號名稱顯示）
+const _EVENT_LABELS := {
+	"reached": "踩到時",
+	"turned_on": "打開時",
+	"turned_off": "關掉時",
+	"opened": "門打開時",
+	"closed": "門關上時",
+	"launched": "彈出時",
+	"teleported": "傳送時",
+}
+# 這些事件發生時零件馬上藏起來，播動畫也看不到，不列進 SkinEvent 的下拉（敵人被打倒用「死亡」動畫）
+const _EVENT_SKIP := ["collected", "broken", "crumbled", "defeated"]
+# 尖刺、岩漿關掉時變暗的顏色（跟色塊原本變暗的程度一樣）
+const _DARK := Color(0.45, 0.45, 0.45)
+# 皮的「狀態改變後」選項：換圖就好、換圖再加原本效果、只用原本效果（皮沒有狀態圖時一律當成只用原本效果）
+const LOOK_SWAP_ONLY := 0
+const LOOK_SWAP_AND_EFFECT := 1
+const LOOK_EFFECT_ONLY := 2
 
 var _owner: Node = null
 var _rect: CanvasItem = null
 var _skin: Node2D = null
+var _skin_origin := Vector2.ZERO
+var _rect_origin := Vector2.ZERO
 
 # 找零件底下的皮並套上；color_rect 是零件原本的色塊
 func _init(owner: Node, color_rect: CanvasItem) -> void:
 	_owner = owner
 	_rect = color_rect
+	if _rect is Control:
+		_rect_origin = (_rect as Control).position
 	for child in owner.get_children():
 		if not child.has_method("skin_setup"):
 			continue
@@ -37,6 +63,9 @@ func _init(owner: Node, color_rect: CanvasItem) -> void:
 		_skin.visible = false
 		_skin = null
 		return
+	_skin_origin = _skin.position
+	if _skin.has_method("skin_bind"):
+		_skin.skin_bind(owner)
 	if _rect != null:
 		_rect.visible = false
 
@@ -44,13 +73,42 @@ func _init(owner: Node, color_rect: CanvasItem) -> void:
 func has_skin() -> bool:
 	return _skin != null
 
-# 顯示零件的狀態：active 是「狀態改變後」（終點踩到、門打開…），color 是色塊在這個狀態的顏色。
-# 有皮時換成 texture_active／「啟動」動畫，沒有的話平常的圖往 color 染色
+# 顯示零件的狀態（變色的零件：終點、按鈕、重生點）：active 是「狀態改變後」（終點踩到、按鈕亮起…），
+# color 是色塊在這個狀態的顏色；皮沒有狀態圖（或選了只用原本效果）時把圖往 color 染色
 func show_state(active: bool, color: Color) -> void:
 	if _skin != null:
-		_skin.skin_set_state(active, Color.WHITE.lerp(color, _TINT_STRENGTH))
+		_show_on_skin(active, Color.WHITE.lerp(color, _TINT_STRENGTH), false)
 	elif _rect is ColorRect:
 		(_rect as ColorRect).color = color
+
+# 顯示零件的狀態（變淡的零件：門打開）：active 時變淡成 alpha
+func show_faded(active: bool, alpha: float) -> void:
+	if _skin != null:
+		_show_on_skin(active, Color(1, 1, 1, alpha), false)
+	elif _rect != null:
+		_rect.modulate.a = alpha if active else 1.0
+
+# 顯示零件的狀態（藏起來的零件：開關方塊關掉）：active 時整個看不到
+func show_hidden(active: bool) -> void:
+	if _skin != null:
+		_show_on_skin(active, Color.WHITE, true)
+	elif _rect != null:
+		_rect.visible = not active
+
+# 顯示零件的狀態（變暗的零件：尖刺、岩漿關掉）：active 時變暗
+func show_dark(active: bool) -> void:
+	if _skin != null:
+		_show_on_skin(active, _DARK, false)
+	elif _rect != null:
+		_rect.modulate = _DARK if active else Color.WHITE
+
+# 把狀態套到皮上：依皮的「狀態改變後」選項決定換圖、加原本效果（tint 染色／變淡、hide 藏起來），或兩個都做
+func _show_on_skin(active: bool, tint: Color, hide: bool) -> void:
+	var look: int = _skin.skin_active_look() if active else LOOK_EFFECT_ONLY
+	var swap := active and look != LOOK_EFFECT_ONLY
+	var effect := active and look != LOOK_SWAP_ONLY
+	_skin.skin_set_state(swap, tint if effect else Color.WHITE)
+	_skin.visible = not (effect and hide)
 
 # 整個零件變淡（alpha 0～1），例如崩塌地板快消失、門打開後半透明
 func set_alpha(alpha: float) -> void:
@@ -65,7 +123,15 @@ func set_visible(value: bool) -> void:
 	elif _rect != null:
 		_rect.visible = value
 
-# 零件面向左邊還是右邊（敵人轉向），皮勾了 follow_facing 才會翻
+# 零件抖一下：offset 是離原本位置多遠，傳 Vector2.ZERO 回到原位（例如崩塌地板快碎掉）
+func set_shake(offset: Vector2) -> void:
+	if _skin != null:
+		_skin.position = _skin_origin + offset
+	elif _rect is Control:
+		(_rect as Control).position = _rect_origin + offset
+
+# 零件面向左邊還是右邊（敵人轉向），皮勾了 follow_facing 才會翻；
+# 以皮在編輯器裡的 Flip H 當「朝右」的樣子（圖朝左畫的，學員勾 Flip H 讓它朝右）
 func set_facing(facing_left: bool) -> void:
 	if _skin != null:
 		_skin.skin_set_facing(facing_left)
@@ -75,12 +141,47 @@ func play(anim_name: String) -> void:
 	if _skin != null:
 		_skin.skin_play(anim_name)
 
+# 這段動畫播一次要幾秒；靜態的皮、沒有這段動畫時回傳 0（敵人用來決定死掉後多久才藏起來）
+func anim_length(anim_name: String) -> float:
+	return _skin.skin_anim_length(anim_name) if _skin != null else 0.0
+
+# 回到平常的動畫（敵人重生復活時，從停在最後一格的「死亡」回到「走路」）
+func reset_anim() -> void:
+	if _skin != null:
+		_skin.skin_reset()
+
 # ---- Skin、SkinAnimated 共用
 
 # 這個節點是不是敵人（SkinAnimated 依此決定要檢查哪些動畫名稱）
 static func is_enemy_host(node: Node) -> bool:
 	var host_script: Script = node.get_script() if node != null else null
 	return host_script != null and host_script.resource_path in _ENEMY_SCRIPTS
+
+# 這個零件有哪些事件可以讓 SkinEvent 播動畫：中文 → 訊號名稱（照零件定義的順序）
+static func event_signals(host: Node) -> Dictionary:
+	var result := {}
+	var host_script: Script = host.get_script() if host != null else null
+	if host_script == null:
+		return result
+	for info in host_script.get_script_signal_list():
+		var signal_name: String = info.name
+		if signal_name in _EVENT_SKIP:
+			continue
+		result[_EVENT_LABELS.get(signal_name, signal_name)] = signal_name
+	return result
+
+# 這個零件有沒有方向（風扇吹的方向），皮可以跟著轉
+static func is_directional_host(node: Node) -> bool:
+	var host_script: Script = node.get_script() if node != null else null
+	return host_script != null and _DIRECTIONAL_SCRIPTS.has(host_script.resource_path)
+
+# 這個零件現在的方向要把皮轉幾度（弧度）；沒有方向的零件回傳 0
+static func host_angle(node: Node) -> float:
+	if not is_directional_host(node):
+		return 0.0
+	var angles: Array = _DIRECTIONAL_SCRIPTS[node.get_script().resource_path]
+	var index := int(node.get("direction"))
+	return deg_to_rad(angles[index]) if index >= 0 and index < angles.size() else 0.0
 
 # 這個節點是不是 Player → Visual（皮放在這裡當角色的圖）
 static func is_player_visual(node: Node) -> bool:

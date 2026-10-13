@@ -18,12 +18,15 @@ extends StaticBody2D
 
 const _TILE_SIZE := 16.0
 
-# 加入 no_bounce group（彈性宇宙卡認這個），設定碰撞層，套用大小
+# 加入 no_bounce group（彈性宇宙卡認這個），設定碰撞層，套用大小；底下有皮就換上皮
+#（要先套好大小，皮選了重複鋪滿／拉伸蓋滿才對得到；方塊沒有狀態變化，不用留著 SkinLink）
 func _ready() -> void:
 	add_to_group("no_bounce")
 	collision_layer = Layers.TERRAIN
 	collision_mask = 0
 	_apply_size()
+	if not Engine.is_editor_hint():
+		SkinLink.new(self, $Visual)
 
 # 依格數算出大小，套用到碰撞形狀與外觀（編輯器裡拉拉桿就會即時變大變小）
 func _apply_size() -> void:

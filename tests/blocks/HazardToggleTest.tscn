@@ -63,6 +63,7 @@ start_on = false
 
 [node name="Portal_B" parent="." instance=ExtResource("9")]
 position = Vector2(180, 95)
+pair = NodePath("../Portal_A")
 
 [connection signal="turned_on" from="Button_Spike" to="Spike_Off" method="toggle"]
 [connection signal="turned_off" from="Button_Spike" to="Spike_Off" method="toggle"]

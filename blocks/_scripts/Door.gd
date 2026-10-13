@@ -43,12 +43,12 @@ const _MODE_CUSTOM := 3
 const _WARNING_REFRESH_SECONDS := 1.0
 
 @onready var _shape: CollisionShape2D = $Body/CollisionShape2D
-@onready var _visual: ColorRect = $Visual
 @onready var _detector: Area2D = $Detector
 
 var _is_open: bool = false
 var _paid: int = 0
 var _warning_timer: float = 0.0
+var _skin: SkinLink = null
 
 ## 開啟
 func activate() -> void:
@@ -62,10 +62,11 @@ func deactivate() -> void:
 func toggle() -> void:
 	_set_open(not _is_open)
 
-# 依 open_mode 決定要不要監聽玩家碰門，並套用一開始的開關狀態
+# 依 open_mode 決定要不要監聽玩家碰門，並套用一開始的開關狀態；底下有皮就換上皮
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	_skin = SkinLink.new(self, $Visual)
 	add_to_group("signal_source")
 	if open_mode != _MODE_SIGNAL:
 		_detector.body_entered.connect(_on_detector_entered)
@@ -174,10 +175,10 @@ func _set_open(is_open: bool) -> void:
 	else:
 		closed.emit()
 
-# 把目前的開關狀態套用到碰撞與外觀上
+# 把目前的開關狀態套用到碰撞與外觀上（打開時變淡，有皮就換皮的樣子）
 func _apply_state() -> void:
 	_shape.set_deferred("disabled", _is_open)
-	_visual.modulate.a = 0.35 if _is_open else 1.0
+	_skin.show_faded(_is_open, 0.35)
 
 # 編輯畫面持續請求重畫，讓虛線跟著訊號連接的變化即時更新；每隔一段時間重新檢查自訂名稱
 func _process(delta: float) -> void:

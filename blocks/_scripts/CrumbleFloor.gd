@@ -20,21 +20,20 @@ const _WHO_PLAYER_ONLY := 0
 const _SHAKE_AMOUNT := 2.0
 
 @onready var _shape: CollisionShape2D = $Body/CollisionShape2D
-@onready var _visual: ColorRect = $Visual
 @onready var _detector: Area2D = $Detector
 
-var _visual_origin: Vector2
+var _skin: SkinLink = null
 var _is_triggered: bool = false
 var _is_broken: bool = false
 var _shake_time_left: float = 0.0
 var _generation: int = 0  # 每次 reset() 加一，讓 reset 之前排好的碎裂／重生計時器失效
 
-# 設定碰撞層／遮罩，記住外觀原始位置
+# 設定碰撞層／遮罩；底下有皮就換上皮
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	add_to_group("signal_source")
-	_visual_origin = _visual.position
+	_skin = SkinLink.new(self, $Visual)
 	_detector.collision_layer = 0
 	_detector.collision_mask = Layers.PLAYER | Layers.BOX
 	_detector.body_entered.connect(_on_detector_entered)
@@ -67,7 +66,7 @@ func reset() -> void:
 	_shake_time_left = 0.0
 	_respawn()
 
-# 倒數期間讓外觀小幅度隨機抖動，給玩家看得到的碎裂提示；編輯畫面則持續請求重畫，
+# 倒數期間讓外觀（有皮就是皮）小幅度隨機抖動，給玩家看得到的碎裂提示；編輯畫面則持續請求重畫，
 # 讓訊號連接的虛線跟著變化即時更新
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
@@ -77,12 +76,12 @@ func _process(delta: float) -> void:
 		return
 	_shake_time_left -= delta
 	if _shake_time_left <= 0.0:
-		_visual.position = _visual_origin
+		_skin.set_shake(Vector2.ZERO)
 		return
-	_visual.position = _visual_origin + Vector2(
+	_skin.set_shake(Vector2(
 		randf_range(-_SHAKE_AMOUNT, _SHAKE_AMOUNT),
 		randf_range(-_SHAKE_AMOUNT, _SHAKE_AMOUNT)
-	)
+	))
 
 # 真正碎裂：關閉碰撞、隱藏外觀、發出訊號，依 respawn_time 決定要不要重生
 func _break() -> void:
@@ -90,7 +89,7 @@ func _break() -> void:
 		return
 	_is_broken = true
 	_shape.disabled = true
-	_visual.visible = false
+	_skin.set_visible(false)
 	crumbled.emit()
 	if respawn_time > 0.0:
 		_after(respawn_time, _respawn)
@@ -100,8 +99,8 @@ func _respawn() -> void:
 	_is_broken = false
 	_is_triggered = false
 	_shape.set_deferred("disabled", false)
-	_visual.visible = true
-	_visual.position = _visual_origin
+	_skin.set_visible(true)
+	_skin.set_shake(Vector2.ZERO)
 
 # 編輯畫面用：幫這個零件自己發出的每個訊號的每條連接畫一條虛線到目標節點
 func _draw() -> void:

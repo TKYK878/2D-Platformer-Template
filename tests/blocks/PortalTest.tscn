@@ -36,3 +36,11 @@ pair = NodePath("../Portal_B")
 
 [node name="Portal_B" parent="." instance=ExtResource("5")]
 position = Vector2(60, 95)
+pair = NodePath("../Portal_A")
+
+[node name="Portal_C_OneWay" parent="." instance=ExtResource("5")]
+position = Vector2(-60, 15)
+pair = NodePath("../Portal_D_Exit")
+
+[node name="Portal_D_Exit" parent="." instance=ExtResource("5")]
+position = Vector2(60, 15)

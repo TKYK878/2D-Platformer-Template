@@ -22,9 +22,9 @@ const _DIRECTIONS := [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 
 @onready var _shape: CollisionShape2D = $CollisionShape2D
 @onready var _zone_visual: ColorRect = $ZoneVisual
-@onready var _body_visual: ColorRect = $BodyVisual
 
 var _active: bool = true
+var _skin: SkinLink = null
 var _overlapping_players: Array[Node] = []
 
 ## 開始吹風
@@ -39,9 +39,11 @@ func deactivate() -> void:
 func toggle() -> void:
 	_set_active(not _active)
 
-# 設定碰撞層／遮罩，依方向與範圍格數算出感應區域，套用一開始要不要開
+# 設定碰撞層／遮罩，依方向與範圍格數算出感應區域，套用一開始要不要開；
+# 本體底下有皮就換上皮（風力範圍的半透明框照舊顯示）
 func _ready() -> void:
 	add_to_group("signal_source")
+	_skin = SkinLink.new(self, $BodyVisual)
 	collision_layer = Layers.SENSOR
 	collision_mask = Layers.PLAYER
 	body_entered.connect(_on_body_entered)
@@ -92,8 +94,8 @@ func _friction_pushback(body: Node, delta: float) -> float:
 	var ground_friction: float = body.get("ground_friction") if body.get("ground_friction") != null else 0.0
 	return move_speed * lerpf(2.0, 20.0, ground_friction) * delta
 
-# 真正切換開關狀態並更新外觀
+# 真正切換開關狀態並更新外觀（本體有皮就換皮的樣子，關掉算「狀態改變後」）
 func _set_active(is_active: bool) -> void:
 	_active = is_active
-	_body_visual.color = Color(0.3, 0.85, 0.35) if _active else Color(0.55, 0.55, 0.55)
+	_skin.show_state(not _active, Color(0.3, 0.85, 0.35) if _active else Color(0.55, 0.55, 0.55))
 	_zone_visual.color = Color(0.4, 0.8, 1.0, 0.35) if _active else Color(0.4, 0.8, 1.0, 0.08)

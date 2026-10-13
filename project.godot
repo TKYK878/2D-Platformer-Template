@@ -37,6 +37,9 @@ window/stretch/scale_mode="integer"
 
 [gui]
 
+theme/default_font_antialiasing=0
+theme/default_font_hinting=0
+theme/default_font_subpixel_positioning=0
 theme/custom="res://art/fonts/DefaultTheme.tres"
 theme/custom_font="res://art/fonts/Cubic_11.woff2"
 

@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/HudNumber.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/HudBar.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="4"]
+
+[sub_resource type="SystemFont" id="serif"]
+font_names = PackedStringArray("Times New Roman", "Serif")
+
+[sub_resource type="SystemFont" id="comic"]
+font_names = PackedStringArray("Comic Sans MS", "Sans-Serif")
+
+[sub_resource type="SystemFont" id="impact"]
+font_names = PackedStringArray("Impact", "Sans-Serif")
+
+[node name="BadHud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Health" parent="." instance=ExtResource("2")]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 7.0
+offset_right = 90.0
+offset_bottom = 30.0
+theme_override_fonts/font = SubResource("serif")
+theme_override_font_sizes/font_size = 19
+kind = "血量"
+format = 1
+
+[node name="HealthBar" parent="." instance=ExtResource("3")]
+layout_mode = 0
+offset_left = 97.0
+offset_top = 13.0
+offset_right = 151.0
+offset_bottom = 22.0
+kind = "血量"
+
+[node name="Coin" parent="." instance=ExtResource("2")]
+layout_mode = 0
+offset_left = 203.0
+offset_top = 2.0
+offset_right = 280.0
+offset_bottom = 20.0
+theme_override_colors/font_color = Color(0, 1, 1, 1)
+theme_override_fonts/font = SubResource("comic")
+theme_override_font_sizes/font_size = 13
+
+[node name="Time" parent="." instance=ExtResource("2")]
+layout_mode = 0
+offset_left = 371.0
+offset_top = 19.0
+offset_right = 470.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_fonts/font = SubResource("impact")
+theme_override_font_sizes/font_size = 17
+source = 1
+format = 2
+
+[node name="Deaths" parent="." instance=ExtResource("2")]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 243.0
+offset_right = 90.0
+offset_bottom = 258.0
+theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
+source = 2
+
+[node name="Title" parent="." instance=ExtResource("4")]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 34.0
+offset_right = 330.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(1, 0.4, 1, 1)
+theme_override_fonts/font = SubResource("impact")
+theme_override_font_sizes/font_size = 23
+text = "超級跳跳冒險!!!"

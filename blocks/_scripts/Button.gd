@@ -45,20 +45,20 @@ const _BUILT_IN_GROUPS := ["player", "box", "enemy"]
 # 編輯器裡每隔幾秒重新檢查一次群組名稱，學員在別的物體加了群組之後黃色警告會跟著消失
 const _WARNING_REFRESH_SECONDS := 1.0
 
-@onready var _visual: ColorRect = $Visual
-
 var _overlapping: Array[Node] = []
 var _is_on: bool = false
 var _permanently_triggered: bool = false
 var _tag: String = ""
 var _warning_timer: float = 0.0
+var _skin: SkinLink = null
 
-# 設定碰撞層／遮罩，並依模式決定要不要監聽踩踏。
+# 設定碰撞層／遮罩，並依模式決定要不要監聽踩踏；底下有皮就換上皮。
 # 預設重生時維持原狀（開關狀態連著別的零件，維持原狀才不會卡關），勾了 reset_on_death 才會 reset()。
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	add_to_group("signal_source")
+	_skin = SkinLink.new(self, $Visual)
 	collision_layer = Layers.SENSOR
 	collision_mask = Layers.PLAYER | Layers.BOX
 	if pressed_by == _WHO_GROUP and mode != _MODE_HIT:
@@ -135,12 +135,12 @@ func _toggle() -> void:
 	else:
 		turned_off.emit()
 
-# 依目前開關狀態換顏色，讓學員看得出按鈕有沒有生效
+# 依目前開關狀態換顏色（有皮就換皮的樣子），讓學員看得出按鈕有沒有生效
 func _update_visual() -> void:
-	if _visual == null:
+	if _skin == null:
 		return
 	var is_lit := _permanently_triggered or _is_on or (mode == _MODE_HOLD and not _overlapping.is_empty())
-	_visual.color = Color(0.3, 0.85, 0.35) if is_lit else Color(0.55, 0.55, 0.55)
+	_skin.show_state(is_lit, Color(0.3, 0.85, 0.35) if is_lit else Color(0.55, 0.55, 0.55))
 
 # 編輯畫面持續請求重畫，讓虛線跟著訊號連接的變化即時更新；每隔一段時間重新檢查群組名稱
 func _process(delta: float) -> void:

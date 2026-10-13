@@ -22,6 +22,21 @@ var _display_names: Dictionary = {}   # kind(String) -> String，畫面上顯示
 # 用 has() 檢查而不是直接覆蓋：遊戲第一次啟動時，主場景裡 ValueSettings 的 _enter_tree
 # 會搶在這個 _ready 之前執行（見 ValueSettings.gd 註解），已經套用的設定不能被這裡蓋掉。
 func _ready() -> void:
+	_add_default_health()
+
+# 換場景（標題 → 關卡、回標題）時呼叫：所有數值種類與設定清空，回到剛開遊戲的樣子（只有血量 3／3）；
+# 新場景的 ValueSettings 之後才進場，會再套用自己的設定
+func reset_for_new_scene() -> void:
+	_values.clear()
+	_max_values.clear()
+	_known_kinds.clear()
+	_hud_visible.clear()
+	_reset_on_death.clear()
+	_display_names.clear()
+	_add_default_health()
+
+# 補上內建的血量種類（初始 3、上限 3），已經有的不蓋掉
+func _add_default_health() -> void:
 	if not _values.has(HEALTH_KIND):
 		_values[HEALTH_KIND] = 3
 	if not _max_values.has(HEALTH_KIND):

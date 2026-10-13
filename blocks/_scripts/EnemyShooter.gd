@@ -31,6 +31,8 @@ extends Node2D
 @export var use_gravity: bool = false
 ## 子彈打中玩家扣幾滴血
 @export_range(1, 10) var damage: int = 1
+## 子彈的圖：從檔案系統把圖片拖進來（畫成朝右飛，飛行時會跟著方向轉）；空白就用原本的色塊
+@export var bullet_texture: Texture2D
 ## 子彈會不會打壞可破壞方塊、按下「被攻擊觸發」的按鈕、推動箱子（關掉的話只會打玩家，撞到東西就消失）
 @export var hit_objects: bool = false
 
@@ -147,6 +149,7 @@ func _fire() -> void:
 	bullet.damage = damage
 	bullet.hit_objects = hit_objects
 	bullet.lifetime_left = _BULLET_LIFETIME
+	bullet.set_texture(bullet_texture)
 	shot.emit()
 
 # 依 aim_type 算出子彈方向

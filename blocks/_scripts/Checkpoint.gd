@@ -13,17 +13,17 @@ extends Area2D
 ## 踩到時發出，給學員自己接效果用（例如接特效或音效）
 signal reached
 
-@onready var _visual: ColorRect = $Visual
-
 const _SAVE_EVERY_TIME := 0
 
 var _touched: bool = false
 var _saved: bool = false
+var _skin: SkinLink = null
 
-# 設定碰撞層／遮罩，只偵測玩家
+# 設定碰撞層／遮罩，只偵測玩家；底下有皮就換上皮
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	_skin = SkinLink.new(self, $Visual)
 	add_to_group("signal_source")
 	add_to_group("checkpoint")
 	collision_layer = Layers.SENSOR
@@ -49,9 +49,10 @@ func forget() -> void:
 	_saved = false
 	_update_visual()
 
-# 踩過一次之後外觀保持「已啟用」的顏色，之後再踩也不會變回去
+# 踩過一次之後外觀保持「已啟用」的顏色（有皮就換皮的樣子），之後再踩也不會變回去
 func _update_visual() -> void:
-	_visual.color = Color(0.3, 0.85, 0.35) if _touched else Color(0.5, 0.55, 0.85)
+	if _skin != null:
+		_skin.show_state(_touched, Color(0.3, 0.85, 0.35) if _touched else Color(0.5, 0.55, 0.85))
 
 # 編輯畫面持續請求重畫，讓虛線跟著訊號連接的變化即時更新
 func _process(_delta: float) -> void:

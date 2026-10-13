@@ -736,22 +736,156 @@
 
 - [x] U177 `Skin`、`SkinAnimated`（欄位、編輯器畫原本色塊的外框、放錯地方的警告、動畫名稱檢查）；零件端的共用接法
 	  （驗證：`tests/skins/SkinTest.tscn`）
-- [ ] U178 零件逐一支援皮：終點、按鈕、重生點、門、開關方塊、道具、尖刺、岩漿（狀態回饋改作用在皮上）
-- [ ] U179 零件逐一支援皮：其餘有色塊的零件（箱子、可破壞、崩塌地板、彈射、風扇、移動平台、單向平台、傳送門…）
-- [ ] U180 敵人支援皮（轉向跟著翻、走路／受傷／死亡動畫）
-- [ ] U181 `Ability_Ranged`／`EnemyShooter` 的 `bullet_texture`、`Ability_Melee` 的 `slash_texture`
+- [x] U178 零件逐一支援皮：終點、按鈕、重生點、門、開關方塊、道具、尖刺、岩漿（狀態回饋改作用在皮上）
+　　→ 講師決定：狀態改變後怎麼顯示「都提供選項」：`Skin`／`SkinAnimated` 加 `active_style` 下拉（換圖就好／換圖再加原本效果／只用原本效果，預設換圖就好）。
+　　　原本效果＝終點、按鈕、重生點變色，門打開變淡，開關方塊關掉藏起來，尖刺岩漿關掉變暗；沒有狀態圖（`texture_active`／「啟動」動畫）時一律用原本效果，
+　　　`Skin` 沒放 `texture_active` 時不顯示這個欄位。開關方塊、尖刺、岩漿的「狀態改變後」＝關掉（驗證：`tests/skins/BlockSkinTest.tscn`）
+　　→ 講師決定：皮的測試場景用講師自己的素材，放 `tests/skins/_art/`（要進 git，換電腦才看得到；`tests/` 在 `.gitattributes` 是 export-ignore，
+　　　不會跑進學員的壓縮檔）。暫代圖在 `_art/AI_Placeholder/`，講師之後自己畫來換（AI 圖不給學員）
+- [x] U179 零件逐一支援皮：其餘有色塊的零件（箱子、可破壞、崩塌地板、彈射、風扇、移動平台、單向平台、傳送門…）
+　　→ 講師決定：可以拉大小的零件（無反彈方塊、單向平台）怎麼蓋「都提供選項」：`Skin` 加 `fill_style`（只放一張／重複鋪滿／拉伸蓋滿，預設只放一張），
+　　　`SkinAnimated` 只有只放一張／拉伸蓋滿（動畫做不到重複鋪滿）；後兩種自動對齊色塊範圍，從圖集切出來的圖也能重複鋪滿。
+　　　風扇的皮跟不跟著吹的方向轉「給選項」：`follow_direction`（預設勾，圖畫成朝上吹），只在風扇底下顯示。
+　　　彈射台彈出時播動畫不寫死名稱，改成學員自己加：另開 U180b `SkinEvent`。風扇關掉算「狀態改變後」（同 U178 的開關方塊、尖刺、岩漿）
+　　　（驗證：`tests/skins/MoreBlockSkinTest.tscn`）
+- [x] U180 敵人支援皮（轉向跟著翻、走路／受傷／死亡動畫）
+　　→ 講師決定：圖朝左畫的素材不另外加欄位，用 Godot 內建的 Flip H：學員勾 Flip H 讓圖在編輯器裡朝右（敵人一開始往右走），
+　　　轉向時以勾好的樣子為基準再翻。「死亡」動畫播完才藏起來（死掉當下就沒有碰撞、不傷人），「受傷」勾了循環也只播一輪
+　　　（驗證：`tests/skins/EnemySkinTest.tscn`）
+- [x] U180b `SkinEvent`：拖到 `SkinAnimated` 底下，「什麼時候」下拉自動列出零件的事件（中文，例如彈射台「彈出時」、傳送門「傳送時」），
+	  「播哪段」下拉自動列出 SpriteFrames 裡的動畫，播完回到平常；不用打字、不用連線；放錯地方、動畫被刪掉時黃色驚嘆號（講師決定，U179 提出）
+	  （驗證：`tests/skins/SkinEventTest.tscn`）
+　　→ 實作：零件馬上消失的事件（道具被撿、可破壞／崩塌地板碎掉、敵人被打倒）不列進下拉；兩個欄位空白時自動選第一個能用的；
+　　　事件動畫播的期間狀態改變先記著，播完回到現在的狀態（例如按鈕閃完停在「啟動」）；勾了循環也只播一輪
+- [x] U181 `Ability_Ranged`／`EnemyShooter` 的 `bullet_texture`、`Ability_Melee` 的 `slash_texture`
+	  （驗證：`tests/skins/AttackSkinTest.tscn`）
+　　→ 實作：子彈的圖畫成朝右飛，飛行時跟著方向轉（拋物線也一路頭朝前）；揮擊的圖畫成往右揮，放在原本色塊的中心，往左攻擊時跟著翻；
+　　　空白照舊顯示色塊、不警告
 
 ## 階段 51：角色動畫
 
-- [ ] U182 `Ability_Melee`／`Ability_Ranged` 新增 `attacked` 訊號
-- [ ] U183 `Juice_Animator`（找播放器、依狀態切換、缺動畫的退路、名稱檢查、動畫改了 scale／modulate 的警告、`play_custom`）
+- [x] U182 `Ability_Melee`／`Ability_Ranged` 新增 `attacked` 訊號
+	  （驗證：`tests/abilities/AttackedSignalTest.tscn`）
+　　→ 實作：訊號放在 `AbilityBase`（所有攻擊能力共用），近戰生成判定區、遠程發射子彈的那一下發出（遠程的 `shoot()` 也算）；冷卻中按了沒反應的不發
+- [x] U183 `Juice_Animator`（找播放器、依狀態切換、缺動畫的退路、名稱檢查、動畫改了 scale／modulate 的警告、`play_custom`）
+	  （驗證：`tests/juice/AnimatorSpriteTest.tscn`、`tests/juice/AnimatorPlayerTest.tscn`）
+　　→ 講師決定：角色轉向翻面由 `Juice_Animator` 負責（`follow_facing`，預設勾）：翻 Visual 底下圖的 Flip H，以編輯器裡勾好的 Flip H 當朝右
+　　　（圖朝左畫的勾 Flip H，跟敵人同一套）；自動奔跑卡已經翻 Visual 時不再翻一次。沒放 `Juice_Animator` 角色不翻（跟以前一樣）
+　　→ 實作：名稱不在清單裡、但跟清單很像的動畫（「跑」→「跑步」）也出黃色驚嘆號；死亡動畫勾了循環也只播一輪、停在最後一格
 
 ## 階段 52：地形與收尾
 
-- [ ] U184 `art/tile_template.png` 範本圖
-- [ ] U185 `W4_SkinBox` 起始場景（示範用的自訂 UI、皮、角色動畫）
-- [ ] U186 `W4_SkinPractice` 練習關（`PracticeSign` 加 W4 題目）
-- [ ] U187 煙霧測試補上 W4 項目；README、零件手冊、速查表補 W4（含 §9 課堂 SOP、背景圖做法）；跑一次煙霧測試
+- [x] U184 `art/tile_template.png` 範本圖
+	  （驗證：`tests/skins/TileTemplateTest.tscn`）
+　　→ 講師決定：原本 32 格都是實心色票、關卡只用到 (3,1)，改成重新規劃＋自動接邊（Godot 內建 Terrain，「地面」「平台」兩種，只比四邊）：
+　　　地面 16 格（3×3 以 (3,1) 為中心，加柱子、橫條、單獨一格）、平台 4 格（單向碰撞，左端／中間／右端／單塊）、裝飾 12 格（沒有碰撞）；
+　　　(3,1) 像素不變，舊關卡看起來一樣。`blocks.png` 重畫成預設圖塊（平塗色＋邊線），另外附 `tile_template_guide.png`（放大 8 倍、中文標註）
+- [x] U185 `W4_SkinBox` 起始場景（示範用的自訂 UI、皮、角色動畫）
+	  （驗證：`levels/_starts/W4_SkinBox.tscn`）
+　　→ 講師決定：示範素材先接好，發給學員前講師換成自己畫的（`levels/_starts/_W4SkinBox/art/`，同檔名同尺寸直接覆蓋）。
+　　　現在暫用測試素材（Foxy、Pixel Adventure、tileset）的複製，愛心是幾何暫代圖。
+　　→ 實作：W3_JuiceBox 的路線與 Juice（拿掉咕嚕眼，角色圖自己有眼睛）；角色 AnimatedSprite2D＋`Juice_Animator`；
+　　　金幣、尖刺、終點套 `Skin`，敵人套 `SkinAnimated`（拉伸蓋滿）；HUD 直接拖進關卡（接法 B，愛心圖示＋金幣圖、糖果配色），
+　　　暫停選單（暗色）、過關畫面（復古綠）接在 `UISettings`（接法 A），場景放 `levels/_starts/_W4SkinBox/ui/`
+- [x] U186 `W4_SkinPractice` 練習關（`PracticeSign` 加 W4 題目）
+	  （驗證：`levels/_starts/W4_SkinPractice.tscn`）
+　　→ 講師決定：規格第 3 題「HUD 加一個金幣數字」範本本來就有，改成「HUD 加一個遊玩時間」（HudNumber source 選遊玩時間）；
+　　　第 2 題「血條換位置」改成「血條移到畫面右上角」（血量的 HudBar／HudIcons 中心在畫面右半、上半）
+　　→ 實作：W3_JuicePractice 的路線（Juice 清空、八塊告示牌同位置），題目換成 W4 的 8 題（`task` 8～15）；
+　　　只認學員自己的 UI（`custom_ui_*` 群組，預設範本不算），接法 A、B 都算；告示牌改成開場 0.3 秒後檢查（等 UISettings 接上的畫面排好）
+- [x] U187 煙霧測試補上 W4 項目；README、零件手冊、速查表補 W4（含 §9 課堂 SOP、背景圖做法）；跑一次煙霧測試
+　　→ 實作：煙霧測試加 3 步：角色換 AnimatedSprite2D＋`Juice_Animator`（跑、跳、受傷、死亡重生、總開關，拔掉後翻面要還原）、
+　　　`blocks/` 每個有色塊的零件輪流套 `Skin`／`SkinAnimated` 開關打重置一輪、三個 UI 範本與 W4_SkinBox 示範 UI 用接法 A／B 各接一次；
+　　　順手修：拔掉 `Juice_Animator` 時角色圖翻面沒還原（鐵律 5）。README §3.2、§6，零件手冊 §1、§6、§7，速查表 §4、§6 補 W4。
+　　　煙霧測試通過（SMOKE TEST PASSED，只有預期內的中文警告）
+
+## 階段 53：W4 補強（標題畫面與畫面和諧工具）
+
+　　→ 講師決定（盤點後追加）：W4 補上標題畫面，以及讓學員畫面看起來一致的工具。順序 U188 → U189 → U191 → U190 → U193 → U192 → U194
+
+- [x] U188 像素專案預設值：像素字型關掉抗鋸齒、hinting、次像素定位；`UIRoot.font_size` 改成下拉（12 的整數倍）
+	  （驗證：`tests/ui/PixelDefaultsTest.tscn`）
+　　→ 盤點：貼圖 Nearest（`default_texture_filter=0`）、整數縮放（`window/stretch/scale_mode="integer"`）本來就設好了；
+　　　`Cubic_11.woff2` 400 KB、9159 個漢字、自由授權，不用子集化
+　　→ 講師決定：抽卡場景（`CardDraw`、`RuleCardDraw`）不是 12 倍數的字級，有必要就改成 12 的倍數
+- [x] U188b 暫停選單、過關畫面範本加底框：`Center/List` 外面包一層 `PanelContainer`，底色跟著 `palette`；「預設」配色補深色半透明面板色；
+	  `W4_SkinBox` 的示範暫停選單、過關畫面一起改（驗證：`tests/ui/PauseMenuTemplateTest.tscn`、`tests/ui/ClearScreenTemplateTest.tscn`）
+　　→ 講師決定（U188 時提出）：選單沒有自己的底框，遊戲畫面花的時候看不清楚；暫停選單、過關畫面都加。學員已經再製出去的不會跟著改
+- [x] U188c `Juice_TextPopup.size` 改成下拉（12／24／36，預設 12）；展示間的 20 號字改成 12（U188 盤點漏掉的）
+	  （驗證：`tests/juice/_extra/Juice_TextPopupTest.tscn`、`levels/Showroom.tscn`）
+　　→ 講師決定（U188 時提出）：跳字預設 11、拉桿 8～32，關掉抗鋸齒後不是 12 倍數會筆畫粗細不一，改成跟 `UIRoot.font_size` 一樣的下拉。
+　　　展示間的標籤框只有 80 寬、間隔 96，改 24 會互相重疊，所以改 12
+- [x] U189 `TitleScreenTemplate`：標題畫面（獨立場景、設為主場景）；`MenuAction` 加「開始遊戲」（下拉選關卡）、「回標題」（回主場景）；
+	  換場景前自動載入的狀態歸零；暫停選單、過關畫面範本加「回標題」；外觀變體 2 個
+	  （驗證：`tests/ui/TitleScreenTemplateTest.tscn`、`tests/ui/TitleFlowTest.tscn`）
+　　→ 講師決定：標題是獨立場景，按開始換場景進關卡，讓學員練習換場景。CLAUDE.md 開例外：重生、整關重來仍不准換場景，
+　　　只有 `MenuAction` 的「開始遊戲」「回標題」可以。標題不進 `UISettings`（接法 A／B 只管 HUD、暫停選單、過關畫面）
+　　→ 講師決定：遊戲名稱、主視覺、Hook 字「欄位與直接改範本都做」：根節點欄位有填就蓋掉範本裡的，空白就保留範本原本的
+　　→ 實作：`UIRoot.kind` 加「標題畫面」；`MenuAction` 加「開始遊戲」（`level` 下拉掃 `_my/`、`levels/_starts/`，記 UID 防改名）、「回標題」（回主場景，
+　　　沒有標題畫面可回時藏起來）；換場景統一走 `PauseMenu.change_scene()`：先拿掉舊場景，再歸零 `Stats`（數值種類與設定，血量回 3／3）、
+　　　`HudData`（來源、遊玩時間、死亡次數）、`RespawnMemory`、`StatsHud`（預設 HUD、角落容器），最後放進新場景；`JuiceSwitch` 的開關、音量不歸零（是玩家的偏好）。
+　　　標題放進關卡會中文警告並自己拿掉、拖進 `UISettings` 黃色驚嘆號；標題上 Esc 不開暫停選單；`ConnectionValidator` 換場景後也檢查新場景。
+　　　暫停選單、過關畫面範本（含 W4_SkinBox 示範版）加「回標題」；範本三個（預設、`_Center` 暗色主視覺當背景、`_Side` 復古綠左文右圖），主視覺佔位圖 `ui/templates/_art/`
+- [x] U191 `UIRoot` 加 `style`（像素復古／乾淨極簡／可愛圓角，含九宮格面板）；`ColorGrade`（統一色調，`CanvasModulate`）
+	  （驗證：`tests/ui/StylePresetTest.tscn`、`tests/ui/ColorGradeTest.tscn`）
+　　→ 講師決定：三套風格都用 Cubic 11（換非像素中文字型網頁版要多好幾 MB）
+　　→ 實作：`style` 管形狀、`palette` 管顏色。按鈕四種狀態（正常／滑過／按下／停用）本來就有，加上依風格的外框、圓角、厚底邊；
+　　　底框改用 `ui/styles/Panel_Pixel／Clean／Cute.png` 灰階九宮格依配色上色（像素復古的底框多了切角外框）；「預設」配色配其他兩種風格用中性灰。
+　　　`ColorGrade` 用 `CanvasModulate`，放兩個、放在 CanvasLayer 底下時黃色驚嘆號＋中文警告
+　　→ 順手修（講師驗收時發現）：`VolumeSlider` 的百分比原本掛在拉桿外面，不算進大小，有底框之後跑出框外。
+　　　改成 `HBoxContainer`（內部拉桿＋百分比，百分比固定留「100%」的寬），容器會照整個寬度撐開；欄位不變，既有的場景不用改
+- [x] U190 `SkinBackground`：背景零件（只放一張／重複鋪滿／拉伸蓋滿、可選視差、自動放最底）
+	  （驗證：`tests/skins/BackgroundSkinTest.tscn`）
+　　→ 講師決定：背景鋪在整個關卡上（跟地形一樣在世界裡），預設重複鋪滿、不視差
+　　→ 實作：內部 `Parallax2D`＋`Sprite2D`，`z_index = -100`；蓋滿的範圍是所有 Room 加起來（沒有 Room 看地形），編輯器每半秒重新對齊；
+　　　遠景要蓋的範圍是「關卡範圍 × depth＋一個畫面」（實測 4.7.2 的 `Parallax2D`：鏡頭移動 1000、scroll_scale 0.5 時背景在畫面上只移 500）；
+　　　沒放圖、放在別的東西底下、兩個不視差的蓋滿背景疊在一起時黃色驚嘆號＋中文警告。測試用講師的 `tests/skins/_art/Background/` 素材
+- [x] U193 風格一致性警告：`Skin`／`SkinAnimated`／`SkinBackground` 濾鏡不是 Nearest、縮放不是整數倍、像素密度跟場景裡多數的差 2 倍以上
+	  （驗證：`tests/skins/StyleWarningTest.tscn`）
+　　→ 講師決定：只出黃色驚嘆號、不阻擋；附 `ignore_style_check` 勾選框讓刻意混用的人關掉
+　　→ 實作：共用工具 `StyleCheck`。「16px 角色配 64px 地板」本身不算（都是 1 倍，像素一樣大），只抓「一個像素在畫面上多大」不一樣：
+　　　像素大小＝縮放，跟同場景多數的皮差 2 倍以上才警告（3 個皮以上才比、拉伸蓋滿和背景不算）；拉伸蓋滿不檢查縮放。
+　　　圖片匯入的 mipmaps 不檢查：專案是 Nearest，沒用 mipmap 的濾鏡時 mipmaps 不影響畫面，改 Filter 的情況第①條就抓得到。
+　　　盤點現有 W4_SkinBox 與 `tests/skins/` 的 73 個皮：沒有新的驚嘆號
+- [x] U192 `SquintTest`：瞇眼測試（按鍵切換模糊，可選加黑白，暫停中也能用）
+	  （驗證：`tests/ui/SquintTestDemo.tscn`）
+　　→ 講師決定：只在編輯器裡按 F5／F6 時有效，匯出的遊戲裡不作用
+　　→ 實作：放 `skins/`（講師決定 Q5），驗證場景改名 `tests/ui/SquintTestDemo.tscn`（避免 TestTest）；選的鍵被占用時讓出並提醒，多放的自己拿掉。
+　　　選 Tab 時，選單有按鈕被選中的話 Tab 會先被選單拿去切換按鈕（Godot 內建的鍵盤操作），所以預設用 F1
+　　→ 講師決定（驗收時提出）：瞇眼不代表要變黑白。`style` 下拉「只模糊」（預設，顏色還在）／「模糊＋黑白」（只看明暗）
+- [x] U194 `W4_BadExample`：教學用壞範例（低優先，放 `tests/skins/`，不進學員壓縮檔、不進煙霧測試）
+	  （驗證：`tests/skins/W4_BadExample.tscn`）
+　　→ 實作：複製 W4_SkinBox 同一條路線（方便並排截圖）：金幣三種畫風輪流（原本的、AI 金幣 1.5 倍、蘋果 0.4 倍＋Linear）、
+　　　尖刺換別套素材 0.7 倍＋Linear、終點換 AI 圖 1.3 倍、背景亮黃格子（`SkinBackground`＋調亮）、
+　　　HUD（`tests/skins/_bad/BadHud.tscn`）四種字型（像素字＋系統的 Times New Roman／Comic Sans／Impact）、四種顏色、位置沒對齊、正中間一行大標題。
+　　　`tests/` 是 export-ignore，不進學員壓縮檔；不進煙霧測試
+　　→ 講師決定（Q9）：`export_presets.cfg` 網頁版、Windows 兩個匯出設定的 `exclude_filter` 填 `tests/*`，講師自己匯出時也不打包測試場景與測試素材
+
+## 階段 54：修正
+
+- [x] U195 傳送門不再自動連回：每座只管自己傳到哪，A 指定 B＝單向（B 只當出口），要雙向兩座互相指定
+	  （驗證：`tests/blocks/PortalTest.tscn`）
+　　→ 講師決定：學員只想做單向，另一座卻會自己接回來。選「改成不自動連回」（規則最單純），不另外加下拉或勾選框
+　　→ 實作：只當出口的那座編輯器不出驚嘆號，玩家站進去時輸出面板提醒一次怎麼做成雙向；
+　　　展示間與測試場景（Showroom、PortalTest、HazardToggleTest、MoreBlockSkinTest）的 B 補上指回 A，維持原本的雙向；
+　　　PortalTest 加一組單向（C → D）；pair 指到不是傳送門的東西時，警告拿掉「只能單向」的字樣
+- [x] U196 `AreaTrigger` 觸發區：遊戲中看不見的範圍，走進發 `entered`、都離開發 `exited`；`width_tiles`／`height_tiles`、
+	  `triggered_by`＋`tag`（同按鈕）、`trigger_mode` 每次進入／只有第一次進入、`reset_on_death`（驗證：`tests/blocks/AreaTriggerTest.tscn`）
+　　→ 講師決定（U195 後提出）：沒有能自訂範圍的觸發零件，學員只能拿按鈕湊。照提案做，預設只有玩家會觸發
+　　→ 實作：碰撞範圍由程式建，每個觸發區各自一份形狀（拉一個不會改到別的）；範圍裡已經有東西時再進來的不重複發 entered；
+　　　「只有第一次進入」觸發後不發 exited；兩個訊號都沒連時執行時中文提醒（同按鍵觸發器）。展示間沒有加
+- [x] U197 Juice 觸發時機補上「撞天花板時」：`Player` 加 `ceiling_hit` 訊號（剛撞到的那一下，照角色的上方算，重力翻轉時跟著翻）
+	  （驗證：`tests/juice/CeilingHitTest.tscn`）
+　　→ 講師決定（學員回報）：Juice 有落地、撞牆，唯獨少了天花板，要補上；撞天花板的力道（像落地的 `follow_impact`）這次不做
+　　→ 實作：`timing` 下拉「撞天花板時」排在「撞牆時」後面，存的編號放最後（13），其他選項的編號不變，已經存好的場景不會跑掉
+- [x] U198 Room 被 Scale 縮放時鏡頭跑掉：範圍、中心、玩家在不在房間裡都照縮放後算，另外黃色驚嘆號＋中文警告建議改用拉桿
+	  （驗證：`tests/blocks/RoomScaleTest.tscn`）
+　　→ 學員回報（`tests/camear_bug_project`，碰到終點鏡頭就跑掉）：Room1 被 Scale 放大 5 倍、鏡頭 zoom 0.2 瞬切。
+　　　編輯器看到的房間是 2400×1360，程式卻只算左上角沒縮放的 480×272；玩家擦進那一小塊（剛好在終點正上方）時，
+　　　鏡頭瞬切到那一小塊的中心
+　　→ 講師決定：兩種都做（支援縮放＋提醒），很多學員都這樣縮放。學員那份專案換上新的 Room.gd 驗證過鏡頭不再跑掉
+　　→ 講師決定：房間大小盡量不要給上限（學員需要 150 格寬，原本最多 128）：`width_in_tiles`／`height_in_tiles`／`spawn_x`／`spawn_y`
+　　　加 `or_greater`，拉桿範圍放大到寬 256、高 128，拉到底還能繼續拉。學員專案 `tests/camear_bug_project` 測完刪掉（講師決定）
 
 ## 之後再做（構想，還沒排進單元）
 

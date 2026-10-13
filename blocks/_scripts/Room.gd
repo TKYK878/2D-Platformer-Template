@@ -8,6 +8,8 @@ extends Area2D
 # start_trigger 決定每次走進來都改，還是只有第一次；use_room_start 取消勾選時走進來不改。
 # 金幣、箱子、敵人這類會放回去的東西要拖到 Room 底下，玩家在這個房間死掉時才會放回去；
 # 範圍內有沒掛在任何 Room 底下的，場景樹會顯示黃色驚嘆號。
+# 學員用 Scale 把房間拉大時，範圍、中心、房間起點都照縮放後算（編輯器看到多大就是多大），
+# 但房間底下的東西也會一起放大，所以出黃色驚嘆號建議改用 width_in_tiles／height_in_tiles。
 
 const _TILE_SIZE := 16
 const _BORDER_COLOR := Color(0.35, 0.8, 1.0, 0.9)
@@ -19,25 +21,25 @@ const _WARNING_REFRESH_SECONDS := 1.0
 const _MAX_LISTED_OBJECTS := 3
 
 @export_group("房間設定")
-## 房間寬度，以格為單位（16px 一格，30 格 = 一個螢幕寬）
-@export_range(16, 128) var width_in_tiles: int = 30:
+## 房間寬度，以格為單位（16px 一格，30 格 = 一個螢幕寬）；拉到底還可以繼續往右拉，沒有上限
+@export_range(16, 256, 1, "or_greater") var width_in_tiles: int = 30:
 	set(value):
 		width_in_tiles = value
 		_update_shape()
-## 房間高度，以格為單位（17 格 ≈ 一個螢幕高，最下面半格會被畫面切掉）
-@export_range(9, 64) var height_in_tiles: int = 17:
+## 房間高度，以格為單位（17 格 ≈ 一個螢幕高，最下面半格會被畫面切掉）；拉到底還可以繼續往右拉，沒有上限
+@export_range(9, 128, 1, "or_greater") var height_in_tiles: int = 17:
 	set(value):
 		height_in_tiles = value
 		_update_shape()
 
 @export_group("房間起點")
 ## 房間起點離房間左邊幾格（30 格寬的房間，15 就是正中間）。玩家在這個房間死掉會回到這裡
-@export_range(0, 128) var spawn_x: int = 15:
+@export_range(0, 256, 1, "or_greater") var spawn_x: int = 15:
 	set(value):
 		spawn_x = value
 		_update_shape()
 ## 房間起點離房間底部幾格（2 就是站在最下面一排地板上）
-@export_range(0, 64) var spawn_y: int = 2:
+@export_range(0, 128, 1, "or_greater") var spawn_y: int = 2:
 	set(value):
 		spawn_y = value
 		_update_shape()
@@ -78,13 +80,13 @@ func _print_problems() -> void:
 		push_warning("[房間] %s：%s" % [name, message])
 		print("[房間] %s：%s" % [name, message])
 
-# 回傳房間中心的全域座標，鏡頭切換用這個
+# 回傳房間中心的全域座標，鏡頭切換用這個（房間有縮放的話照縮放後算）
 func get_center() -> Vector2:
-	return global_position + _get_size() / 2.0
+	return to_global(_get_size() / 2.0)
 
-# 回傳房間範圍（全域座標的矩形），鏡頭「房間內跟隨」用這個限制不超出房間
+# 回傳房間範圍（全域座標的矩形，房間有縮放的話照縮放後算），鏡頭「房間內跟隨」用這個限制不超出房間
 func get_rect() -> Rect2:
-	return Rect2(global_position, _get_size())
+	return global_transform * Rect2(Vector2.ZERO, _get_size())
 
 # 回傳玩家在這個房間死掉時要回到的全域座標（房間起點），重生處理者用這個
 func get_spawn_point() -> Vector2:
@@ -105,7 +107,7 @@ func _validate_property(property: Dictionary) -> void:
 
 # 回傳某個全域座標在不在這個房間範圍內，重生處理者找「房間裡的零件」用這個
 func has_point(global_point: Vector2) -> bool:
-	return Rect2(global_position, _get_size()).has_point(global_point)
+	return get_rect().has_point(global_point)
 
 # 玩家碰到房間邊界時開始追蹤；真正算「進入」要等玩家中心點跨進來
 func _on_body_entered(body: Node) -> void:
@@ -143,6 +145,9 @@ func _get_local_spawn_point() -> Vector2:
 # 檢查房間設定有沒有問題，回傳中文說明（編輯器黃色警告跟執行時警告共用）
 func _get_problems(scene_root: Node) -> PackedStringArray:
 	var problems := PackedStringArray()
+	var scale_problem := _scale_problem()
+	if scale_problem != "":
+		problems.append(scale_problem)
 	if spawn_x > width_in_tiles:
 		problems.append("spawn_x（%d）超過房間寬度（%d 格），房間起點被放在房間最右邊" % [spawn_x, width_in_tiles])
 	if spawn_y > height_in_tiles:
@@ -156,7 +161,27 @@ func _get_problems(scene_root: Node) -> PackedStringArray:
 			problems.append("%s 在房間範圍內，但沒有放在 Room 底下，玩家死掉時不會被放回去。把它拖到 %s 底下" % [_list_names(loose), name])
 	return problems
 
-# 編輯器場景樹的黃色驚嘆號：房間起點超出房間、底下還放著舊的 Marker2D、範圍內有沒掛進來的物件
+# 房間（或它上面的節點）被縮放了：範圍照縮放後算所以鏡頭、重生正常，但房間裡的東西也一起放大，提醒改用拉桿
+func _scale_problem() -> String:
+	var s := global_scale
+	if is_equal_approx(s.x, 1.0) and is_equal_approx(s.y, 1.0):
+		return ""
+	var size := get_rect().size
+	return ("房間被 Scale 縮放成 %s 倍（現在是 %d × %d 像素）：鏡頭、重生照縮放後的大小算，但房間底下的東西也一起變成 %s 倍。"
+		+ "要調房間大小建議把 Scale 改回 1，用 width_in_tiles／height_in_tiles 拉桿") 		% [_scale_text(s), roundi(size.x), roundi(size.y), _scale_text(s)]
+
+# 縮放寫成字：左右上下一樣就一個數字，不一樣就「左右 × 上下」
+func _scale_text(s: Vector2) -> String:
+	if is_equal_approx(s.x, s.y):
+		return _num(s.x)
+	return "%s × %s" % [_num(s.x), _num(s.y)]
+
+# 數字最多兩位小數，整數不寫小數點（5 而不是 5.0）
+func _num(value: float) -> String:
+	var v := snappedf(value, 0.01)
+	return str(int(v)) if is_equal_approx(v, roundf(v)) else String.num(v)
+
+# 編輯器場景樹的黃色驚嘆號：房間被縮放、房間起點超出房間、底下還放著舊的 Marker2D、範圍內有沒掛進來的物件
 func _get_configuration_warnings() -> PackedStringArray:
 	if not is_inside_tree():
 		return PackedStringArray()

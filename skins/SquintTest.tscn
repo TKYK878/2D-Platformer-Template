@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skins/_scripts/SquintTest.gd" id="1"]
+
+[node name="SquintTest" type="CanvasLayer"]
+layer = 110
+script = ExtResource("1")

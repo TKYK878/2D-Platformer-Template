@@ -1,0 +1,55 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/HudNumber.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/HudIcons.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/heart_full.png" id="4"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/heart_empty.png" id="5"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/coin.png" id="6"]
+
+[node name="HudDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+palette = 4
+
+[node name="Rows" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 104.0
+offset_bottom = 36.0
+mouse_filter = 2
+
+[node name="HealthRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Title" parent="Rows/HealthRow" instance=ExtResource("2")]
+layout_mode = 2
+kind = "血量"
+format = 3
+
+[node name="Hearts" parent="Rows/HealthRow" instance=ExtResource("3")]
+layout_mode = 2
+full_icon = ExtResource("4")
+empty_icon = ExtResource("5")
+shake_on_decrease = true
+
+[node name="CoinRow" type="HBoxContainer" parent="Rows"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Icon" type="TextureRect" parent="Rows/CoinRow"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("6")
+stretch_mode = 5
+
+[node name="Coin" parent="Rows/CoinRow" instance=ExtResource("2")]
+layout_mode = 2

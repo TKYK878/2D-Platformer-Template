@@ -1,0 +1,220 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/skins/_scripts/SkinEventTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="player"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Foxy/idle/sprites/f-01.png" id="fox"]
+[ext_resource type="PackedScene" path="res://skins/Skin.tscn" id="skin"]
+[ext_resource type="PackedScene" path="res://skins/SkinAnimated.tscn" id="anim"]
+[ext_resource type="PackedScene" path="res://skins/SkinEvent.tscn" id="event"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Traps/Trampoline/Idle.png" id="tramp_idle"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Traps/Trampoline/Jump (28x28).png" id="tramp_jump"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_1.png" id="btn1"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_2.png" id="btn2"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_on_1.png" id="on1"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_on_2.png" id="on2"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/door.png" id="door"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/door_open.png" id="door_open"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/goal.png" id="goal"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/tileset.png" id="box_tex"]
+[ext_resource type="PackedScene" path="res://blocks/Button.tscn" id="Button"]
+[ext_resource type="PackedScene" path="res://blocks/Door.tscn" id="Door"]
+[ext_resource type="PackedScene" path="res://blocks/Launcher.tscn" id="Launcher"]
+[ext_resource type="PackedScene" path="res://blocks/Box.tscn" id="Box"]
+[ext_resource type="PackedScene" path="res://blocks/Goal.tscn" id="Goal"]
+
+[sub_resource type="AtlasTexture" id="jump0"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(0, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump1"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(28, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump2"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(56, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump3"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(84, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump4"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(112, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump5"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(140, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump6"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(168, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="jump7"]
+atlas = ExtResource("tramp_jump")
+region = Rect2(196, 0, 28, 28)
+
+[sub_resource type="AtlasTexture" id="box"]
+atlas = ExtResource("box_tex")
+region = Rect2(272, 112, 16, 16)
+
+[sub_resource type="SpriteFrames" id="F_tramp"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("tramp_idle")}],
+"loop": true,
+"name": &"平常",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("jump0")}, {"duration": 1.0, "texture": SubResource("jump1")}, {"duration": 1.0, "texture": SubResource("jump2")}, {"duration": 1.0, "texture": SubResource("jump3")}, {"duration": 1.0, "texture": SubResource("jump4")}, {"duration": 1.0, "texture": SubResource("jump5")}, {"duration": 1.0, "texture": SubResource("jump6")}, {"duration": 1.0, "texture": SubResource("jump7")}],
+"loop": false,
+"name": &"彈跳",
+"speed": 20.0
+}]
+
+[sub_resource type="SpriteFrames" id="F_btn"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("btn1")}, {"duration": 1.0, "texture": ExtResource("btn2")}],
+"loop": true,
+"name": &"平常",
+"speed": 3.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("on1")}, {"duration": 1.0, "texture": ExtResource("on2")}],
+"loop": true,
+"name": &"啟動",
+"speed": 6.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("on2")}, {"duration": 1.0, "texture": ExtResource("btn1")}, {"duration": 1.0, "texture": ExtResource("on2")}, {"duration": 1.0, "texture": ExtResource("btn1")}, {"duration": 1.0, "texture": ExtResource("on2")}, {"duration": 1.0, "texture": ExtResource("btn1")}],
+"loop": false,
+"name": &"閃",
+"speed": 12.0
+}]
+
+[sub_resource type="SpriteFrames" id="F_door"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": ExtResource("door")}],
+"loop": true,
+"name": &"平常",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("door_open")}],
+"loop": true,
+"name": &"啟動",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": ExtResource("door")}, {"duration": 1.0, "texture": ExtResource("door_open")}, {"duration": 1.0, "texture": ExtResource("door")}, {"duration": 1.0, "texture": ExtResource("door_open")}, {"duration": 1.0, "texture": ExtResource("door")}, {"duration": 1.0, "texture": ExtResource("door_open")}],
+"loop": false,
+"name": &"開門中",
+"speed": 8.0
+}]
+
+[sub_resource type="SpriteFrames" id="F_box"]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("box")}],
+"loop": true,
+"name": &"平常",
+"speed": 5.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("box")}],
+"loop": true,
+"name": &"晃",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="Floor_Shape"]
+size = Vector2(460, 16)
+
+[node name="SkinEventTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(0, 8)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("Floor_Shape")
+
+[node name="ColorRect" type="ColorRect" parent="Floor"]
+offset_left = -230.0
+offset_top = -8.0
+offset_right = 230.0
+offset_bottom = 8.0
+color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="Player" parent="." instance=ExtResource("player")]
+position = Vector2(-200, -20)
+
+[node name="Visual" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual"]
+texture = ExtResource("fox")
+
+[node name="Mechanics" type="Node2D" parent="Player"]
+
+[node name="Juice" type="Node2D" parent="Player"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -60)
+
+[node name="Button1_Flash" parent="." instance=ExtResource("Button")]
+position = Vector2(-150, -4)
+mode = 1
+
+[node name="SkinAnimated" parent="Button1_Flash" instance=ExtResource("anim")]
+sprite_frames = SubResource("F_btn")
+
+[node name="SkinEvent" parent="Button1_Flash/SkinAnimated" instance=ExtResource("event")]
+when = "打開時"
+animation = "閃"
+
+[node name="Door1_Opening" parent="." instance=ExtResource("Door")]
+position = Vector2(-100, -16)
+
+[node name="SkinAnimated" parent="Door1_Opening" instance=ExtResource("anim")]
+sprite_frames = SubResource("F_door")
+
+[node name="SkinEvent" parent="Door1_Opening/SkinAnimated" instance=ExtResource("event")]
+when = "門打開時"
+animation = "開門中"
+
+[node name="Launcher1_Bounce" parent="." instance=ExtResource("Launcher")]
+position = Vector2(-30, -8)
+
+[node name="SkinAnimated" parent="Launcher1_Bounce" instance=ExtResource("anim")]
+position = Vector2(0, -6)
+sprite_frames = SubResource("F_tramp")
+
+[node name="SkinEvent" parent="Launcher1_Bounce/SkinAnimated" instance=ExtResource("event")]
+when = "彈出時"
+animation = "彈跳"
+
+[node name="Launcher2_Typo" parent="." instance=ExtResource("Launcher")]
+position = Vector2(60, -8)
+
+[node name="SkinAnimated" parent="Launcher2_Typo" instance=ExtResource("anim")]
+position = Vector2(0, -6)
+sprite_frames = SubResource("F_tramp")
+
+[node name="SkinEvent" parent="Launcher2_Typo/SkinAnimated" instance=ExtResource("event")]
+when = "彈出時"
+animation = "彈"
+
+[node name="Box_NoEvents" parent="." instance=ExtResource("Box")]
+position = Vector2(120, -8)
+
+[node name="SkinAnimated" parent="Box_NoEvents" instance=ExtResource("anim")]
+sprite_frames = SubResource("F_box")
+
+[node name="SkinEvent" parent="Box_NoEvents/SkinAnimated" instance=ExtResource("event")]
+animation = "晃"
+
+[node name="Goal_StaticSkin" parent="." instance=ExtResource("Goal")]
+position = Vector2(180, -16)
+
+[node name="Skin" parent="Goal_StaticSkin" instance=ExtResource("skin")]
+texture_normal = ExtResource("goal")
+
+[node name="SkinEvent" parent="Goal_StaticSkin/Skin" instance=ExtResource("event")]
+
+[connection signal="turned_on" from="Button1_Flash" to="Door1_Opening" method="activate"]
+[connection signal="turned_off" from="Button1_Flash" to="Door1_Opening" method="deactivate"]

@@ -23,24 +23,24 @@ theme_override_constants/separation = 18
 
 [node name="CardTitle" type="Label" parent="CenterContainer/VBoxContainer"]
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 text = "按下面的按鈕抽一張卡"
 
 [node name="CardRule" type="Label" parent="CenterContainer/VBoxContainer"]
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="CardDifficulty" type="Label" parent="CenterContainer/VBoxContainer"]
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 
 [node name="CardDragHint" type="Label" parent="CenterContainer/VBoxContainer"]
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -54,10 +54,10 @@ theme_override_constants/separation = 20
 [node name="DrawButton" type="Button" parent="CenterContainer/VBoxContainer/ButtonRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 50)
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 24
 text = "抽卡"
 
 [node name="RedrawHint" type="Label" parent="CenterContainer/VBoxContainer/ButtonRow"]
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 24
 vertical_alignment = 1
 text = "抽到沒感覺的就重抽"

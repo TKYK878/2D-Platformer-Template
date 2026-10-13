@@ -1,0 +1,156 @@
+[gd_scene format=3 uid="uid://beqquiqx4nqnh"]
+
+[ext_resource type="Script" uid="uid://bbwei42v2mixo" path="res://tests/skins/_scripts/SkinTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://tests/skins/SkinTestBlock.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://skins/Skin.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://skins/SkinAnimated.tscn" id="4"]
+[ext_resource type="Texture2D" uid="uid://2i8abt7n0dih" path="res://tests/skins/_art/Foxy/idle/sprites/f-01.png" id="idle1"]
+[ext_resource type="Texture2D" uid="uid://ccxxykl3utphk" path="res://tests/skins/_art/Foxy/idle/sprites/f-02.png" id="idle2"]
+[ext_resource type="Texture2D" uid="uid://b0616pgmajtu6" path="res://tests/skins/_art/Foxy/idle/sprites/f-03.png" id="idle3"]
+[ext_resource type="Texture2D" uid="uid://lvhqqiked5p4" path="res://tests/skins/_art/Foxy/idle/sprites/f-04.png" id="idle4"]
+[ext_resource type="Texture2D" uid="uid://5nn8mp33ta8i" path="res://tests/skins/_art/Foxy/jump/sprites/f-01.png" id="jump"]
+[ext_resource type="Texture2D" uid="uid://dwnimnhogitv1" path="res://tests/skins/_art/Foxy/run/sprites/f-01.png" id="run1"]
+[ext_resource type="Texture2D" uid="uid://dw3nrvtp150sq" path="res://tests/skins/_art/Foxy/run/sprites/f-02.png" id="run2"]
+[ext_resource type="Texture2D" uid="uid://b1vej51k331bh" path="res://tests/skins/_art/Foxy/run/sprites/f-03.png" id="run3"]
+[ext_resource type="Texture2D" uid="uid://pvyhwmsigqve" path="res://tests/skins/_art/Foxy/run/sprites/f-04.png" id="run4"]
+[ext_resource type="Texture2D" uid="uid://b08l6tdylhsre" path="res://tests/skins/_art/Foxy/run/sprites/f-05.png" id="run5"]
+[ext_resource type="Texture2D" uid="uid://8w8cxgiusxqf" path="res://tests/skins/_art/Foxy/run/sprites/f-06.png" id="run6"]
+[ext_resource type="Texture2D" uid="uid://du4gkbad8fjkn" path="res://tests/skins/_art/Foxy/Victory/sprites/f-01.png" id="victory"]
+
+[sub_resource type="SpriteFrames" id="Frames_ok"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("run1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run6")
+}],
+"loop": 1,
+"name": &"啟動",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("idle1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("idle2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("idle3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("idle4")
+}],
+"loop": 1,
+"name": &"平常",
+"speed": 6.0
+}]
+
+[sub_resource type="SpriteFrames" id="Frames_typo"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("run1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("run6")
+}],
+"loop": 1,
+"name": &"啟動",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("idle1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("idle2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("idle3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("idle4")
+}],
+"loop": 1,
+"name": &"平",
+"speed": 6.0
+}]
+
+[node name="Local_SkinTest" type="Node2D" unique_id=235986242]
+script = ExtResource("1")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=19886084]
+zoom = Vector2(2, 2)
+
+[node name="Block1_StaticTint" parent="." unique_id=667307367 instance=ExtResource("2")]
+position = Vector2(-100, 0)
+
+[node name="Skin" parent="Block1_StaticTint" unique_id=1211572061 instance=ExtResource("3")]
+texture_normal = ExtResource("idle1")
+
+[node name="Block2_StaticActive" parent="." unique_id=1202566931 instance=ExtResource("2")]
+position = Vector2(-60, 0)
+
+[node name="Skin" parent="Block2_StaticActive" unique_id=1085840249 instance=ExtResource("3")]
+texture_normal = ExtResource("idle1")
+texture_active = ExtResource("victory")
+follow_facing = false
+
+[node name="Block3_Animated" parent="." unique_id=359604015 instance=ExtResource("2")]
+position = Vector2(-20, 0)
+
+[node name="SkinAnimated" parent="Block3_Animated" unique_id=1232526754 instance=ExtResource("4")]
+sprite_frames = SubResource("Frames_ok")
+animation = &"平常"
+
+[node name="Block4_AnimTypo" parent="." unique_id=2116243449 instance=ExtResource("2")]
+position = Vector2(20, 0)
+
+[node name="SkinAnimated" parent="Block4_AnimTypo" unique_id=1479923201 instance=ExtResource("4")]
+sprite_frames = SubResource("Frames_typo")
+animation = &"平"
+
+[node name="Block5_NoTexture" parent="." unique_id=1429287450 instance=ExtResource("2")]
+position = Vector2(60, 0)
+
+[node name="Skin" parent="Block5_NoTexture" unique_id=638260503 instance=ExtResource("3")]
+
+[node name="Block6_TwoSkins" parent="." unique_id=820515509 instance=ExtResource("2")]
+position = Vector2(100, 0)
+
+[node name="Skin" parent="Block6_TwoSkins" unique_id=1981353149 instance=ExtResource("3")]
+texture_normal = ExtResource("idle1")
+
+[node name="Skin2" parent="Block6_TwoSkins" unique_id=1889528000 instance=ExtResource("3")]
+texture_normal = ExtResource("jump")
+
+[node name="LostSkin" parent="." unique_id=875963106 instance=ExtResource("3")]
+position = Vector2(0, 50)
+texture_normal = ExtResource("idle1")

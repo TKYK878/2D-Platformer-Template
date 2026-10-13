@@ -14,15 +14,15 @@ const _COLOR_REACHED := Color(0.3, 0.85, 0.35, 1)
 # 編輯器裡每隔幾秒重新檢查一次有沒有過關畫面，學員拖進來之後黃色警告會跟著消失
 const _WARNING_REFRESH_SECONDS := 1.0
 
-@onready var _visual: ColorRect = $Visual
-
+var _skin: SkinLink = null
 var _cleared: bool = false
 var _warning_timer: float = 0.0
 
-# 設定碰撞層／遮罩，只偵測玩家
+# 設定碰撞層／遮罩，只偵測玩家；底下有皮就換上皮
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	_skin = SkinLink.new(self, $Visual)
 	add_to_group("signal_source")
 	add_to_group("goal")
 	collision_layer = Layers.SENSOR
@@ -34,14 +34,15 @@ func _on_body_entered(body: Node) -> void:
 	if _cleared or not body.is_in_group("player"):
 		return
 	_cleared = true
-	_visual.color = _COLOR_REACHED
+	_skin.show_state(true, _COLOR_REACHED)
 	reached.emit()
 	Events.level_cleared.emit()
 
 # 恢復成還沒踩過，可以再過關一次（整關重來、過關畫面按再玩一次時呼叫）
 func reset() -> void:
 	_cleared = false
-	_visual.color = _COLOR_WAITING
+	if _skin != null:
+		_skin.show_state(false, _COLOR_WAITING)
 
 # 編輯器裡的黃色驚嘆號：場景裡沒有過關畫面，踩到終點畫面上不會有任何反應
 func _get_configuration_warnings() -> PackedStringArray:

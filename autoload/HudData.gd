@@ -94,6 +94,17 @@ func reset_run() -> void:
 	publish(PLAY_TIME, 0.0)
 	publish(DEATHS, 0.0)
 
+# 換場景時呼叫（Stats 先歸零之後）：所有來源清空，重新公開 Stats 現有的數值、遊玩時間、死亡次數歸零
+func reset_for_new_scene() -> void:
+	for source_name in _values.keys():
+		remove_source(source_name)
+	_claims.clear()
+	_play_time = 0.0
+	for kind in Stats.get_known_kinds():
+		_publish_stat(kind)
+	publish(PLAY_TIME, 0.0)
+	publish(DEATHS, 0.0)
+
 # 把 Stats 某個數值種類的目前值與上限公開出去
 func _publish_stat(kind: String) -> void:
 	publish(kind, Stats.get_value(kind), Stats.get_max_value(kind))

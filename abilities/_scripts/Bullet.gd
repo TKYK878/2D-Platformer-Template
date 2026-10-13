@@ -5,6 +5,7 @@ extends Area2D
 # 會像拋物線一樣往下墜；存在超過 lifetime_left 秒、或飛超過 max_distance 像素（0 代表不限制）也會自動消失。
 # 子彈分陣營：玩家方打敵人跟物件，敵方打玩家；敵方子彈只有 hit_objects 開啟時才會打壞物件。
 # 不是拖進場景用的零件，一律用 Bullet.spawn() 產生（遠程能力、敵人射擊都用這個）。
+# 生它的人有放 bullet_texture 時用 set_texture() 換成那張圖（圖畫成朝右飛，飛行時跟著方向轉）。
 
 # 陣營：玩家方
 const TEAM_PLAYER := 0
@@ -24,6 +25,7 @@ var team: int = TEAM_PLAYER
 var hit_objects: bool = true
 var shooter: Node = null
 var _traveled: float = 0.0
+var _sprite: Sprite2D = null
 
 # 從 shooter 的位置朝 direction 發射一顆子彈，放進目前的關卡場景並回傳它；
 # 其他選項（重力、存在秒數、飛行距離、傷害…）拿到回傳值之後再設定
@@ -35,6 +37,16 @@ static func spawn(from: Node2D, direction: Vector2, speed: float, bullet_team: i
 	bullet.velocity = direction.normalized() * speed
 	from.get_tree().current_scene.add_child(bullet)
 	return bullet
+
+# 把子彈換成一張圖（藏起原本的色塊）；圖畫成朝右飛，飛行時跟著方向轉。tex 空白就照舊顯示色塊
+func set_texture(tex: Texture2D) -> void:
+	if tex == null:
+		return
+	$Visual.visible = false
+	_sprite = Sprite2D.new()
+	_sprite.texture = tex
+	_sprite.rotation = velocity.angle()
+	add_child(_sprite)
 
 # 依陣營設定碰撞層／遮罩，監聽撞到東西；敵方子彈在玩家重生時自動消失，不會一重生就被舊子彈打到
 func _ready() -> void:
@@ -51,6 +63,8 @@ func _physics_process(delta: float) -> void:
 	if gravity_enabled:
 		velocity.y += _GRAVITY * delta
 	global_position += velocity * delta
+	if _sprite != null:
+		_sprite.rotation = velocity.angle()
 	_traveled += velocity.length() * delta
 	lifetime_left -= delta
 	if lifetime_left <= 0.0 or (max_distance > 0.0 and _traveled >= max_distance):

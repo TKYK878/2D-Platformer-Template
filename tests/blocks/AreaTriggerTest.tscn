@@ -1,0 +1,73 @@
+[gd_scene format=4 uid="uid://calr0yhere5jx"]
+
+[ext_resource type="Script" uid="uid://c0m1gv4tkxsdu" path="res://tests/blocks/_scripts/AreaTriggerTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="2"]
+[ext_resource type="TileSet" uid="uid://6xyxoqkb30in" path="res://art/default_tile.tres" id="3"]
+[ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="4"]
+[ext_resource type="PackedScene" path="res://blocks/Spike.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://juice/Juice_Sound.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://blocks/AreaTrigger.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://blocks/Door.tscn" id="12"]
+
+[node name="AreaTriggerTest" type="Node2D" unique_id=508156622]
+script = ExtResource("1")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=438316119]
+tile_map_data = PackedByteArray("AADx/wcAAAADAAEAAADy/wcAAAADAAEAAADz/wcAAAADAAEAAAD0/wcAAAADAAEAAAD1/wcAAAADAAEAAAD2/wcAAAADAAEAAAD3/wcAAAADAAEAAAD4/wcAAAADAAEAAAD5/wcAAAADAAEAAAD6/wcAAAADAAEAAAD7/wcAAAADAAEAAAD8/wcAAAADAAEAAAD9/wcAAAADAAEAAAD+/wcAAAADAAEAAAD//wcAAAADAAEAAAAAAAcAAAADAAEAAAABAAcAAAADAAEAAAACAAcAAAADAAEAAAADAAcAAAADAAEAAAAEAAcAAAADAAEAAAAFAAcAAAADAAEAAAAGAAcAAAADAAEAAAAHAAcAAAADAAEAAAAIAAcAAAADAAEAAAAJAAcAAAADAAEAAAAKAAcAAAADAAEAAAALAAcAAAADAAEAAAAMAAcAAAADAAEAAAANAAcAAAADAAEAAAAOAAcAAAADAAEAAAA=")
+tile_set = ExtResource("3")
+
+[node name="Player" parent="." unique_id=1998252816 instance=ExtResource("2")]
+position = Vector2(-150, 95)
+
+[node name="Visual" type="Node2D" parent="Player" unique_id=883111990]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual" unique_id=1887335101]
+texture = ExtResource("4")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 32)
+
+[node name="Mechanics" type="Node2D" parent="Player" unique_id=866223669]
+
+[node name="Juice" type="Node2D" parent="Player" unique_id=792754784]
+
+[node name="Juice_Sound" parent="Player/Juice" unique_id=1036746252 instance=ExtResource("10")]
+sound = 5
+timing = 11
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1506780310]
+position = Vector2(-15, 50)
+zoom = Vector2(0.75, 0.75)
+
+[node name="RespawnHandler" parent="." unique_id=726422482 instance=ExtResource("6")]
+
+[node name="Spike_Instant" parent="." unique_id=1442204519 instance=ExtResource("5")]
+position = Vector2(0, 90)
+penalty = 1
+
+[node name="Trigger_Door" parent="." unique_id=2093129750 instance=ExtResource("11")]
+position = Vector2(-70, 80)
+width_tiles = 5
+
+[node name="Door" parent="." unique_id=964190584 instance=ExtResource("12")]
+position = Vector2(-40, 95)
+
+[node name="Trigger_Once" parent="." unique_id=893454048 instance=ExtResource("11")]
+position = Vector2(60, 80)
+width_tiles = 2
+trigger_mode = 1
+reset_on_death = true
+
+[node name="Trigger_Unconnected" parent="." unique_id=1467539434 instance=ExtResource("11")]
+position = Vector2(150, 80)
+width_tiles = 2
+
+[node name="Trigger_GroupTypo" parent="." unique_id=1790255147 instance=ExtResource("11")]
+position = Vector2(150, 20)
+triggered_by = 3
+tag = " 鑰匙箱 "
+
+[connection signal="entered" from="Trigger_Door" to="Door" method="activate"]
+[connection signal="exited" from="Trigger_Door" to="Door" method="deactivate"]
+[connection signal="entered" from="Trigger_Once" to="." method="_on_once_entered"]
+[connection signal="entered" from="Trigger_GroupTypo" to="Door" method="toggle"]

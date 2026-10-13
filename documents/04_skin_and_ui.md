@@ -163,7 +163,7 @@ const TIMELINE := "時間軸"
 
 | 零件 | 繼承 | 做什麼 |
 |---|---|---|
-| `MenuAction` | `Button` | `action` 下拉：繼續遊戲／整關重來／離開遊戲（跟現在暫停選單同三個）。按下去就執行，不用連 `pressed`。「離開遊戲」在 Web 版自動藏起來 |
+| `MenuAction` | `Button` | `action` 下拉：繼續遊戲／整關重來／離開遊戲／開始遊戲／回標題（後兩個 U189）。按下去就執行，不用連 `pressed`。「離開遊戲」在 Web 版自動藏起來；「回標題」在主場景不是標題畫面、或現在就在標題上時自動藏起來；「開始遊戲」多一格 `level` 下拉（掃 `_my/`、`levels/_starts/` 的關卡，排除最上層是 `UIRoot` 的場景；存去掉 `res://` 的路徑，另外記 UID，改名搬家還找得到；沒選、找不到時黃色驚嘆號＋中文警告） |
 | `VolumeSlider` | `HSlider` | `bus` 下拉：主音量／音效／音樂。跟現在暫停選單的拉桿同一套存檔（`user://settings.cfg`） |
 | `ClearStat` | `Label` | 過關畫面專用：`stat` 下拉：用了幾秒／死了幾次／製作者的話。照 `ClearScreen` 的勾選決定要不要顯示 |
 
@@ -176,8 +176,8 @@ const TIMELINE := "時間軸"
 @export_enum("HUD", "暫停選單", "過關畫面") var kind: int = 0
 ## 這一整套 UI 用的字型，從檔案系統把字型檔拖進來；空白用專案預設的像素字
 @export var font: Font
-## 字的大小（像素字型請用 12 的倍數）
-@export_range(12, 48, 12) var font_size: int = 12
+## 字的大小：像素字只能放大成原本的整數倍，不然會糊或高低不齊
+@export_enum("原本大小 12:12", "2 倍 24:24", "3 倍 36:36", "4 倍 48:48") var font_size: int = 12
 ## 配色：字、底色、按鈕、條的顏色一起換
 @export_enum("預設", "暗色", "亮色", "復古綠", "糖果") var palette: int = 0
 ```
@@ -187,6 +187,24 @@ const TIMELINE := "時間軸"
 - 個別零件想要不一樣的字或顏色，用原生的「主題覆寫」改（進階，不在課堂上教）；主題覆寫優先於 `UIRoot`。
 - `font` 屬於資源欄位例外：拖錯類型 Inspector 本身就不會接受；空白用預設，不需要警告。
 - 「預設」配色＝現在的樣子。
+- `style`（U191）：像素復古（原本的樣子，預設）／乾淨極簡（按鈕細外框、左右多留白）／可愛圓角（按鈕、條圓角，按鈕底邊加厚、按下變薄字往下）。
+  形狀跟顏色分開：`style` 管形狀、`palette` 管顏色，任意組合；「預設」配色配像素復古以外的風格時用中性灰（`_NEUTRAL`），不然按鈕是 Godot 原本的樣子換不了形狀。
+  底框（`Panel`／`PanelContainer`）用 `ui/styles/Panel_*.png` 灰階九宮格（24×24、四邊 8 像素），`StyleBoxTexture.modulate_color` 依配色的 panel 上色。
+  三套都用 Cubic_11（講師決定，換非像素中文字型網頁版多好幾 MB）。圓角一律關抗鋸齒，維持像素風的硬邊。
+- 畫面風格檢查 `skins/_scripts/StyleCheck.gd`（U193）：`Skin`／`SkinAnimated`／`SkinBackground` 的 `_get_configuration_warnings()` 呼叫，只在編輯器出黃色驚嘆號、執行時不印。
+  ① `texture_filter` 不是 Inherit／Nearest（濾鏡在節點上，不在圖片匯入設定；不往上檢查父節點）；
+  ② `global_scale` 左右或上下跟最近整數差超過 0.05（含 0 倍以下）；
+  ③ 像素大小＝`global_scale` 左右上下平均，同場景（`edited_scene_root`）的 `Skin`／`SkinAnimated` 取眾數（四捨五入到 0.25，一樣多取小的），差 2 倍以上才警告，至少 3 個皮才比；背景不比。
+  「拉伸蓋滿」（`style_scale_free()`）不檢查②③也不算進眾數。每個皮都有 `ignore_style_check`。編輯器裡每秒重新檢查一次（拖 Scale、改 Filter 會更新），掃場景的結果快取半秒。
+  講師的示範與測試場景（W4_SkinBox、`tests/skins/` 共 73 個皮）不會出現新的驚嘆號。
+- 瞇眼測試 `skins/SquintTest.tscn`（U192）：`CanvasLayer`（layer 110）＋全畫面 `ColorRect`＋shader（`hint_screen_texture` 9 點平均模糊，`style` 選「模糊＋黑白」再轉灰階；不靠 mipmap，GL Compatibility 可用）。
+  `key` F1／F2／Tab／G（預設 F1）、`strength` 模糊距離 1～4 像素；`process_mode = ALWAYS`、`mouse_filter = IGNORE`，只蓋畫面不影響遊戲。
+  選的鍵已經在 InputMap 裡被學員或組件用掉（`ui_` 開頭的不算）就讓給它並中文提醒（同 `PauseMenu._is_p_taken`）；
+  只在 `OS.has_feature("editor")` 時有效（講師決定），匯出的遊戲裡自己拿掉；多放的中文警告並拿掉。開著時左上角提示字不被模糊。
+- 統一色調 `skins/ColorGrade.tscn`（U191）：內建 `CanvasModulate`，`tone` 暖／冷／復古／夜晚 × `strength`（跟白色內插）。
+  只染遊戲畫面（CanvasLayer 的 UI 不受影響），不用 shader；放兩個以上、放在 CanvasLayer 底下時黃色驚嘆號＋中文警告。
+- `font_size` 是下拉（U188，原本是拉桿），存的值還是 12／24／36／48，舊場景照樣讀得到。
+  像素字 `Cubic_11` 匯入時關掉抗鋸齒、hinting、次像素定位，專案的 `gui/theme/default_font_*` 三項也一樣，字只能放大整數倍才不會高低不齊。
 - `theme` 由欄位自動產生，不存進場景檔、Inspector 也不顯示。
 - 遊戲開始時 `UIRoot` 如果不在 `CanvasLayer` 底下（接法 B 直接拖進關卡），自己移進一個新的 `CanvasLayer`，固定在畫面上；
   圖層照原本的預設 UI：HUD 1、過關畫面 10、暫停選單 20。
@@ -201,7 +219,10 @@ const TIMELINE := "時間軸"
 |---|---|---|
 | `HudTemplate.tscn` | HUD | 左上角血條（`HudBar` 血量）＋金幣（`HudNumber`） |
 | `PauseMenuTemplate.tscn` | 暫停選單 | 半透明底、標題、三條 `VolumeSlider`、`MenuAction` 繼續遊戲／整關重來／離開遊戲、「Esc／P 繼續」提示 |
-| `ClearScreenTemplate.tscn` | 過關畫面 | 「過關！」、`ClearStat` 時間／死亡次數／製作者的話、「按 R 再玩一次」提示 |
+| `ClearScreenTemplate.tscn` | 過關畫面 | 「過關！」、`ClearStat` 時間／死亡次數／製作者的話、`MenuAction` 回標題、「按 R 再玩一次」提示 |
+| `TitleScreenTemplate.tscn` | 標題畫面 | 上中下 1：2：1.4，上遊戲名（`GameName`）、中主視覺（`KeyArt`）、下「開始遊戲」「離開遊戲」＋一行小字（`Hook`） |
+| `TitleScreenTemplate_Center.tscn` | 標題畫面 | 暗色；主視覺鋪滿當背景，遊戲名在上，按鈕和小字在置中的底框裡 |
+| `TitleScreenTemplate_Side.tscn` | 標題畫面 | 復古綠；左邊遊戲名、小字、按鈕，右邊主視覺 |
 
 - 預設 HUD 範本只放血量（`HudNumber` 只有名字＋`HudBar`）和金幣（色塊＋`HudNumber`）；其他數值（鑰匙、學員自訂的數值）
   照現在的規則，第一次用到時由預設 HUD 自動加一列「色塊＋`HudNumber`」。每一列照原本的規則出現（`show_in_hud` 打勾或被用到過），
@@ -211,6 +232,13 @@ const TIMELINE := "時間軸"
   `UIRoot` 不算學員的自訂畫面。
 - 認領在零件真的離開場景時才放掉；只是換位置（`UIRoot` 自己移進 CanvasLayer）不算。
 - 按鍵（暫停的 Esc／P、過關的 R）由系統處理，不靠學員的按鈕，所以學員把按鈕全刪掉也不會卡死在畫面裡。
+- 標題畫面（U189）自己就是一個場景、設為主場景，不參加接法 A／B：拖進關卡會中文警告並自己拿掉，拖進 `UISettings` 的欄位會黃色驚嘆號、改用預設。
+  `UIRoot` 的 `game_name`、`key_art`、`hook` 只在標題畫面顯示，照節點名稱套到範本裡的 `GameName`、`KeyArt`、`Hook`，空白就不動；
+  欄位有填但節點被刪掉時黃色驚嘆號。換場景由 `PauseMenu.change_scene()` 處理：關掉選單、解除暫停、`Engine.time_scale = 1`，
+  先拿掉舊場景，再把 `Stats`、`HudData`、`RespawnMemory`、`StatsHud` 歸零，最後放進新場景（新場景的 `ValueSettings` 才套得上）。
+  標題畫面上 Esc 不開暫停選單。`ConnectionValidator` 換場景後也檢查新場景。
+- 暫停選單、過關畫面的內容放在底框 `Center/Panel`（`PanelContainer`）裡（U188b）：底色跟著 `palette`，「預設」配色是深色半透明，
+  遊戲畫面花的時候字也看得清楚。學員之前已經再製出去的場景不會跟著改。
 - 暫停、過關畫面的「暫停中也要能動」（`process_mode = ALWAYS`）由 `UIRoot` 自己設好，學員不用管。
 - 現在的 `StatsHud`、`PauseMenu` 自動載入保留「什麼時候顯示」的邏輯，畫面改成實例化範本（或學員的場景）。
 
@@ -231,11 +259,24 @@ const TIMELINE := "時間軸"
 ```gdscript
 ## 平常的樣子：從檔案系統把圖片拖進來
 @export var texture_normal: Texture2D
-## 狀態改變後的樣子（終點踩到、按鈕亮起、門打開、重生點啟用、開關方塊切換…）；空白就用平常的圖再變色表示
+## 狀態改變後的樣子（終點踩到、按鈕亮起、門打開、重生點啟用、開關方塊關掉、尖刺岩漿關掉…）；空白就用平常的圖再變色表示
 @export var texture_active: Texture2D
+## 狀態改變後怎麼顯示：只換成 texture_active、換圖之外再加零件原本的效果（變色、變淡、藏起來、變暗），
+## 或不換圖只用原本的效果
+@export_enum("換圖就好", "換圖再加原本效果", "只用原本效果") var active_style: int = 0
 ## 要不要跟著零件左右翻（敵人轉向）
 @export var follow_facing: bool = true
 ```
+
+`fill_style`（講師決定：都提供選項，U179）：`@export_enum("只放一張", "重複鋪滿", "拉伸蓋滿")`，預設只放一張；
+後兩種自動對齊色塊範圍，可以拉大小的無反彈方塊、單向平台用得到；不在零件底下時不顯示。
+`follow_facing` 翻面時以皮在編輯器裡的 Flip H 當「朝右」的樣子（講師決定，U180）：圖朝左畫的素材，學員勾 Flip H 讓它朝右就好，
+不另外加欄位。敵人的「死亡」動畫播完才藏起來，「受傷」播一輪回到「走路」。
+
+`follow_direction`（講師決定：給選項，U179）：`bool`，預設勾，只在風扇底下顯示，皮跟著吹的方向轉（圖畫成朝上吹）。
+
+`active_style`（講師決定：都提供選項，U178）：零件原本的狀態回饋是終點、按鈕、重生點變色，門打開變淡，
+開關方塊關掉藏起來，尖刺、岩漿關掉變暗。沒有 `texture_active` 時一律用原本效果，Inspector 也不顯示這個欄位。
 
 ### 6.2 `SkinAnimated`（動畫）
 
@@ -243,7 +284,9 @@ const TIMELINE := "時間軸"
   - 一般零件：「平常」「啟動」（啟動＝狀態改變後，同 `texture_active` 的時機）
   - 敵人：「走路」「受傷」「死亡」（沒有「受傷」「死亡」就繼續播「走路」）
 - 缺「平常」（或敵人缺「走路」）→ 黃色驚嘆號，列出現有的動畫名稱並附近似名稱建議（`NameCheck`）。
-- `follow_facing` 同 `Skin`。
+- `follow_facing`、`active_style`、`follow_direction` 同 `Skin`（沒有「啟動」動畫時一律用原本效果）。
+- `fill_style` 只有「只放一張」「拉伸蓋滿」（動畫做不到重複鋪滿）。
+- 零件發生的事件（彈出、傳送、碎掉…）要播動畫：U180b `SkinEvent`，學員自己選「什麼時候 → 播哪段」，不寫死動畫名稱。
 
 ### 6.3 程式生出來的東西
 
@@ -284,6 +327,8 @@ const TIMELINE := "時間軸"
   會跟 Juice 打架：文件提醒「動畫只改 frame（第幾格），不要改大小和顏色」，並在編輯器檢查動畫軌道，有改就黃色驚嘆號。
 - 地基需要：`Ability_Melee`、`Ability_Ranged` 新增 `attacked` 訊號（揮擊／射擊那一下發出），`PlayerAnimator` 自己找到並聽它，不用學員連。
 - 檢查動畫名稱時跟 §6.2 一樣：列出現有的名稱、附近似名稱建議（例如「跑」→「跑步」）。
+- 轉向翻面（講師決定，U183）：`follow_facing`（預設勾），翻 Visual 底下圖的 Flip H，以編輯器裡勾好的 Flip H 當朝右；
+  自動奔跑卡已經翻 Visual 時不再翻一次。Juice 總開關關掉時停在待機、不翻面。
 
 ### 7.2 自訂動畫
 
@@ -297,9 +342,16 @@ const TIMELINE := "時間軸"
 現在地形用 `art/default_tile.tres`（唯讀區），16×16 一格、`art/blocks.png`（128×64）。
 
 - 提供 `art/tile_template.png`：跟 `blocks.png` 同樣格子配置的範本圖，每一格標好用途（實心、平台頂、裝飾…）。
+  （講師決定，U184）格子重新規劃成地面 16 格（3×3 以 (3,1) 為中心＋柱子、橫條、單獨一格）、平台 4 格（單向碰撞）、裝飾 12 格（沒有碰撞），
+  設好 Godot 內建 Terrain「地面」「平台」：學員在圖塊面板的「地形」分頁用筆刷刷，邊會自動接好。
+  範本上紅線＝露在外面的邊、藍線＝平台站的那一面、淡黃＝裝飾；`art/tile_template_guide.png` 是放大 8 倍的中文說明圖。
 - 學員流程：再製 `default_tile.tres` 到 `_my/` → 把自己照範本畫好的圖拖進去取代 atlas 圖片 → 關卡的 `TileMapLayer` 換成自己的圖塊。
   因為格子位置一樣，碰撞形狀不用重畫。
-- 背景圖：直接在關卡裡加 `Sprite2D`／`Parallax2D`，用 Godot 原生的做法，不另外做零件（教學文件補一頁）。
+- 背景圖：`skins/SkinBackground.tscn`（U190，講師決定改成做零件）。內部生 `Parallax2D`＋`Sprite2D`，自己 `z_index = -100`（不相對），永遠在最底下。
+  `fill_style` 只放一張（在節點位置）／重複鋪滿（預設）／拉伸蓋滿；後兩種蓋住所有 `Room` 的範圍（沒有 Room 用 `TileMapLayer` 畫到的範圍），四周多留 2 格，
+  編輯器裡每半秒重新對齊。`parallax`＋`depth`（0.1～0.9）：`Parallax2D.scroll_scale = depth`，鏡頭左上角在 c 時看到的是 c × depth 起一個畫面大，
+  所以要蓋的範圍是「關卡範圍 × depth＋一個畫面」（編輯器裡照關卡範圍畫）。圖集切出來的圖重複鋪滿前先轉單張圖（同 `Skin`）。
+  `texture` 屬資源欄位例外：空白黃色驚嘆號＋執行時中文警告。放在有腳本或不是 Node／Node2D 的節點底下、兩個不視差的蓋滿背景疊在一起時黃色驚嘆號＋中文警告。
 
 ---
 

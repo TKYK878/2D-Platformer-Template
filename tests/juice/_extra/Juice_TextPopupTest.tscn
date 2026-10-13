@@ -84,7 +84,7 @@ enabled = false
 kind = 2
 custom_kind = "  星星 "
 color = 2
-size = 16
+size = 24
 duration = 1.5
 
 [node name="Juice_TextPopup_Typo" parent="Player/Juice" instance=ExtResource("7")]

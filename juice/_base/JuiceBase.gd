@@ -9,8 +9,9 @@ class_name JuiceBase
 ## 關閉時這個 Juice 組件不會生效，但仍會顯示在場景裡。
 @export var enabled: bool = true
 ## 什麼時候要播放這個效果。選「不自動觸發」的話，可以把卡片或零件的訊號連到這個組件的 play()。
-@export_enum("跳躍時", "落地時", "受傷時", "死亡時", "撞牆時", "開始移動時", "轉向時", "重生時",
-	"打中東西時", "打倒敵人時", "撿到東西時", "過關時", "不自動觸發")
+# 「撞天花板時」是後來加的，存的編號放最後（13），學員已經存好的選項不會跑掉
+@export_enum("跳躍時:0", "落地時:1", "受傷時:2", "死亡時:3", "撞牆時:4", "撞天花板時:13", "開始移動時:5", "轉向時:6", "重生時:7",
+	"打中東西時:8", "打倒敵人時:9", "撿到東西時:10", "過關時:11", "不自動觸發:12")
 var timing: int = TIMING_LANDED:
 	set(value):
 		timing = value
@@ -31,6 +32,7 @@ const TIMING_ENEMY_DIED := 9
 const TIMING_ITEM_COLLECTED := 10
 const TIMING_LEVEL_CLEARED := 11
 const TIMING_MANUAL := 12
+const TIMING_CEILING_HIT := 13
 
 # 同一個組件這段時間內只播一次（毫秒），避免每幀落地這類情況塞爆畫面
 const _REPEAT_GUARD_MS := 50
@@ -117,6 +119,7 @@ func _connect_timing() -> void:
 		TIMING_HURT: _listen(player.hurt, func(): _trigger_at_player())
 		TIMING_DIED: _listen(player.died, func(): _trigger_at_player())
 		TIMING_WALL_HIT: _listen(player.wall_hit, func(): _trigger_at_player())
+		TIMING_CEILING_HIT: _listen(player.ceiling_hit, func(): _trigger_at_player())
 		TIMING_STARTED_MOVING: _listen(player.started_moving, func(): _trigger_at_player())
 		TIMING_TURNED: _listen(player.direction_changed, _on_player_direction_changed)
 		TIMING_RESPAWNED: _listen(Events.player_respawned, func(_p): _trigger_at_player())

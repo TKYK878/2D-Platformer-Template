@@ -9,6 +9,7 @@ signal hurt
 signal died
 signal direction_changed(dir: int)   # -1 左, 1 右
 signal wall_hit
+signal ceiling_hit   # 剛撞到天花板（照角色的上方算，重力翻轉時跟著翻）
 signal started_moving
 signal stopped_moving
 
@@ -54,6 +55,7 @@ var _mechanics: Array[Node] = []
 var _last_direction: int = 0
 var _was_moving: bool = false
 var _was_on_wall: bool = false
+var _was_on_ceiling: bool = false
 var _is_dead: bool = false
 var _damage_scale: float = 1.0
 var _knockback_scale: float = 1.0
@@ -184,6 +186,7 @@ func _physics_process(delta: float) -> void:
 
 	_emit_landing(pre_on_floor, pre_fall_speed)
 	_emit_wall_hit()
+	_emit_ceiling_hit()
 	_update_jump_assist(delta)
 
 # 按鍵手感：站在地上時補滿土狼時間、離開地面後倒數；空中按過跳躍、在時間內落地就重播一次跳躍鍵
@@ -304,6 +307,12 @@ func _emit_wall_hit() -> void:
 		wall_hit.emit()
 	_was_on_wall = is_on_wall()
 
+# 偵測這一幀是不是剛撞到天花板，是的話發出撞天花板訊號
+func _emit_ceiling_hit() -> void:
+	if is_on_ceiling() and not _was_on_ceiling:
+		ceiling_hit.emit()
+	_was_on_ceiling = is_on_ceiling()
+
 # ---- 提供給機制卡的公開 API（機制卡不得直接寫 velocity） ----
 
 # 翻轉重力方向，重力翻轉卡用這個
@@ -367,6 +376,7 @@ func revive(at_position: Vector2) -> void:
 	_is_dead = false
 	_was_moving = false
 	_was_on_wall = false
+	_was_on_ceiling = false
 	_last_direction = 0
 	_impulse_grace_left = 0.0
 	_frozen = false

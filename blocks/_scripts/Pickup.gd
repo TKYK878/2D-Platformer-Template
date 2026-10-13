@@ -40,11 +40,13 @@ var _value_returned: bool = false
 var _stats_kind: String = ""
 var _warning_timer: float = 0.0
 
-# 依 kind 算出對應的 Stats 種類名稱，設定碰撞層／遮罩，只偵測玩家
+# 依 kind 算出對應的 Stats 種類名稱，設定碰撞層／遮罩，只偵測玩家；底下有皮就換上皮
+#（道具沒有狀態變化，撿到時整個藏起來，皮跟著藏，不用留著 SkinLink）
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	add_to_group("signal_source")
+	SkinLink.new(self, $Visual)
 	_stats_kind = _resolve_stats_kind()
 	if not show_in_hud and _stats_kind != "" and _stats_kind != Stats.HEALTH_KIND:
 		Stats.set_hud_visible(_stats_kind, false)

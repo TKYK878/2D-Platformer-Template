@@ -17,11 +17,11 @@ const _TICK_INTERVAL := 1.0
 
 @onready var _shape: CollisionShape2D = $Body/CollisionShape2D
 @onready var _detector: Area2D = $Detector
-@onready var _visual: ColorRect = $Visual
 
 var _overlapping_players: Array[Node] = []
 var _tick_elapsed: float = 0.0
 var _active: bool = true
+var _skin: SkinLink = null
 
 ## 開啟：開始燙人；即死模式下，開啟當下已經站在上面的玩家直接死亡
 func activate() -> void:
@@ -44,15 +44,16 @@ func toggle() -> void:
 	else:
 		activate()
 
-# 設定碰撞層／遮罩，套用一開始要不要開
+# 設定碰撞層／遮罩，套用一開始要不要開；底下有皮就換上皮
 func _ready() -> void:
+	_skin = SkinLink.new(self, $Visual)
 	_detector.collision_layer = 0
 	_detector.collision_mask = Layers.PLAYER
 	_detector.body_entered.connect(_on_detector_entered)
 	_detector.body_exited.connect(_on_detector_exited)
 	_set_active(start_on)
 
-# 切換開關狀態：開著才加入 hazard／lava group（彈珠台、地板是岩漿認這個），關掉時變暗、扣血計時重來
+# 切換開關狀態：開著才加入 hazard／lava group（彈珠台、地板是岩漿認這個），關掉時變暗（有皮就換皮的樣子）、扣血計時重來
 func _set_active(is_active: bool) -> void:
 	_active = is_active
 	_tick_elapsed = 0.0
@@ -61,7 +62,7 @@ func _set_active(is_active: bool) -> void:
 			add_to_group(group)
 		else:
 			remove_from_group(group)
-	_visual.modulate = Color.WHITE if _active else Color(0.45, 0.45, 0.45)
+	_skin.show_dark(not _active)
 
 # 玩家碰到：記進名單（關著時也記，開啟當下才知道誰站在上面）；開著的即死模式直接殺死，否則每秒扣血
 func _on_detector_entered(body: Node) -> void:

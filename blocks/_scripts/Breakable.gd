@@ -24,12 +24,12 @@ extends StaticBody2D
 signal broken
 
 @onready var _shape: CollisionShape2D = $CollisionShape2D
-@onready var _visual: ColorRect = $Visual
 @onready var _detector: Area2D = $Detector
 
 var _durability_left: int = 0
 var _is_broken: bool = false
 var _generation: int = 0  # 每次 reset() 加一，讓 reset 之前排好的重生計時器失效
+var _skin: SkinLink = null
 
 # 被攻擊打到，扣耐久，歸零時碎裂
 func take_hit(damage: int, _knockback: Vector2, source: Node) -> void:
@@ -38,10 +38,11 @@ func take_hit(damage: int, _knockback: Vector2, source: Node) -> void:
 		return
 	_apply_damage(maxi(damage, 1))
 
-# 設定碰撞層／遮罩，監聽高速撞擊，套用一開始的耐久
+# 設定碰撞層／遮罩，監聽高速撞擊，套用一開始的耐久；底下有皮就換上皮
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
+	_skin = SkinLink.new(self, $Visual)
 	add_to_group("signal_source")
 	_durability_left = durability
 	collision_layer = Layers.TERRAIN
@@ -73,7 +74,7 @@ func _break() -> void:
 		return
 	_is_broken = true
 	_shape.set_deferred("disabled", true)
-	_visual.visible = false
+	_skin.set_visible(false)
 	broken.emit()
 	if respawn_time > 0.0:
 		var generation := _generation
@@ -92,13 +93,13 @@ func _respawn() -> void:
 	_is_broken = false
 	_durability_left = durability
 	_shape.set_deferred("disabled", false)
-	_visual.visible = true
+	_skin.set_visible(true)
 	_update_visual()
 
-# 依剩餘耐久調整外觀透明度，讓學員看得出快壞了
+# 依剩餘耐久調整外觀透明度（有皮就作用在皮上），讓學員看得出快壞了
 func _update_visual() -> void:
 	var ratio := float(_durability_left) / float(maxi(durability, 1))
-	_visual.modulate.a = clampf(lerpf(0.35, 1.0, ratio), 0.35, 1.0)
+	_skin.set_alpha(clampf(lerpf(0.35, 1.0, ratio), 0.35, 1.0))
 
 # 編輯畫面持續請求重畫，讓虛線跟著訊號連接的變化即時更新
 func _process(_delta: float) -> void:

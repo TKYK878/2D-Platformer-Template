@@ -1,0 +1,58 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/ui/_scripts/PixelDefaultsTest.gd" id="1"]
+[ext_resource type="Script" uid="uid://w61x3i18lq1x" path="res://ui/_scripts/UIRoot.gd" id="2"]
+[ext_resource type="Texture2D" uid="uid://dc7oecnhhnmlh" path="res://art/blocks.png" id="3"]
+
+[node name="PixelDefaultsTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(240, 135)
+
+[node name="Tiles3x" type="Sprite2D" parent="."]
+position = Vector2(352, 80)
+scale = Vector2(3, 3)
+texture = ExtResource("3")
+region_enabled = true
+region_rect = Rect2(0, 0, 64, 48)
+
+[node name="Tiles1x" type="Sprite2D" parent="."]
+position = Vector2(352, 200)
+texture = ExtResource("3")
+region_enabled = true
+region_rect = Rect2(0, 0, 64, 48)
+
+[node name="UIRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 480.0
+offset_bottom = 270.0
+mouse_filter = 2
+script = ExtResource("2")
+
+[node name="List" type="VBoxContainer" parent="UIRoot"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 252.0
+offset_bottom = 258.0
+
+[node name="Size12" type="Label" parent="UIRoot/List"]
+layout_mode = 2
+text = "12 像素字 ABC 123"
+
+[node name="Size24" type="Label" parent="UIRoot/List"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "24 兩倍字"
+
+[node name="Size36" type="Label" parent="UIRoot/List"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "36 三倍"
+
+[node name="Size20" type="Label" parent="UIRoot/List"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "20（反例）高低不齊"

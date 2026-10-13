@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/skins/_scripts/AttackSkinTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="player"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Foxy/idle/sprites/f-01.png" id="fox"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Ranged.tscn" id="ranged"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="melee"]
+[ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="enemy"]
+[ext_resource type="PackedScene" path="res://blocks/EnemyShooter.tscn" id="shooter"]
+[ext_resource type="PackedScene" path="res://blocks/Breakable.tscn" id="breakable"]
+[ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="respawn"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/arrow.png" id="arrow"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/fireball.png" id="fireball"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/slash.png" id="slash"]
+
+[sub_resource type="RectangleShape2D" id="Floor_Shape"]
+size = Vector2(460, 16)
+
+[sub_resource type="RectangleShape2D" id="Ledge_Shape"]
+size = Vector2(96, 8)
+
+[node name="AttackSkinTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(0, 8)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("Floor_Shape")
+
+[node name="ColorRect" type="ColorRect" parent="Floor"]
+offset_left = -230.0
+offset_top = -8.0
+offset_right = 230.0
+offset_bottom = 8.0
+color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="Ledge" type="StaticBody2D" parent="."]
+position = Vector2(170, -76)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ledge"]
+shape = SubResource("Ledge_Shape")
+
+[node name="ColorRect" type="ColorRect" parent="Ledge"]
+offset_left = -48.0
+offset_top = -4.0
+offset_right = 48.0
+offset_bottom = 4.0
+color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="RespawnHandler" parent="." instance=ExtResource("respawn")]
+
+[node name="Player" parent="." instance=ExtResource("player")]
+position = Vector2(-150, -20)
+
+[node name="Visual" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual"]
+texture = ExtResource("fox")
+
+[node name="Mechanics" type="Node2D" parent="Player"]
+
+[node name="Juice" type="Node2D" parent="Player"]
+
+[node name="Abilities" type="Node2D" parent="Player"]
+
+[node name="Ability_Ranged" parent="Player/Abilities" instance=ExtResource("ranged")]
+bullet_texture = ExtResource("arrow")
+
+[node name="Ability_Ranged_Gravity" parent="Player/Abilities" instance=ExtResource("ranged")]
+key = 72
+use_gravity = true
+bullet_texture = ExtResource("arrow")
+
+[node name="Ability_Melee" parent="Player/Abilities" instance=ExtResource("melee")]
+slash_texture = ExtResource("slash")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -60)
+
+[node name="Breakable1" parent="." instance=ExtResource("breakable")]
+position = Vector2(-60, -8)
+
+[node name="Breakable2" parent="." instance=ExtResource("breakable")]
+position = Vector2(-60, -24)
+
+[node name="Enemy1_Fireball" parent="." instance=ExtResource("enemy")]
+position = Vector2(150, -88)
+speed = 20.0
+
+[node name="EnemyShooter" parent="Enemy1_Fireball" instance=ExtResource("shooter")]
+cooldown = 2.0
+use_gravity = true
+bullet_texture = ExtResource("fireball")
+
+[node name="Enemy2_NoTexture" parent="." instance=ExtResource("enemy")]
+position = Vector2(190, -88)
+speed = 20.0
+
+[node name="EnemyShooter" parent="Enemy2_NoTexture" instance=ExtResource("shooter")]
+cooldown = 2.0

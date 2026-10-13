@@ -76,6 +76,8 @@ func _problem(kind: int) -> String:
 	probe.free()
 	if root_kind == -1:
 		return "%s：拖進來的場景最上層不是 UIRoot，請從 ui/templates/ 的範本再製出來改" % _FIELDS[kind]
+	if root_kind == UIRoot.KIND_TITLE:
+		return "%s：拖進來的是標題畫面。%s" % [_FIELDS[kind], UIRoot.TITLE_NOT_ALONE]
 	if root_kind != kind:
 		return "%s：拖進來的是%s，不是%s，請拖進 %s" % [_FIELDS[kind], _KIND_NAMES[root_kind], _KIND_NAMES[kind], _FIELDS[root_kind]]
 	return ""

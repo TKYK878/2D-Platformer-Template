@@ -27,9 +27,9 @@ const _MIN_BOUNCE_RATIO := 0.5
 
 @onready var _shape: CollisionShape2D = $Body/CollisionShape2D
 @onready var _detector: Area2D = $Detector
-@onready var _visual: ColorRect = $Visual
 
 var _active: bool = true
+var _skin: SkinLink = null
 
 ## 開啟：開始會彈；開啟當下已經站在上面的也會被彈出去
 func activate() -> void:
@@ -50,11 +50,12 @@ func toggle() -> void:
 	else:
 		activate()
 
-# 設定碰撞層／遮罩，只偵測玩家跟箱子
+# 設定碰撞層／遮罩，只偵測玩家跟箱子；底下有皮就換上皮
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 	add_to_group("signal_source")
+	_skin = SkinLink.new(self, $Visual)
 	_detector.collision_layer = 0
 	_detector.collision_mask = Layers.PLAYER | Layers.BOX
 	_detector.body_entered.connect(_on_detector_entered)
@@ -74,10 +75,10 @@ func _on_detector_entered(body: Node) -> void:
 	body.add_impulse(dir * (launch_speed - current_along))
 	launched.emit(body)
 
-# 切換開關狀態，關掉時變暗讓學員看得出它沒在運作
+# 切換開關狀態，關掉時變暗（有皮就換皮的樣子）讓學員看得出它沒在運作
 func _set_active(is_active: bool) -> void:
 	_active = is_active
-	_visual.modulate = Color.WHITE if _active else Color(0.45, 0.45, 0.45)
+	_skin.show_dark(not _active)
 
 # 編輯畫面持續請求重畫，讓虛線跟著訊號連接的變化即時更新
 func _process(_delta: float) -> void:

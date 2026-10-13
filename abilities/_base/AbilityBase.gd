@@ -4,6 +4,9 @@ class_name AbilityBase
 ## 關閉時這個攻擊能力不會生效，但仍會顯示在場景裡。
 @export var enabled: bool = true
 
+## 攻擊的那一下發出（近戰揮擊、遠程射擊；冷卻中按了沒反應的不算），給角色動畫、學員自己接特效／音效用
+signal attacked
+
 var player: Node = null
 
 # Player 呼叫，註冊自己並執行子類別初始化
