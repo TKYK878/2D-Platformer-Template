@@ -903,8 +903,138 @@
 　　　Fan.tscn 的 ZoneVisual 預設隱藏，遊戲開始才打開（不然編輯器裡會多一個舊尺寸的框）。
 　　　吹的方向改成下拉方向再套上節點的旋轉、翻面（任意角度都行，斜著吹時舊算法只補償水平那一份摩擦力），沒旋轉的風扇行為不變
 
+## 階段 55：開放 Input Map
+
+- [x] U201 卡片／能力／`KeyTrigger` 的按鍵種類加「Input Map 動作」，選了才出現動作下拉（自動列出專案設定裡的動作，不用打字），
+	  學員到「專案設定 → Input Map」自己錄製按鍵、手把；README 的「不要改 Input Map」改成說明做法與重灌注意事項
+　　→ 講師決定：學員想綁手把、手機等其他輸入裝置，開放 Input Map（不另做手把下拉）。
+　　　Input Map 存在 `project.godot`、在 `_my/` 外面，重灌會掉
+　　→ 講師決定：用下拉選單，新選項接在最後面，預設不變，沒選它的同學完全不受影響；動作下拉不藏 `ui_` 開頭的內建動作。
+　　　重灌只在 README 提醒要重加；基本動作被刪掉或清空時開場印中文警告；`KeySettings` 只換鍵盤鍵、手把事件保留（原本就是這樣，不用改）
+　　→ 實作：`action` 用 Godot 內建的 `PROPERTY_HINT_INPUT_NAME` 下拉（不用 `@tool`）；`InputRouter.check_action()` 在沒選、找不到（附近似名稱建議）、
+　　　沒有按鍵時警告並不綁定；衝突檢查認得手把按鈕與搖桿。改到的有重力翻轉、忽大忽小、彈弓、衝刺、脫殼、近戰、遠程、`KeyTrigger`。
+　　　後座力卡（本來就用 Input Map 的方向動作）、子彈時間（只有 `key`）、脫殼切換殼的 Q／E、暫停鍵 Esc／P 沒有改
+　　　（驗證：`tests/systems/InputMapActionTest.tscn`）
+
+## 階段 56：素材整理
+
+- [x] U202 測試素材與 W4_SkinBox 示範素材依作者分資料夾、刪掉沒用到的、補 CREDITS；手冊加「用了別人的素材要標註」
+　　→ 講師決定：AI 暫代圖當講師自己畫的（說明檔不寫 AI），講師補畫零件圖（箱子、崩塌地板、彈射台、開關方塊開／關、重生點升／降旗），
+　　　之後搬到 `art/` 給找不到素材的學員用（另開單元）；用不到的暫代圖（按下的按鈕、終點、收起來的尖刺、箭、火球、刀光）刪掉
+　　→ 講師決定：素材依作者分資料夾、檔名維持原包；Foxy、`tileset.png` 作者 Ansimuz，Pixel Adventure 1 作者 Pixel Frog（CC0）；
+　　　沒用到的素材全刪（`objects_/`、Foxy 的 `.ase` 與 preview、沒用到的水果和陷阱）
+　　→ 講師決定：Ansimuz 的素材要標註作者（CREDITS 寫明）；AttackSkinTest 的箭、火球、刀光沒人用，欄位留空、測色塊就好
+　　→ 講師決定：學員標註素材的說明放零件手冊 §7（不在 `_my/` 放範本檔，學員重灌時會蓋掉）
+　　→ 實作：`tests/skins/_art/` 分成 `Ansimuz/`、`PixelFrog/`、`AI_Placeholder/`；`_W4SkinBox/art/` 分成 `Ansimuz/`、`PixelFrog/`，
+　　　講師的圖（終點紅旗）與專案自己做的愛心留在根目錄；兩邊各一份 `CREDITS.md`。W4_SkinBox 的終點原本是 tileset 切的 32×32 石磚，改成講師的紅旗。
+　　　測試場景改用講師的圖：BlockSkinTest（重生點、開關方塊、終點；拿掉收起來的尖刺 Spike1）、SkinEventTest（箱子、終點；
+　　　按鈕沒有「啟動」圖，閃完用原本效果）、W4_BadExample（AI 圖的終點）；AttackSkinTest 拿掉圖。README §3.2、§8.3 指向手冊
+　　　（驗證：`tests/skins/BlockSkinTest.tscn`、`tests/skins/SkinEventTest.tscn`、`levels/_starts/W4_SkinBox.tscn`）
+- [x] U203 `Skin`／`SkinAnimated` 在編輯器裡也藏起原本的色塊（只留黃色虛線框），擺的時候看到的就是遊戲裡的樣子；
+	  皮設定有問題（沒放圖、缺動畫）時色塊照舊顯示（講師決定，U202 時提出：透明背景的圖後面會露出色塊）
+	  （驗證：`tests/skins/SkinTest.tscn`，在編輯器裡看）
+　　→ 實作：`SkinLink.editor_hide_block()` 用 `RenderingServer.canvas_item_set_visible` 只藏畫面、不改色塊的 `visible`，存檔不會多一行；
+　　　皮每一幀判斷能不能用（Skin 有 `texture_normal`、SkinAnimated 有「平常」／敵人「走路」、皮本身看得到、沒有放錯地方或重複），
+　　　皮被刪掉、拖走時把色塊顯示回來。零件手冊 §7.1 加「色塊又冒出來＝皮有問題」
+- [x] U204 講師畫的零件圖搬到 `art/blocks_skin/` 給學員用（找不到素材時直接拖進 `Skin`）
+　　→ 講師決定：放 `art/blocks_skin/`；檔名照零件名稱（平常 `零件名.png`、狀態改變後 `零件名_active.png`，對應 `texture_normal`／`texture_active`）；
+　　　只留一份，測試場景改指向 `art/blocks_skin/`；零件手冊 §1、§7.1 加說明
+　　→ 實作：13 張（Box、Button_1／_2、Checkpoint／_active、Pickup_coin、CrumbleFloor、Door／_active、Launcher、Portal、SwitchBlock_red／_active），
+　　　`tests/skins/_art/AI_Placeholder/` 刪掉，BlockSkinTest、MoreBlockSkinTest、SkinEventTest、StyleWarningTest、W4_BadExample 改路徑
+	  （驗證：`tests/skins/BlockSkinTest.tscn`、`tests/skins/SkinEventTest.tscn`）
+- [x] U205 `W4_SkinBox` 補上階段 53 之後的示範：標題畫面、背景、選單風格與統一色調、講師的零件圖
+　　→ 講師決定（U204 後盤點）：W4 起始場景沒跟上 U188～U204，四樣都補；練習關另開 U206，新功能每種都碰一下
+　　→ 實作：示範標題 `_W4SkinBox/ui/TitleDemo.tscn`（從 TitleScreenTemplate 再製，填 game_name／key_art（狐狸第一格）／hook，
+　　　糖果配色＋可愛圓角，「開始遊戲」→ W4_SkinBox）；`SkinBackground`（Pixel Frog 藍格子，複製到 `_W4SkinBox/art/PixelFrog/background.png`，視差）；
+　　　`ColorGrade` 暖色 0.2；HUD 可愛圓角、暫停選單乾淨極簡、過關畫面像素復古（三種 style 各示範一次）；
+　　　金幣改用 `art/blocks_skin/Pickup_coin.png`（12×12 剛好是金幣大小，HUD 圖示一起換），加一個重生點套 `Checkpoint`／`Checkpoint_active`。
+　　　主場景沒改（還是 `_Template`），所以示範選單的「回標題」照規則藏起來
+	  （驗證：`levels/_starts/W4_SkinBox.tscn`、`levels/_starts/_W4SkinBox/ui/TitleDemo.tscn`）
+- [x] U206 `W4_SkinPractice` 題目補上新功能（標題畫面、背景、風格、色調、瞇眼測試、講師零件圖），每種都碰一下
+	  （驗證：`levels/_starts/W4_SkinPractice.tscn`）
+　　→ 講師決定：原本 8 題保留，新增 5 題；關卡往右延伸 40 格（房間 60→100 格寬，右牆、終點往右搬，延伸的部分是平地），新告示牌掛在上面
+　　→ 實作：第 5 題改成「換字型、配色或風格」（`style` 不是預設也算）；新題 9～13（`task` 16～20）：
+　　　背景（`SkinBackground` 有圖）、統一色調（`ColorGrade` 強度大於 0）、講師的零件圖（有 `Skin` 用了 `art/blocks_skin/` 的圖）、
+　　　瞇眼測試（關卡裡有 `SquintTest`）、標題畫面（主場景在 `_my/` 而且是標題畫面，「開始遊戲」選的是現在這一關，比對路徑或 UID）。
+　　　用臨時場景確認 5 題做對時都會變綠
+
+- [x] U208 訊號換圖：`Skin`／`SkinAnimated` 加 `show_normal`／`show_active`／`next_look`／`previous_look`／`show_first`／`show_last`／`show_look(第幾張)`，
+	  別的零件的訊號連過來就能換圖；`Skin` 加 `more_textures` 放兩張以上的圖（驗證：`tests/skins/SkinLookTest.tscn`）
+　　→ 講師決定（U205 驗收時提出）：想用訊號讓終點的旗子升起（不過關）；零件的狀態跟訊號撞在一起時聽誰的「讓學員選」：
+　　　`signal_priority`（零件的狀態優先，預設／訊號優先）；兩張以上用 `next_look`／`previous_look`，要有第一張和最後一張（`show_first`／`show_last`），
+　　　`show_look(第幾張)` 保留給會寫程式的同學；`loop_looks`（預設勾）最後一張接回第一張，不勾停住
+　　→ 實作：順序是 `texture_normal` → `texture_active` → `more_textures`（空的格子跳過、編輯器黃色驚嘆號）；動畫是平常 → 啟動 → 其他照名稱排（不含受傷、死亡）。
+　　　`show_look` 從 1 數，超出範圍、`show_active` 沒有狀態圖時中文警告不換。訊號優先時零件的狀態改變只加原本效果（照 `active_style`）。
+　　　`more_textures` 列進 CLAUDE.md 資源欄位例外；煙霧測試的套皮輪加訊號換圖（兩種優先輪流）
+- [x] U209 練習關說明：零件手冊 §8（告示牌檢查什麼、常見卡住，W3 8 題＋W4 13 題）、講師版 `_help/練習關解答.md`（完整步驟）
+	  （驗證：讀兩份文件，照講師版做一遍練習關）
+　　→ 講師決定（U206 後講師自己做練習關時提出）：卡住時只有告示牌一行提示，不知道差在哪。兩份都要：
+　　　學員版只寫「檢查什麼、常見卡住」不寫完整步驟，講師版寫完整步驟
+　　→ 實作：手冊 §8 開頭列沒變綠最常見的三個原因（改的不是 `_my/` 那份、在別的分頁按 F6、自己的 UI 沒存檔）；
+　　　W4 第 2 題寫明改 `Rows` 的 Anchors Preset（改最上層會超出畫面）。告示牌第 2、5 題提示改成指名哪一層；README 兩個練習關指向手冊 §8
+- [x] U210 HUD 背景：`HudTemplate` 加底框節點 `Panel`（跟暫停選單一樣）；`UIRoot` 加 `hud_background`（無／字加外框），只有 HUD 顯示
+	  （驗證：`tests/ui/HudBackgroundTest.tscn`）
+　　→ 講師決定（講師做練習關時提出）：HUD 直接疊在遊戲畫面上，背景花的時候看不清楚，要像暫停選單那樣的底框。
+　　　範本裡真的放一個 `Panel` 節點包住 `Rows`（學員看得到、拖得動、刪得掉）；第 2 題改成「選 `Panel` 改錨點」。
+　　　中途做出來的「字加外框」保留成 `hud_background`（預設字加外框，學員已經再製的 HUD 也會多一圈描邊）
+　　→ 實作：字加外框＝Theme 給 Label、Button、ProgressBar 2 像素描邊，字亮描深、字暗描淺（亮色、糖果配色）。
+　　　預設 HUD（`StatsHud`）的路徑改成 `Panel/Rows`，一列都沒有時藏起底框、列變多變少時底框跟著縮放。
+　　　告示牌第 2 題提示、零件手冊 §7.2／§8、講師版解答第 2～4 題的場景樹改成有 `Panel` 的樣子。
+　　　W4_SkinBox 的 HudDemo 是另外排的，沒有加底框。煙霧測試的 UI 範本輪加 hud_background 兩種輪一次
+- [x] U211 `UIRoot` 加四種 `style`（木牌、科幻、漫畫、復古遊戲機）、五套 `palette`（海洋、森林、夕陽、黑白、萬聖節）
+	  （驗證：`tests/ui/StylePresetTest.tscn`）
+　　→ 講師決定（U210 時提出）：風格與配色都多做幾種；底框用程式畫的框框就好（不用 AI 生圖）
+　　→ 實作：底框圖 `ui/styles/Panel_Wood／SciFi／Comic／Retro.png` 由 `tools/generate_ui_panels.py` 產生（24×24 灰階、四邊 8 像素，木牌的中間重複鋪）；
+　　　按鈕：木牌小圓角＋底邊厚、科幻左邊亮線、漫畫黑框＋右下加粗當陰影（按下變薄）、復古遊戲機左邊粗線（滑過變亮）；
+　　　條：木牌小圓角、漫畫黑框。原本規劃復古遊戲機按鈕前面畫 ▶，StyleBox 畫不出箭頭，改成左邊粗線。
+　　　新選項接在下拉最後，既有場景不變。煙霧測試的風格輪改成 7 種 × 10 套
+- [x] U212 底框加外框：所有風格的底框（暫停選單、過關畫面、HUD 的 `Panel`）外面多一圈配色的 accent 顏色
+　　→ 講師決定（U211 時提出）：底框整張染 panel 色，外框跟底色同色系看不出來；外框用配色的 accent（亮色），一律加、不做開關
+	  （驗證：`tests/ui/StylePresetTest.tscn`）
+　　→ 實作：`tools/generate_ui_panels.py` 從每張底框算出最外一圈，存成 `ui/styles/Outline_*.png`（白色，圓角、切角跟著形狀）；
+　　　新的 `PanelBox`（StyleBox）先畫底框再疊外框，外框依 accent 上色（「預設」配色用中性灰的 accent）。漫畫本來就是黑框，不加。
+　　　所有用到底框的畫面（暫停選單、過關畫面、標題、HUD 的 Panel）都會多這圈外框
+- [x] U213 自訂配色：`palette` 加「自訂」，選了才出現 4 個取色器（字、底框、按鈕、亮色），滑過／按下／次要字／條的底自動算
+　　→ 講師決定（U211 時提出）：讓學員自己配色，用 Godot 內建的取色器（滑鼠點選，不打字）；列進 CLAUDE.md 的例外
+	  （驗證：`tests/ui/StylePresetTest.tscn`）
+　　→ 實作：`palette` 最後加「自訂」，`@export_group("自訂配色")` 的 `text_color`／`panel_color`／`button_color`／`accent_color` 只在自訂時顯示，
+　　　預設是一套深紫底、米白字、橘色亮色，不改也好看。其他顏色自動算：次要字＝字往底框混 45%、滑過＝按鈕變亮（亮的按鈕改變暗）、按下＝變暗、條的底＝底框變暗。
+　　　字跟底框亮度差小於 0.3 時黃色驚嘆號＋執行時中文警告（鐵律 3）。煙霧測試風格輪改成 7 × 11
+- [x] U214 `Juice_Animator`：動畫改成每個狀態下拉選（名稱隨便取，（自動）認常見中英文名字）；加一次型動畫（落地、轉向、重生、撞牆、撞天花板、開始移動）、
+	  `can_interrupt`、`min_run_speed`、`run_speed_follow`（驗證：`tests/juice/AnimatorOptionsTest.tscn`）
+　　→ 講師決定（U213 後提出）：不喜歡規定中文動畫名稱，英文比較好；Juice_Animator 介面太簡略，要多一些讓學員自訂的部分。
+　　　名稱改成下拉選（像 SkinEvent），SkinAnimated 也要（另開 U215）；多開放一次型狀態、跑步判定與速度、一次型能不能被打斷（每個狀態的播放速度不做）
+　　→ 實作：下拉是 String 欄位＋`PROPERTY_HINT_ENUM`，選項（自動）、（沒有）＋現有的動畫，不打字；舊場景沒有這些欄位＝（自動），中文名字照樣對上。
+　　　（自動）的常見名字含 default（SpriteFrames 預設那段當待機）、跑（AnimatorPlayerTest 原本「故意打錯」的跑現在會認出來，說明一起改）。
+　　　拿掉「名稱打錯」的警告，改成「選的動畫不見了」；告示牌第 6 題改成看 `resolved_animation("idle"／"run")`。
+　　　手冊 §7.3／§8、速查表、README、講師版解答、規格一起改
+- [x] U215 `SkinAnimated` 動畫改成下拉選（平常、啟動、走路、受傷、死亡），（自動）認常見中英文名字
+	  （驗證：`tests/skins/SkinTest.tscn`、`tests/skins/EnemySkinTest.tscn`）
+　　→ 實作：「動畫」群組 `normal_animation`、`active_animation`（一般零件）／`hurt_animation`、`die_animation`（敵人），看零件種類只顯示用得到的；
+　　　平常／啟動／走路／受傷／死亡留著當零件呼叫用的代號，`resolved_animation()` 轉成實際名稱，`Enemy` 不用改；舊場景的中文名字照樣對上。
+　　　缺平常（走路）時的提醒附「是不是要選…」；選的動畫不見了黃色驚嘆號。SkinEvent 預設動畫改成避開實際的平常、啟動。
+　　→ 順手修：SkinEvent 聽沒有參數的事件時 `unbind(0)` 報錯（SkinEventTest 的「unbind() arguments must be 1 or greater」，U180b 起就有）
+- [x] U216 `SkinBackground` 加 `cover_area`：整個關卡（預設）／所在的房間（拖到 Room 底下）／自己拉範圍（`width_in_tiles`、`height_in_tiles`）
+	  （驗證：`tests/skins/BackgroundAreaTest.tscn`）
+　　→ 講師決定（U215 時提出）：背景範圍原本只能自動蓋整個關卡，學員要能自己決定；「所在的房間」「自己拉範圍」都做
+　　→ 實作：自己拉範圍從節點位置往右下、編輯器畫黃色虛線框（跟 AreaTrigger 一樣）；放在 Room 底下不再警告。
+　　　測試時發現 Room 在場景樹排在背景前面時，房間的背景被整個關卡的背景蓋掉（學員的關卡一定是這樣排），
+　　　所以改成範圍小的自動在上面（整個關卡 -100、房間 -99、自己拉／只放一張 -98，遠景再往下 3 層），同一層才照場景樹順序；
+　　　重疊警告改成「同一層而且把前面的整個蓋住」才出（整個關卡一張＋某個房間換一張不會被警告）
+- [x] U217 零件手冊 §7.4 加「進階：自己設接邊規則」：用下載的圖塊時自己點地形小方塊（只看四邊 16 格、四邊＋四角 47 格）、畫碰撞、平台 One Way、設錯時長怎樣；
+	  對照圖 `art/terrain_rules_sides.png`、`art/terrain_rules_corners.png`（`tools/generate_terrain_guides.py` 產生）；§7.4 背景圖改指向 SkinBackground；速查表、README 加一行
+　　→ 講師決定：教學員自己設 Terrain 規則（像 Unity 的 Rule Tile），只做手冊教學，兩種接法都完整教；不做練習素材、設錯警告、告示牌
+　　→ 步驟從再製 `default_tile.tres` 開始（地形「地面」「平台」和碰撞層已建好），刪掉原本的圖再拖自己的；編輯器按鈕名稱要講師在 4.7.2 確認
+- [x] U218 標題畫面 `palette` 加「跟主視覺配」：從主視覺抓主色自動配出字、底框、按鈕、亮色（字一定看得清楚）；
+	  `tone` 自動／深底／淺底、`main_color` 按鈕和亮色用圖裡最多／第二多／第三多的顏色；改選「自訂」時 4 個取色器帶著剛剛的顏色；手冊教取色器的滴管吸色
+　　→ 講師決定：學員會把自己的主角放上主視覺，配色最難；A（手冊教吸色）、B（跟主視覺配）、C（整套 UI 跟著標題的顏色）都做，C 另開 U219
+- [x] U219 HUD、暫停選單、過關畫面的 `palette` 加「跟標題一樣」：用主場景（標題畫面）的整套顏色，標題改了跟著變
+	  （驗證：`tests/ui/TitleColorFollowTest.tscn`）
+　　→ 實作：讀專案主場景的標題畫面拿顏色（不管是哪一套、自訂、跟主視覺配都跟）；只跟顏色，style、字型各自選；
+　　　主場景不是標題畫面時黃色驚嘆號＋執行時警告、用預設配色；「跟主視覺配」只在標題的下拉、「跟標題一樣」只在其他畫面的下拉
 ## 之後再做（構想，還沒排進單元）
 
+- 手機觸控按鈕：拖進關卡的虛擬按鈕組件，下拉選它代表哪個動作，只在觸控裝置上顯示（講師決定先放待做，U201 時提出）
 - GameFlow 加上狀態：管理「開始 → 進行中 → 過關／Game Over」，學員可以聽狀態變化的訊號；
   可能一起做命數、Game Over 條件（命用完或某個數值歸零）與 Game Over 畫面，會牽涉 RespawnHandler、ClearScreen。
   U156 的訊號名稱不用變，學員已經連好的線不用重連。

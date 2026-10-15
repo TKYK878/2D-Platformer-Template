@@ -2,22 +2,19 @@
 
 [ext_resource type="Script" path="res://tests/skins/_scripts/BlockSkinTest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/Player.tscn" id="player"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Foxy/idle/sprites/f-01.png" id="fox"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/tileset.png" id="tex"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Traps/Spikes/Idle.png" id="spikes"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Traps/Fire/On (16x32).png" id="fire_on"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Traps/Fire/Off.png" id="fire_off"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Terrain/Terrain (16x16).png" id="terrain"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/goal.png" id="ai_goal"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_1.png" id="ai_button_1"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_2.png" id="ai_button_2"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_on_1.png" id="ai_button_on_1"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/button_on_2.png" id="ai_button_on_2"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/coin.png" id="ai_coin"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/door.png" id="ai_door"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/door_open.png" id="ai_door_open"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/switch_red_off.png" id="ai_switch_red_off"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/spike_down.png" id="ai_spike_down"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Ansimuz/Foxy/idle/sprites/f-01.png" id="fox"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/PixelFrog/Traps/Spikes/Idle.png" id="spikes"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/PixelFrog/Traps/Fire/On (16x32).png" id="fire_on"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/PixelFrog/Traps/Fire/Off.png" id="fire_off"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Button_1.png" id="ai_button_1"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Button_2.png" id="ai_button_2"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Pickup_coin.png" id="ai_coin"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Door.png" id="ai_door"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Door_active.png" id="ai_door_open"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/SwitchBlock_red_active.png" id="ai_switch_red_off"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/SwitchBlock_red.png" id="ai_switch_red_on"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Checkpoint.png" id="ai_checkpoint_off"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Checkpoint_active.png" id="ai_checkpoint_on"]
 [ext_resource type="PackedScene" path="res://skins/Skin.tscn" id="skin"]
 [ext_resource type="PackedScene" path="res://skins/SkinAnimated.tscn" id="anim"]
 [ext_resource type="PackedScene" path="res://blocks/Pickup.tscn" id="Pickup"]
@@ -28,22 +25,6 @@
 [ext_resource type="PackedScene" path="res://blocks/SwitchBlock.tscn" id="SwitchBlock"]
 [ext_resource type="PackedScene" path="res://blocks/Spike.tscn" id="Spike"]
 [ext_resource type="PackedScene" path="res://blocks/Lava.tscn" id="Lava"]
-
-[sub_resource type="AtlasTexture" id="Tall_A"]
-atlas = ExtResource("tex")
-region = Rect2(272, 320, 16, 16)
-
-[sub_resource type="AtlasTexture" id="Tall_C"]
-atlas = ExtResource("tex")
-region = Rect2(160, 160, 16, 16)
-
-[sub_resource type="AtlasTexture" id="Sq_N"]
-atlas = ExtResource("terrain")
-region = Rect2(272, 64, 16, 16)
-
-[sub_resource type="AtlasTexture" id="Sq_B"]
-atlas = ExtResource("terrain")
-region = Rect2(272, 128, 16, 16)
 
 [sub_resource type="AtlasTexture" id="Lava_N"]
 atlas = ExtResource("fire_on")
@@ -67,11 +48,6 @@ animations = [{
 "loop": true,
 "name": &"平常",
 "speed": 3.0
-}, {
-"frames": [{"duration": 1.0, "texture": ExtResource("ai_button_on_1")}, {"duration": 1.0, "texture": ExtResource("ai_button_on_2")}],
-"loop": true,
-"name": &"啟動",
-"speed": 6.0
 }]
 
 [sub_resource type="AtlasTexture" id="Lava_N3"]
@@ -132,9 +108,8 @@ texture_normal = ExtResource("ai_coin")
 position = Vector2(-135, -16)
 
 [node name="Skin" parent="Checkpoint_Swap" instance=ExtResource("skin")]
-position = Vector2(0, 8)
-texture_normal = SubResource("Tall_C")
-texture_active = SubResource("Tall_A")
+texture_normal = ExtResource("ai_checkpoint_off")
+texture_active = ExtResource("ai_checkpoint_on")
 
 [node name="Button_Animated" parent="." instance=ExtResource("Button")]
 position = Vector2(-110, -4)
@@ -151,7 +126,7 @@ mode = 1
 position = Vector2(-60, -16)
 
 [node name="Skin" parent="Goal_TintOnly" instance=ExtResource("skin")]
-texture_normal = ExtResource("ai_goal")
+texture_normal = ExtResource("ai_checkpoint_on")
 
 [node name="Door1_SwapOnly" parent="." instance=ExtResource("Door")]
 position = Vector2(-30, -16)
@@ -184,26 +159,17 @@ position = Vector2(36, -16)
 position = Vector2(62, -8)
 
 [node name="Skin" parent="Switch1_Swap" instance=ExtResource("skin")]
-texture_normal = SubResource("Sq_N")
+texture_normal = ExtResource("ai_switch_red_on")
 texture_active = ExtResource("ai_switch_red_off")
 
 [node name="Switch2_HideOnly" parent="." instance=ExtResource("SwitchBlock")]
 position = Vector2(80, -8)
-color = 1
 
 [node name="Skin" parent="Switch2_HideOnly" instance=ExtResource("skin")]
-texture_normal = SubResource("Sq_B")
+texture_normal = ExtResource("ai_switch_red_on")
 
 [node name="Switch3_NoSkin" parent="." instance=ExtResource("SwitchBlock")]
 position = Vector2(98, -8)
-
-[node name="Spike1_Swap" parent="." instance=ExtResource("Spike")]
-position = Vector2(124, -8)
-
-[node name="Skin" parent="Spike1_Swap" instance=ExtResource("skin")]
-position = Vector2(0, 3)
-texture_normal = SubResource("Spike_N")
-texture_active = ExtResource("ai_spike_down")
 
 [node name="Spike2_DarkOnly" parent="." instance=ExtResource("Spike")]
 position = Vector2(142, -8)

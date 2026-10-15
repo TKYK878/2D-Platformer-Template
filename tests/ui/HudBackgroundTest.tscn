@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/ui/_scripts/HudBackgroundTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://blocks/ValueSettings.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/templates/HudTemplate.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/PixelFrog/Background/Yellow.png" id="4"]
+
+[node name="HudBackgroundTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="ValueSettings_Health" parent="." instance=ExtResource("2")]
+
+[node name="BusyBackground" type="TextureRect" parent="."]
+offset_right = 480.0
+offset_bottom = 270.0
+texture = ExtResource("4")
+stretch_mode = 1
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(240, 135)
+
+[node name="HudTemplate" parent="." instance=ExtResource("3")]

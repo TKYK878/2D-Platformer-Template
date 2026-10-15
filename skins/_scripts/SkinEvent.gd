@@ -67,8 +67,9 @@ func _fill_defaults() -> void:
 	var anims := _anim_names()
 	if animation == "" and not anims.is_empty():
 		animation = anims[0]
+		var main: Array = get_parent().main_animations() if _skin_ok() else []
 		for n in anims:
-			if n not in ["平常", "啟動", "走路"]:
+			if n not in main:
 				animation = n
 				break
 
@@ -133,7 +134,8 @@ func skin_event_setup(host: Node, skin: Node) -> void:
 		if info.name == signal_name:
 			arg_count = info.args.size()
 			break
-	host.connect(signal_name, skin.play_event.bind(animation).unbind(arg_count))
+	var callback: Callable = skin.play_event.bind(animation)
+	host.connect(signal_name, callback.unbind(arg_count) if arg_count > 0 else callback)
 
 # 印中文警告到輸出面板
 func _warn(message: String) -> void:

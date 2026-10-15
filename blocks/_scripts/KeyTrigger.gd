@@ -1,7 +1,7 @@
 extends Node
 
 # 按鍵觸發器：KeySettings 底下的一列自訂按鍵（節點名稱＝這一列的名稱）。依 key_source 決定要自己選一個
-# 按鍵、用滑鼠左鍵／右鍵／中鍵，還是跟基本操作（移動/跳躍）共用同一顆鍵；依 trigger 決定什麼
+# 按鍵、用滑鼠左鍵／右鍵／中鍵，還是跟基本操作（移動/跳躍）或 Input Map 裡的動作共用同一顆鍵；依 trigger 決定什麼
 # 時候發出 triggered，學員把 triggered 連到零件的函式。一律用學員按鍵優先權註冊，
 # 不會搶走 Player 或機制卡的輸入（見 documents/01a_shared_systems.md §3.5）。
 
@@ -15,8 +15,9 @@ extends Node
 @export var key: Key = KEY_E
 
 ## 跟哪一個基本操作用同一顆鍵（會跟著 KeySettings 改過的按鍵走）。這裡只決定聽哪一顆鍵，
-## 按下時基本操作照樣會做，另外再觸發你用 triggered 訊號連的函式
-@export_enum("move_left", "move_right", "move_up", "move_down", "jump", "restart") var same_key_as: String = "jump"
+## 按下時基本操作照樣會做，另外再觸發你用 triggered 訊號連的函式。
+## 也可以選你在「專案設定 → Input Map」自己加的動作（可以綁手把等其他裝置）
+@export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin") var same_key_as: String = "jump"
 
 ## 什麼時候發出 triggered：按下的那一刻、放開的那一刻，或按住期間每一幀都發
 @export_enum("按下時", "放開時", "按住時（每一幀）") var trigger: int = 0
@@ -53,6 +54,8 @@ func _ready() -> void:
 	add_to_group("signal_source")
 	_warn_if_not_connected.call_deferred()  # 等場景裡其他節點的 _ready() 都跑完，用程式連的線也算進去
 	if key_source == _SOURCE_ACTION:
+		if not InputRouter.check_action(StringName(same_key_as), "[按鍵觸發器] %s" % name):
+			return
 		InputRouter.bind_student(self, StringName(same_key_as), InputRouter.PRESSED, _on_pressed)
 		InputRouter.bind_student(self, StringName(same_key_as), InputRouter.HELD, _on_held)
 		InputRouter.bind_student(self, StringName(same_key_as), InputRouter.RELEASED, _on_released)

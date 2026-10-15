@@ -2,16 +2,13 @@
 
 [ext_resource type="Script" path="res://tests/skins/_scripts/AttackSkinTest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/Player.tscn" id="player"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Foxy/idle/sprites/f-01.png" id="fox"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Ansimuz/Foxy/idle/sprites/f-01.png" id="fox"]
 [ext_resource type="PackedScene" path="res://abilities/Ability_Ranged.tscn" id="ranged"]
 [ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="melee"]
 [ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="enemy"]
 [ext_resource type="PackedScene" path="res://blocks/EnemyShooter.tscn" id="shooter"]
 [ext_resource type="PackedScene" path="res://blocks/Breakable.tscn" id="breakable"]
 [ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="respawn"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/arrow.png" id="arrow"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/fireball.png" id="fireball"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/slash.png" id="slash"]
 
 [sub_resource type="RectangleShape2D" id="Floor_Shape"]
 size = Vector2(460, 16)
@@ -69,15 +66,12 @@ texture = ExtResource("fox")
 [node name="Abilities" type="Node2D" parent="Player"]
 
 [node name="Ability_Ranged" parent="Player/Abilities" instance=ExtResource("ranged")]
-bullet_texture = ExtResource("arrow")
 
 [node name="Ability_Ranged_Gravity" parent="Player/Abilities" instance=ExtResource("ranged")]
 key = 72
 use_gravity = true
-bullet_texture = ExtResource("arrow")
 
 [node name="Ability_Melee" parent="Player/Abilities" instance=ExtResource("melee")]
-slash_texture = ExtResource("slash")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(0, -60)
@@ -95,7 +89,6 @@ speed = 20.0
 [node name="EnemyShooter" parent="Enemy1_Fireball" instance=ExtResource("shooter")]
 cooldown = 2.0
 use_gravity = true
-bullet_texture = ExtResource("fireball")
 
 [node name="Enemy2_NoTexture" parent="." instance=ExtResource("enemy")]
 position = Vector2(190, -88)

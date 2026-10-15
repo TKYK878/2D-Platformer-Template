@@ -220,6 +220,23 @@ static func block_rect_local(skin: Node2D) -> Rect2:
 		return Rect2()
 	return skin.transform.affine_inverse() * Rect2(visual.position, visual.size)
 
+# 編輯器裡：皮能用（usable）時藏起零件原本的色塊，擺的時候看到的就是遊戲裡的樣子；皮有問題、被藏起來、放錯地方時色塊照舊顯示。
+# 只改畫面、不改色塊的 visible，不會存進學員的場景。hidden 是上次藏的色塊（皮被拖到別的零件時把舊的顯示回來），回傳這次藏的色塊
+static func editor_hide_block(skin: CanvasItem, usable: bool, hidden: ColorRect) -> ColorRect:
+	var visual := block_visual(skin.get_parent())
+	if hidden != visual:
+		editor_show_block(hidden)
+	if visual == null:
+		return null
+	var hide := usable and skin.visible and placement_problem(skin) == ""
+	RenderingServer.canvas_item_set_visible(visual.get_canvas_item(), visual.visible and not hide)
+	return visual if hide else null
+
+# 編輯器裡：把 editor_hide_block 藏起來的色塊顯示回來（皮被刪掉、拖走時）
+static func editor_show_block(hidden: ColorRect) -> void:
+	if hidden != null and is_instance_valid(hidden):
+		RenderingServer.canvas_item_set_visible(hidden.get_canvas_item(), hidden.visible)
+
 # 畫原本色塊的虛線外框（教學提醒「圖要畫在框裡」）
 static func draw_outline(skin: Node2D) -> void:
 	var r := block_rect_local(skin)
@@ -229,6 +246,10 @@ static func draw_outline(skin: Node2D) -> void:
 	var corners := [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
 	for i in 4:
 		skin.draw_dashed_line(corners[i], corners[(i + 1) % 4], color, 1.0, 2.0)
+
+# 印中文警告到輸出面板（皮自己也用這個）
+static func warn(message: String) -> void:
+	_warn(message)
 
 # 印中文警告到輸出面板
 static func _warn(message: String) -> void:

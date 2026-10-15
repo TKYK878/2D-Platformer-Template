@@ -13,6 +13,7 @@ class_name UIRoot
 	set(value):
 		kind = value
 		_apply_process_mode()
+		_apply_theme()
 		notify_property_list_changed()
 ## 這一整套 UI 用的字型，從檔案系統把字型檔拖進來；空白用專案預設的像素字
 @export var font: Font:
@@ -24,16 +25,67 @@ class_name UIRoot
 	set(value):
 		font_size = value
 		_apply_theme()
-## 配色：字、底色、按鈕、條的顏色一起換
-@export_enum("預設", "暗色", "亮色", "復古綠", "糖果") var palette: int = PALETTE_DEFAULT:
+## 配色：字、底色、按鈕、條的顏色一起換；標題畫面多一個「跟主視覺配」，從主視覺的圖自動配顏色；
+## 其他畫面多一個「跟標題一樣」，用主場景（標題畫面）的配色，整套 UI 統一
+@export_enum("預設", "暗色", "亮色", "復古綠", "糖果", "海洋", "森林", "夕陽", "黑白", "萬聖節", "自訂", "跟主視覺配", "跟標題一樣") var palette: int = PALETTE_DEFAULT:
 	set(value):
+		if value == PALETTE_CUSTOM and palette == PALETTE_ART:
+			_copy_art_to_custom()
 		palette = value
+		if is_inside_tree():
+			_refresh_art_colors()
+		set_process(Engine.is_editor_hint() and palette == PALETTE_TITLE)
 		_apply_theme()
-## 風格：按鈕、條、底框的形狀（像素復古＝方角、乾淨極簡＝細外框、可愛圓角＝圓角加厚底邊），顏色照 palette
-@export_enum("像素復古", "乾淨極簡", "可愛圓角") var style: int = STYLE_PIXEL:
+		notify_property_list_changed()
+		update_configuration_warnings()
+## 風格：按鈕、條、底框的形狀（像素復古＝方角、乾淨極簡＝細外框、可愛圓角＝圓角加厚底邊、木牌＝木紋加釘子、
+## 科幻＝切角亮線、漫畫＝粗黑框加硬陰影、復古遊戲機＝雙線框），顏色照 palette
+@export_enum("像素復古", "乾淨極簡", "可愛圓角", "木牌", "科幻", "漫畫", "復古遊戲機") var style: int = STYLE_PIXEL:
 	set(value):
 		style = value
 		_apply_theme()
+## HUD 蓋在遊戲畫面上，背景花的時候字會看不清楚：字加外框（字外面一圈描邊）；只有 HUD 有這一格。
+## 範本裡的 Panel 是底框，不要底框就把 Panel 的 Self Modulate 透明度拉到 0，或把 Rows 拖出來、刪掉 Panel
+@export_enum("無", "字加外框") var hud_background: int = HUD_BG_OUTLINE:
+	set(value):
+		hud_background = value
+		_apply_theme()
+
+@export_group("自訂配色")
+## 字的顏色（palette 選「自訂」才用到）：點色塊用滑鼠選
+@export var text_color: Color = Color("f0ece0"):
+	set(value):
+		text_color = value
+		_on_custom_color_changed()
+## 底框的顏色，拉低 A（透明度）可以看到後面的遊戲畫面
+@export var panel_color: Color = Color("2a2440e6"):
+	set(value):
+		panel_color = value
+		_on_custom_color_changed()
+## 按鈕的顏色（滑鼠移上去、按下去的顏色自動變亮變暗）
+@export var button_color: Color = Color("4a3f6e"):
+	set(value):
+		button_color = value
+		_on_custom_color_changed()
+## 亮色：條、拉桿、底框外框、按鈕被選到時的顏色
+@export var accent_color: Color = Color("ffb84a"):
+	set(value):
+		accent_color = value
+		_on_custom_color_changed()
+
+@export_group("跟主視覺配")
+## 底框要深色還是淺色：自動（看主視覺整體是亮是暗）、深底（淺色的字）、淺底（深色的字）
+@export_enum("自動", "深底", "淺底") var tone: int = 0:
+	set(value):
+		tone = value
+		_on_art_changed()
+## 按鈕和亮色用主視覺裡哪個顏色：最多的、第二多的、第三多的（圖裡顏色不夠多時會一樣）
+@export_enum("最多的顏色", "第二多的顏色", "第三多的顏色") var main_color: int = 0:
+	set(value):
+		main_color = value
+		_on_art_changed()
+# 從主視覺算好的 4 個顏色（字、底框、按鈕、亮色），編輯器裡算好存進場景檔，遊戲中直接用（不用每次重讀圖）
+@export_storage var art_colors: PackedColorArray = PackedColorArray()
 
 @export_group("標題畫面")
 ## 遊戲名稱（這一格可以打字）：填了就蓋掉範本裡 GameName 的字；空白就用範本裡原本的字
@@ -46,6 +98,7 @@ class_name UIRoot
 	set(value):
 		key_art = value
 		_apply_title()
+		_on_art_changed()
 ## 一行小字，例如「跳過 100 根尖刺，你做得到嗎？」（這一格可以打字）：填了就蓋掉範本裡 Hook 的字；空白就用範本裡原本的字
 @export var hook: String = "":
 	set(value):
@@ -58,20 +111,63 @@ const KIND_CLEAR_SCREEN := 2
 const KIND_TITLE := 3
 
 const PALETTE_DEFAULT := 0
+const PALETTE_CUSTOM := 10
+const PALETTE_ART := 11
+const PALETTE_TITLE := 12
+# 測試用：「跟標題一樣」改看這個場景，不看專案的主場景（空字串＝看主場景）
+static var title_scene_override := ""
+# 「跟標題一樣」讀到的標題配色（所有畫面共用，遊戲中讀一次；編輯器裡每秒重讀，標題改了跟著變）
+static var _title_cache := {}
+static var _title_cache_problem := ""
+static var _title_cache_time := -1
+# 「跟標題一樣」上一次套用的顏色，編輯器裡比對標題有沒有改
+var _applied_title_colors := {}
+const _ArtPalette := preload("res://ui/_scripts/ArtPalette.gd")
+const _ART_FIELDS := ["tone", "main_color"]
+const NO_KEY_ART := "palette 選「跟主視覺配」，但找不到主視覺的圖：把圖拖進 key_art（或範本裡的 KeyArt），先用預設配色"
+const ART_NOT_TITLE := "palette 的「跟主視覺配」只有標題畫面能用（其他畫面沒有主視覺），先用預設配色"
+# 自訂配色的字跟底框亮度差小於這個就提醒看不清楚
+const _MIN_CONTRAST := 0.3
+const _CUSTOM_FIELDS := ["text_color", "panel_color", "button_color", "accent_color"]
+
+const HUD_BG_NONE := 0
+const HUD_BG_OUTLINE := 1
+# 字加外框的粗細（像素）
+const _OUTLINE_SIZE := 2
 
 const STYLE_PIXEL := 0
 const STYLE_CLEAN := 1
 const STYLE_CUTE := 2
+const STYLE_WOOD := 3
+const STYLE_SCIFI := 4
+const STYLE_COMIC := 5
+const STYLE_RETRO := 6
 
 # 每種風格的底框九宮格圖（灰階，遊戲中依配色的 panel 顏色上色；學員可以照同樣的格子重畫）、四邊各 8 像素不拉伸
 const _PANEL_TEXTURES := [
 	preload("res://ui/styles/Panel_Pixel.png"),
 	preload("res://ui/styles/Panel_Clean.png"),
 	preload("res://ui/styles/Panel_Cute.png"),
+	preload("res://ui/styles/Panel_Wood.png"),
+	preload("res://ui/styles/Panel_SciFi.png"),
+	preload("res://ui/styles/Panel_Comic.png"),
+	preload("res://ui/styles/Panel_Retro.png"),
+]
+# 每種風格底框最外圈的外框圖（白色，遊戲中依配色的 accent 上色）；漫畫本來就是黑框，不另外加
+const _OUTLINE_TEXTURES := [
+	preload("res://ui/styles/Outline_Pixel.png"),
+	preload("res://ui/styles/Outline_Clean.png"),
+	preload("res://ui/styles/Outline_Cute.png"),
+	preload("res://ui/styles/Outline_Wood.png"),
+	preload("res://ui/styles/Outline_SciFi.png"),
+	null,
+	preload("res://ui/styles/Outline_Retro.png"),
 ]
 const _PANEL_PATCH := 8
 # 每種風格底框裡面的留白（左右、上下）
-const _PANEL_MARGINS := [Vector2(12, 8), Vector2(16, 12), Vector2(14, 10)]
+const _PANEL_MARGINS := [Vector2(12, 8), Vector2(16, 12), Vector2(14, 10), Vector2(12, 10), Vector2(14, 10), Vector2(12, 10), Vector2(14, 12)]
+# 漫畫風格的黑框、硬陰影顏色（不跟配色變）
+const _INK := Color(0.08, 0.08, 0.1)
 # 「預設」配色選了像素復古以外的風格時用的顏色（不然按鈕會是 Godot 原本的樣子，形狀換不了）
 const _NEUTRAL := { "text": Color("f0f0f4"), "dim": Color("a0a0aa"), "panel": Color(0.06, 0.06, 0.09, 0.85),
 	"button": Color("3a3a46"), "hover": Color("4c4c5a"), "pressed": Color("2a2a34"), "accent": Color("d0d0dc"), "back": Color("1e1e26") }
@@ -101,6 +197,16 @@ const _PALETTES := [
 		"hover": Color("2c5c2e"), "pressed": Color("153016"), "accent": Color("8ce060"), "back": Color("0a180b") },
 	{ "text": Color("5a2a4a"), "dim": Color("9a6a88"), "panel": Color("fff0f6e6"), "button": Color("ffc8e0"),
 		"hover": Color("ffb0d2"), "pressed": Color("f598c0"), "accent": Color("ff6fae"), "back": Color("ffe0ee") },
+	{ "text": Color("e6f6ff"), "dim": Color("8ab8d4"), "panel": Color("0e3550e6"), "button": Color("17507a"),
+		"hover": Color("1f6a9e"), "pressed": Color("103c5c"), "accent": Color("4fd2e8"), "back": Color("0a2436") },
+	{ "text": Color("f2ecd2"), "dim": Color("a8b08a"), "panel": Color("23361ee6"), "button": Color("3a5a2e"),
+		"hover": Color("4c7240"), "pressed": Color("2c4424"), "accent": Color("d8b44a"), "back": Color("18240f") },
+	{ "text": Color("3a1e2a"), "dim": Color("8a5a5a"), "panel": Color("ffd8b0e6"), "button": Color("ffb27a"),
+		"hover": Color("ff9a62"), "pressed": Color("e8844e"), "accent": Color("e0405a"), "back": Color("f0c098") },
+	{ "text": Color("f4f4f4"), "dim": Color("9a9a9a"), "panel": Color("101010e6"), "button": Color("3a3a3a"),
+		"hover": Color("5a5a5a"), "pressed": Color("242424"), "accent": Color("ffffff"), "back": Color("000000") },
+	{ "text": Color("ffd9a0"), "dim": Color("b08a5c"), "panel": Color("1e1028e6"), "button": Color("4a2468"),
+		"hover": Color("6a3290"), "pressed": Color("341a4a"), "accent": Color("ff8a1e"), "back": Color("120a18") },
 ]
 
 # 套用配色與字型、決定暫停時能不能動；學員的同一種畫面已經有一個的話自己刪掉並警告；
@@ -108,10 +214,17 @@ const _PALETTES := [
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_apply_process_mode()
+	set_process(Engine.is_editor_hint() and palette == PALETTE_TITLE)
+	if Engine.is_editor_hint() or art_colors.is_empty():
+		_refresh_art_colors()
 	_apply_theme()
 	_apply_title()
 	if Engine.is_editor_hint():
 		return
+	for problem in [custom_contrast_problem(), art_problem(), title_palette_problem()]:
+		if problem != "":
+			push_warning("[%s] %s" % [name, problem])
+			printerr("⚠ [%s] %s" % [name, problem])
 	_snap_containers(self)
 	if kind == KIND_TITLE:
 		_ready_title()
@@ -149,6 +262,22 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage = PROPERTY_USAGE_NONE
 	elif _TITLE_NODES.has(property.name) and kind != KIND_TITLE:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name == "hud_background" and kind != KIND_HUD:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name in _CUSTOM_FIELDS and palette != PALETTE_CUSTOM:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name in _ART_FIELDS and palette != PALETTE_ART:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name == "palette":
+		# 「跟主視覺配」只給標題畫面、「跟標題一樣」只給其他畫面（已經選了的照樣顯示，才看得到黃色驚嘆號）
+		var options: PackedStringArray = property.hint_string.split(",")
+		var shown := PackedStringArray()
+		for i in options.size():
+			var hide_art := i == PALETTE_ART and kind != KIND_TITLE and palette != PALETTE_ART
+			var hide_title := i == PALETTE_TITLE and kind == KIND_TITLE and palette != PALETTE_TITLE
+			if not hide_art and not hide_title:
+				shown.append("%s:%d" % [options[i].get_slice(":", 0), i])
+		property.hint_string = ",".join(shown)
 
 # 這套 UI 放進關卡時（不是單獨編輯它的時候），把底下顯示零件的設定錯誤收集起來顯示在這裡：
 # 放進關卡的場景看不到裡面的子節點，錯誤要掛在看得到的這一層
@@ -157,6 +286,15 @@ func _get_configuration_warnings() -> PackedStringArray:
 	if not is_inside_tree():
 		return warnings
 	var scene_root := get_tree().edited_scene_root
+	var contrast := custom_contrast_problem()
+	if contrast != "":
+		warnings.append(contrast)
+	var art := art_problem()
+	if art != "":
+		warnings.append(art)
+	var follow := title_palette_problem()
+	if follow != "":
+		warnings.append(follow)
 	if kind == KIND_TITLE:
 		if scene_root != null and scene_root != self:
 			warnings.append(TITLE_NOT_ALONE)
@@ -205,7 +343,7 @@ func _apply_title() -> void:
 	if name_label != null and game_name.strip_edges() != "":
 		name_label.text = game_name.strip_edges()
 	var art := _title_node("key_art") as TextureRect
-	if art != null and key_art != null:
+	if art != null and key_art != null and art.texture != key_art:
 		art.texture = key_art
 	var hook_label := _title_node("hook") as Label
 	if hook_label != null and hook.strip_edges() != "":
@@ -275,8 +413,139 @@ func _collect_warnings(node: Node, scene_root: Node, warnings: PackedStringArray
 func get_palette_color(role: String, fallback: Color) -> Color:
 	return _colors().get(role, fallback)
 
-# 現在用的這套顏色：「預設」配色配像素復古以外的風格時用中性色
+# 「跟主視覺配」用不了的原因（不是標題畫面、找不到主視覺、讀不到圖），能用回傳空字串
+func art_problem() -> String:
+	if palette != PALETTE_ART:
+		return ""
+	if kind != KIND_TITLE:
+		return ART_NOT_TITLE
+	if _art_texture() == null:
+		return NO_KEY_ART
+	if art_colors.size() < 4:
+		return "讀不到主視覺「%s」的顏色，先用預設配色：換一張 PNG 或 JPG 圖試試" % _art_texture().resource_path.get_file()
+	return ""
+
+# 「跟標題一樣」用不了的原因（這個就是標題畫面、主場景不是標題畫面），能用回傳空字串
+func title_palette_problem() -> String:
+	if palette != PALETTE_TITLE:
+		return ""
+	if kind == KIND_TITLE:
+		return "palette 的「跟標題一樣」是給 HUD、暫停選單、過關畫面用的，標題畫面自己選一套配色"
+	_read_title_palette()
+	return _title_cache_problem
+
+# 讀主場景（標題畫面）的配色存起來：遊戲中只讀一次，編輯器裡超過一秒就重讀
+static func _read_title_palette() -> void:
+	var now := Time.get_ticks_msec()
+	if _title_cache_time >= 0 and (not Engine.is_editor_hint() or now - _title_cache_time < 1000):
+		return
+	_title_cache_time = now
+	_title_cache = {}
+	_title_cache_problem = ""
+	var path: String = title_scene_override
+	if path == "":
+		path = ProjectSettings.get_setting("application/run/main_scene", "")
+	var packed := load(path) as PackedScene if path != "" and ResourceLoader.exists(path) else null
+	var title: Node = packed.instantiate() if packed != null else null
+	if not title is UIRoot or (title as UIRoot).kind != KIND_TITLE:
+		_title_cache_problem = "palette 選「跟標題一樣」，但專案的主場景不是標題畫面：先把 _my/ 裡的標題畫面「設為主場景」，現在先用預設配色"
+	else:
+		var t := title as UIRoot
+		if t.palette == PALETTE_ART and t.art_colors.is_empty():
+			t._refresh_art_colors()
+		_title_cache = t._colors()
+	if title != null:
+		title.free()
+
+# 編輯器裡選了「跟標題一樣」：標題的配色改了就跟著換
+func _process(_delta: float) -> void:
+	if not Engine.is_editor_hint() or palette != PALETTE_TITLE:
+		set_process(false)
+		return
+	_read_title_palette()
+	if _title_cache != _applied_title_colors:
+		_apply_theme()
+		update_configuration_warnings()
+
+# 主視覺的圖：key_art 有填就用它，沒填就用範本裡 KeyArt 原本的圖
+func _art_texture() -> Texture2D:
+	if key_art != null:
+		return key_art
+	var art := _title_node("key_art") as TextureRect
+	return art.texture if art != null else null
+
+# 重新從主視覺算 4 個顏色（只在選了「跟主視覺配」的標題畫面算）
+func _refresh_art_colors() -> void:
+	if palette != PALETTE_ART or kind != KIND_TITLE:
+		return
+	var info := _ArtPalette.analyze(_ArtPalette.read_image(_art_texture()))
+	art_colors = _ArtPalette.make_colors(info, tone, main_color)
+
+# 主視覺、深淺、主色改了：重算顏色、重建 Theme、重新檢查
+func _on_art_changed() -> void:
+	if palette != PALETTE_ART or not is_inside_tree():
+		return
+	_refresh_art_colors()
+	_apply_theme()
+	update_configuration_warnings()
+
+# 從「跟主視覺配」改選「自訂」：4 個取色器帶著剛剛配好的顏色，學員從這裡開始微調
+func _copy_art_to_custom() -> void:
+	if art_colors.size() < 4:
+		return
+	text_color = art_colors[0]
+	panel_color = art_colors[1]
+	button_color = art_colors[2]
+	accent_color = art_colors[3]
+
+# 存檔前重算一次（範本裡 KeyArt 的圖被直接換掉時，存進去的顏色也跟著對）
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_EDITOR_PRE_SAVE and palette == PALETTE_ART:
+		_refresh_art_colors()
+		_apply_theme()
+
+# 自訂配色改了顏色：重建 Theme、重新檢查看不看得清楚
+func _on_custom_color_changed() -> void:
+	if palette == PALETTE_CUSTOM:
+		_apply_theme()
+		update_configuration_warnings()
+
+# 自訂配色的字跟底框顏色太接近時回傳提醒，沒問題回傳空字串
+func custom_contrast_problem() -> String:
+	if palette != PALETTE_CUSTOM:
+		return ""
+	if absf(text_color.get_luminance() - panel_color.get_luminance()) >= _MIN_CONTRAST:
+		return ""
+	return "自訂配色的 text_color（字）跟 panel_color（底框）太接近，字可能看不清楚：把其中一個調亮、另一個調暗"
+
+# 從 4 個顏色（字、底框、按鈕、亮色）算出整套顏色：次要字＝字往底框混一點，滑過／按下＝按鈕變亮／變暗，條的底＝底框變暗
+func _colors_from(text: Color, panel: Color, button: Color, accent: Color) -> Dictionary:
+	var lighter := button.get_luminance() < 0.6
+	return {
+		"text": text,
+		"dim": text.lerp(Color(panel, 1.0), 0.45),
+		"panel": panel,
+		"button": button,
+		"hover": button.lightened(0.15) if lighter else button.darkened(0.12),
+		"pressed": button.darkened(0.2),
+		"accent": accent,
+		"back": Color(panel.darkened(0.45), 1.0),
+	}
+
+# 現在用的這套顏色：「預設」配色配像素復古以外的風格時用中性色；「跟主視覺配」用不了時當成「預設」
 func _colors() -> Dictionary:
+	if palette == PALETTE_CUSTOM:
+		return _colors_from(text_color, panel_color, button_color, accent_color)
+	if palette == PALETTE_ART:
+		if art_problem() == "":
+			return _colors_from(art_colors[0], art_colors[1], art_colors[2], art_colors[3])
+		return _NEUTRAL if style != STYLE_PIXEL else {}
+	if palette == PALETTE_TITLE:
+		if title_palette_problem() == "":
+			_applied_title_colors = _title_cache
+			if not _title_cache.is_empty():
+				return _title_cache
+		return _NEUTRAL if style != STYLE_PIXEL else {}
 	var colors: Dictionary = _PALETTES[palette]
 	if colors.is_empty() and style != STYLE_PIXEL:
 		return _NEUTRAL
@@ -295,8 +564,18 @@ func _apply_theme() -> void:
 		_add_palette(t, colors)
 	_add_panel(t, colors)
 	_add_variations(t, colors)
+	if kind == KIND_HUD and hud_background == HUD_BG_OUTLINE:
+		_add_outline(t, colors)
 	theme = t
 	_notify_children(self)
+
+# HUD 的字加外框：字是亮的就描深色、字是暗的就描淺色
+func _add_outline(t: Theme, c: Dictionary) -> void:
+	var text_color: Color = c.get("text", Color.WHITE)
+	var edge := Color(0, 0, 0, 0.85) if text_color.get_luminance() > 0.5 else Color(1, 1, 1, 0.85)
+	for type in ["Label", "Button", "ProgressBar"]:
+		t.set_constant("outline_size", type, _OUTLINE_SIZE)
+		t.set_color("font_outline_color", type, edge)
 
 # 把一套配色寫進 Theme：字、按鈕、進度條、拉桿、面板
 func _add_palette(t: Theme, c: Dictionary) -> void:
@@ -317,12 +596,25 @@ func _add_palette(t: Theme, c: Dictionary) -> void:
 	t.set_stylebox("grabber_area", "HSlider", _bar_box(c.accent, 2))
 	t.set_stylebox("grabber_area_highlight", "HSlider", _bar_box(c.accent, 2))
 
-# 選單的底框（Panel、PanelContainer）：用這個風格的九宮格圖，依配色上色（「預設」配色是深色半透明）；四周留白讓字不貼邊
+# 選單的底框（Panel、PanelContainer）：用這個風格的九宮格圖，依配色上色（「預設」配色是深色半透明），
+# 最外圈再疊一圈 accent 顏色的外框；四周留白讓字不貼邊
 func _add_panel(t: Theme, c: Dictionary) -> void:
-	var box := StyleBoxTexture.new()
-	box.texture = _PANEL_TEXTURES[style]
-	box.set_texture_margin_all(_PANEL_PATCH)
-	box.modulate_color = c.get("panel", _DEFAULT_PANEL)
+	var fill := StyleBoxTexture.new()
+	fill.texture = _PANEL_TEXTURES[style]
+	fill.set_texture_margin_all(_PANEL_PATCH)
+	if style == STYLE_WOOD:
+		fill.axis_stretch_horizontal = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+		fill.axis_stretch_vertical = StyleBoxTexture.AXIS_STRETCH_MODE_TILE
+	fill.modulate_color = c.get("panel", _DEFAULT_PANEL)
+	var box := PanelBox.new()
+	box.fill = fill
+	if _OUTLINE_TEXTURES[style] != null:
+		var outline := StyleBoxTexture.new()
+		outline.texture = _OUTLINE_TEXTURES[style]
+		outline.set_texture_margin_all(_PANEL_PATCH)
+		outline.draw_center = false
+		outline.modulate_color = c.get("accent", _NEUTRAL.accent)
+		box.outline = outline
 	var margin: Vector2 = _PANEL_MARGINS[style]
 	box.content_margin_left = margin.x
 	box.content_margin_right = margin.x
@@ -367,6 +659,35 @@ func _button_box(color: Color, edge: Color, pressed: bool) -> StyleBoxFlat:
 			box.content_margin_left = 8
 			box.content_margin_right = 8
 			box.content_margin_top = 4 if pressed else 2
+		STYLE_WOOD:
+			box.set_corner_radius_all(2)
+			box.anti_aliasing = false
+			box.set_border_width_all(1)
+			box.border_color = color.darkened(0.5)
+			box.border_width_bottom = 1 if pressed else 2
+			box.content_margin_left = 6
+			box.content_margin_right = 6
+			box.content_margin_top = 3 if pressed else 2
+		STYLE_SCIFI:
+			box.bg_color = Color(color, color.a * 0.85)
+			box.set_border_width_all(1)
+			box.border_width_left = 3
+			box.border_color = edge
+			box.content_margin_left = 8
+			box.content_margin_right = 6
+		STYLE_COMIC:
+			box.border_color = _INK
+			box.set_border_width_all(2)
+			box.border_width_right = 2 if pressed else 4
+			box.border_width_bottom = 2 if pressed else 4
+			box.content_margin_left = 8 if pressed else 6
+			box.content_margin_right = 6
+			box.content_margin_top = 4 if pressed else 2
+		STYLE_RETRO:
+			box.border_width_left = 4
+			box.border_color = edge
+			box.content_margin_left = 10
+			box.content_margin_right = 6
 	return box
 
 # 條和拉桿的方框：可愛圓角時是圓的，其他風格方角
@@ -375,13 +696,19 @@ func _bar_box(color: Color, margin: int = 4) -> StyleBoxFlat:
 	if style == STYLE_CUTE:
 		box.set_corner_radius_all(3)
 		box.anti_aliasing = false
+	elif style == STYLE_WOOD:
+		box.set_corner_radius_all(2)
+		box.anti_aliasing = false
+	elif style == STYLE_COMIC:
+		box.set_border_width_all(1)
+		box.border_color = _INK
 	return box
 
 # 只有外框的方框，按鈕被選到（用鍵盤操作）時用；可愛圓角時也是圓角
 func _outline(color: Color) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.draw_center = false
-	box.set_border_width_all(1)
+	box.set_border_width_all(2 if style == STYLE_COMIC else 1)
 	box.border_color = color
 	if style == STYLE_CUTE:
 		box.set_corner_radius_all(6)

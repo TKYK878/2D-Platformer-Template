@@ -13,14 +13,17 @@ extends MechanicBase
 		notify_property_list_changed()
 		update_configuration_warnings()
 
-## 按下按鍵時用鍵盤按鍵還是滑鼠按鍵（只有「觸發時機」選按下按鍵時才會顯示這一欄）
-@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵") var input_type: int = 0:
+## 按下按鍵時用鍵盤按鍵、滑鼠按鍵，還是 Input Map 動作（可以綁手把）（只有「觸發時機」選按下按鍵時才會顯示這一欄）
+@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "Input Map 動作") var input_type: int = 0:
 	set(value):
 		input_type = value
 		notify_property_list_changed()
 
 ## 按哪一鍵脫殼（「觸發時機」選按下按鍵、「按鍵種類」選鍵盤按鍵時才會顯示這一欄）
 @export var key: Key = KEY_C
+
+## 「按鍵種類」選 Input Map 動作時，要聽哪一個動作（動作在「專案設定 → Input Map」裡加，可以綁手把等其他裝置）
+@export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin") var action: StringName = &""
 
 ## 同時按著好幾個方向鍵時，先看哪個方向；沒按方向鍵就往排第一的方向（排第一的是左右的話，往面向的方向；「start_inside」不勾時改看預設方向）
 @export_enum("上 > 左右 > 下", "左右 > 上 > 下", "下 > 左右 > 上", "左右 > 下 > 上") var direction_order: int = 0
@@ -122,11 +125,16 @@ var _corner_icon: ColorRect = null
 var _corner_label: Label = null
 var _corner_row: HBoxContainer = null
 
+# input_type 的「Input Map 動作」選項
+const _INPUT_MAP_ACTION := 4
+
 # 只在「觸發時機」選按下按鍵時顯示按鍵欄位；選滑鼠按鍵時也隱藏 key 欄位；窩在殼裡時隱藏預設方向
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "input_type" and trigger_timing != _TRIGGER_KEY:
 		property.usage = PROPERTY_USAGE_NONE
 	elif property.name == "key" and (trigger_timing != _TRIGGER_KEY or input_type != 0):
+		property.usage = PROPERTY_USAGE_NONE
+	elif property.name == "action" and (trigger_timing != _TRIGGER_KEY or input_type != _INPUT_MAP_ACTION):
 		property.usage = PROPERTY_USAGE_NONE
 	elif property.name == "default_direction" and start_inside:
 		property.usage = PROPERTY_USAGE_NONE
@@ -171,7 +179,7 @@ func _on_setup() -> void:
 	else:
 		if input_type == 0:
 			InputRouter.warn_if_dangerous_key(key, "[脫殼]")
-		InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _on_key_pressed)
+		InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _on_key_pressed, 0, action)
 	InputRouter.warn_if_dangerous_key(prev_key, "[脫殼]")
 	InputRouter.warn_if_dangerous_key(next_key, "[脫殼]")
 	InputRouter.bind_key(self, prev_key, InputRouter.PRESSED, func(): return _switch(-1))

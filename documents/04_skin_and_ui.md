@@ -190,6 +190,23 @@ const TIMELINE := "時間軸"
 - `style`（U191）：像素復古（原本的樣子，預設）／乾淨極簡（按鈕細外框、左右多留白）／可愛圓角（按鈕、條圓角，按鈕底邊加厚、按下變薄字往下）。
   形狀跟顏色分開：`style` 管形狀、`palette` 管顏色，任意組合；「預設」配色配像素復古以外的風格時用中性灰（`_NEUTRAL`），不然按鈕是 Godot 原本的樣子換不了形狀。
   底框（`Panel`／`PanelContainer`）用 `ui/styles/Panel_*.png` 灰階九宮格（24×24、四邊 8 像素），`StyleBoxTexture.modulate_color` 依配色的 panel 上色。
+- U211 加 `style`：木牌（木紋底框重複鋪、四角釘子；按鈕小圓角、底邊厚）／科幻（切角亮線底框；按鈕左邊 3 像素亮線，滑過變 accent）／
+  漫畫（2 像素黑框＋右下 2 像素硬陰影；按鈕黑框、右下邊加粗當陰影，按下去變薄、字往右下）／復古遊戲機（雙線底框；按鈕左邊 4 像素粗線，滑過變 accent）。
+  加 `palette`：海洋／森林／夕陽／黑白／萬聖節。
+  U213：`palette` 加「自訂」（最後一個），`@export_group("自訂配色")` 4 個 `Color`（text／panel／button／accent），只在自訂時顯示；
+  dim＝字往底框混 45%、hover＝按鈕變亮 15%（亮的按鈕改變暗）、pressed＝變暗 20%、back＝底框變暗 45%；字跟底框亮度差小於 0.3 時黃色驚嘆號＋執行時警告。
+  U218：`palette` 加「跟主視覺配」（編號 11，只有標題畫面的下拉看得到），`ArtPalette.gd` 從主視覺（`key_art`，空白用範本 KeyArt 的圖）
+  抓最多的三種色相（太灰太暗的不算），配出字／底框／按鈕／亮色：深底＝字亮 0.96、底框亮 0.15；淺底＝字亮 0.16、底框亮 0.96。
+  `@export_group("跟主視覺配")`：`tone` 自動（圖平均亮度 0.6 以上配淺底）／深底／淺底、`main_color` 按鈕和亮色用第幾多的顏色。
+  算好的 4 色用 `@export_storage var art_colors` 存進場景檔（存檔前重算），遊戲中不用讀圖；改選「自訂」時 4 個取色器帶著這 4 色。
+  找不到主視覺、讀不到圖、不是標題畫面時黃色驚嘆號＋執行時警告，用預設配色。
+  U219：`palette` 加「跟標題一樣」（編號 12，標題畫面的下拉看不到），讀專案主場景（`application/run/main_scene`）的標題畫面，
+  生出來（不放進場景樹）拿它的整套顏色。結果所有畫面共用（static），遊戲中讀一次、編輯器裡每秒重讀（標題改了 HUD 跟著變）；
+  只跟顏色，`style`、字型不跟。主場景不是標題畫面時黃色驚嘆號＋執行時警告，用預設配色。測試用 `UIRoot.title_scene_override` 指定別的標題。
+  U212：底框外圈疊一圈配色 accent 的外框（`PanelBox`：底框 `StyleBoxTexture`＋外框 `StyleBoxTexture`，外框圖 `Outline_*.png` 是底框形狀最外一圈），漫畫維持黑框。
+ 新選項都接在最後，既有場景存的編號不變。底框圖由 `tools/generate_ui_panels.py` 產生（程式畫的幾何框）。
+- HUD 底框（U210）：`HudTemplate` 的 `Rows` 包在 `Panel`（`PanelContainer`）裡，跟暫停選單同一個九宮格底框。預設 HUD（`StatsHud`）沒有任何一列要顯示時藏起底框。
+- `hud_background`（U210，只有 HUD 顯示）：無／字加外框（預設，Label、Button、ProgressBar 描 2 像素邊，字亮描深、字暗描淺）。學員已經再製的 HUD 也會套到預設的字加外框。
   三套都用 Cubic_11（講師決定，換非像素中文字型網頁版多好幾 MB）。圓角一律關抗鋸齒，維持像素風的硬邊。
 - 畫面風格檢查 `skins/_scripts/StyleCheck.gd`（U193）：`Skin`／`SkinAnimated`／`SkinBackground` 的 `_get_configuration_warnings()` 呼叫，只在編輯器出黃色驚嘆號、執行時不印。
   ① `texture_filter` 不是 Inherit／Nearest（濾鏡在節點上，不在圖片匯入設定；不往上檢查父節點）；
@@ -253,6 +270,7 @@ const TIMELINE := "時間軸"
 - 零件開場時找自己底下有沒有 `Skin`／`SkinAnimated`：有的話藏起自己的 `ColorRect`，原本「變色、變淡、變灰」的狀態回饋改成作用在皮上。
 - 沒有皮的零件照舊顯示色塊。皮放錯地方（不在零件底下、不在 Player → Visual 底下）→ 黃色驚嘆號。
 - 碰撞範圍不跟著圖片變。`@tool`：皮在編輯器裡畫出原本色塊的外框當參考，教學時提醒「圖要畫在框裡」。
+- 皮能用時，編輯器裡也藏起原本的色塊（只改畫面、不改色塊的 `visible`，不會存進學員的場景）；皮有問題、被藏起來時色塊照舊顯示（U203）。
 
 ### 6.1 `Skin`（靜態圖）
 
@@ -284,9 +302,14 @@ const TIMELINE := "時間軸"
   - 一般零件：「平常」「啟動」（啟動＝狀態改變後，同 `texture_active` 的時機）
   - 敵人：「走路」「受傷」「死亡」（沒有「受傷」「死亡」就繼續播「走路」）
 - 缺「平常」（或敵人缺「走路」）→ 黃色驚嘆號，列出現有的動畫名稱並附近似名稱建議（`NameCheck`）。
+- U215：名稱改成「動畫」群組下拉（`normal_animation`、`active_animation`；敵人 `normal_animation`、`hurt_animation`、`die_animation`），
+  選項（自動）、（沒有）＋現有的動畫，（自動）認常見中英文名字；平常／啟動／走路／受傷／死亡留著當零件呼叫用的代號（`resolved_animation()` 轉成實際名稱）。
 - `follow_facing`、`active_style`、`follow_direction` 同 `Skin`（沒有「啟動」動畫時一律用原本效果）。
 - `fill_style` 只有「只放一張」「拉伸蓋滿」（動畫做不到重複鋪滿）。
 - 零件發生的事件（彈出、傳送、碎掉…）要播動畫：U180b `SkinEvent`，學員自己選「什麼時候 → 播哪段」，不寫死動畫名稱。
+- 訊號換圖（U208，`Skin`、`SkinAnimated` 都有）：別的零件的訊號連到 `show_normal`／`show_active`／`next_look`／`previous_look`／`show_first`／`show_last`／`show_look(第幾張)`。
+  順序是 `texture_normal` → `texture_active` → `more_textures`（動畫：平常 → 啟動 → 其他照名稱排，不含「受傷」「死亡」）；
+  `signal_priority`（零件的狀態優先／訊號優先）、`loop_looks`（最後一張接回第一張）。
 
 ### 6.3 程式生出來的東西
 
@@ -326,7 +349,8 @@ const TIMELINE := "時間軸"
   `Visual` 的子節點上（`AnimatedSprite2D` 本身就是子節點），也不衝突。`AnimationPlayer` 動畫裡如果改了 `scale`／`modulate`，
   會跟 Juice 打架：文件提醒「動畫只改 frame（第幾格），不要改大小和顏色」，並在編輯器檢查動畫軌道，有改就黃色驚嘆號。
 - 地基需要：`Ability_Melee`、`Ability_Ranged` 新增 `attacked` 訊號（揮擊／射擊那一下發出），`PlayerAnimator` 自己找到並聽它，不用學員連。
-- 檢查動畫名稱時跟 §6.2 一樣：列出現有的名稱、附近似名稱建議（例如「跑」→「跑步」）。
+- U214：動畫名稱改成每個狀態一格下拉（`idle_animation`…，選項是（自動）、（沒有）＋現有的動畫），（自動）認常見的中英文名字，舊場景的中文名字照樣對上。
+  加一次型動畫（落地、轉向、重生、撞牆、撞天花板、開始移動，預設（沒有））、`can_interrupt`、`min_run_speed`、`run_speed_follow`；選的動畫不見了黃色驚嘆號＋中文警告。
 - 轉向翻面（講師決定，U183）：`follow_facing`（預設勾），翻 Visual 底下圖的 Flip H，以編輯器裡勾好的 Flip H 當朝右；
   自動奔跑卡已經翻 Visual 時不再翻一次。Juice 總開關關掉時停在待機、不翻面。
 
@@ -352,6 +376,9 @@ const TIMELINE := "時間軸"
   編輯器裡每半秒重新對齊。`parallax`＋`depth`（0.1～0.9）：`Parallax2D.scroll_scale = depth`，鏡頭左上角在 c 時看到的是 c × depth 起一個畫面大，
   所以要蓋的範圍是「關卡範圍 × depth＋一個畫面」（編輯器裡照關卡範圍畫）。圖集切出來的圖重複鋪滿前先轉單張圖（同 `Skin`）。
   `texture` 屬資源欄位例外：空白黃色驚嘆號＋執行時中文警告。放在有腳本或不是 Node／Node2D 的節點底下、兩個不視差的蓋滿背景疊在一起時黃色驚嘆號＋中文警告。
+- U216：`cover_area` 整個關卡／所在的房間（父節點是 Room，用 `Room.get_rect()`，不在 Room 底下警告並改蓋整個關卡）／自己拉範圍（`width_in_tiles`、`height_in_tiles`，
+  從節點位置往右下，編輯器畫虛線框）。z 依範圍自動分層：整個關卡 -100、所在的房間 -99、自己拉與只放一張 -98，遠景再 -3；
+  可以放在 Room 底下（不警告）；重疊警告改成「同一層、而且把前面的整個蓋住」才出。
 
 ---
 

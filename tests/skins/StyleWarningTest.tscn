@@ -5,8 +5,8 @@
 [ext_resource type="PackedScene" path="res://blocks/NoBounceBlock.tscn" id="NoBounce"]
 [ext_resource type="PackedScene" path="res://skins/Skin.tscn" id="skin"]
 [ext_resource type="PackedScene" path="res://skins/SkinBackground.tscn" id="bg"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/AI_Placeholder/coin.png" id="coin"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Background/Gray.png" id="gray"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Pickup_coin.png" id="coin"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/PixelFrog/Background/Gray.png" id="gray"]
 
 [node name="StyleWarningTest" type="Node2D"]
 script = ExtResource("1")

@@ -57,7 +57,7 @@
 
 每個 Juice 有哪些設定 → `零件手冊.md` §6。
 
-**練習關**：打開 `levels/_starts/W3_JuicePractice.tscn` → **場景 → 另存場景為** 存到 `_my/` → 照天上 8 塊告示牌的題目拖 Juice、
+**練習關**：打開 `levels/_starts/W3_JuicePractice.tscn` → **場景 → 另存場景為** 存到 `_my/` → 照天上 8 塊告示牌的題目拖 Juice（做了沒變綠看 `零件手冊.md` §8）、
 改設定 → 按 **F6**，做對的告示牌會變綠色寫「完成！」（輸出面板也會列出每一題）。
 
 **按鍵手感**（不是 Juice，在 **Player** 的 Inspector「按鍵手感」）：晚一點按也能跳、早一點按也能跳、短按小跳、頂頭修正、起跑加速，
@@ -65,39 +65,51 @@
 
 ### 3.2 W4：套皮與 UI
 
-1. **先看換完長什麼樣子**：打開 `levels/_starts/W4_SkinBox.tscn` → 按 **F6**（HUD、暫停選單、過關畫面、零件、角色都換過了）
+1. **先看換完長什麼樣子**：打開 `levels/_starts/W4_SkinBox.tscn` → 按 **F6**（HUD、暫停選單、過關畫面、零件、角色、背景都換過了）；
+   標題畫面打開 `levels/_starts/_W4SkinBox/ui/TitleDemo.tscn` → 按 **F6** → 按「開始遊戲」
 2. 回到自己的關卡（W4 才加入的話，把 `W4_SkinBox` 或 `W3_JuiceBox` 另存到 `_my/`）
 3. 自己的圖片、字型都放在 `_my/` 底下（例如 `_my/art/`）
+4. **用了別人的素材要記下來**：寫在 `_my/CREDITS.txt`，格式和授權怎麼看 → `零件手冊.md` §7
 
 **換零件外觀**：在關卡裡點選零件（終點、門、敵人、金幣…）→ 從 `skins/` 拖 `Skin` 進去當它的子節點 → 把圖拖進 `texture_normal`。
 - 黃色虛線框是原本色塊的範圍，碰撞不會跟著圖變，圖要畫在框裡（可以直接拖動 `Skin` 對位置）
 - 狀態改變後的樣子（門打開、按鈕亮起、終點踩到…）拖進 `texture_active`；沒放就用平常的圖變色
-- 要動畫：拖 `SkinAnimated`，在 Sprite Frames 做「平常」（敵人做「走路」），想要狀態改變後的動畫就加「啟動」
+- 要動畫：拖 `SkinAnimated`，在 Sprite Frames 做動畫（名字隨便取），在「動畫」群組下拉選平常（敵人是走路）、狀態改變後各播哪段；取 idle、walk、active 這類常見名字會自動對上
+- 找不到零件的圖：`art/blocks_skin/` 有講師畫的，檔名就是零件名稱（`Door.png` 放 `texture_normal`、`Door_active.png` 放 `texture_active`）
+- 想讓別的東西觸發換圖（例如按按鈕讓終點的旗子升起）：按鈕的訊號連到皮的 `show_active`；兩張以上的圖放 `more_textures`，連 `next_look` 一張一張換
 
 **換 HUD**：`ui/templates/HudTemplate.tscn` 按右鍵 **再製**（Duplicate）→ 存到 `_my/` → 打開改（拖位置、換圖、加零件選數值）→ 把它拖進關卡。
+範本裡的 `Panel` 是底框，血條金幣都在裡面；要搬到右上角就選 `Panel`，Layout 的 Anchors Preset 選右上。字還是看不清楚的話，最上層的 `hud_background` 選「字加外框」（預設就是）。
 **換暫停選單／過關畫面**：`PauseMenuTemplate`、`ClearScreenTemplate` 一樣再製到 `_my/` 改好，拖進關卡裡 `UISettings` 的欄位
-（關卡沒有 `UISettings` 的話從 `blocks/` 拖一個）。整套字型、配色、風格：點畫面最上層，改 `font`、`font_size`、`palette`、`style`。
+（關卡沒有 `UISettings` 的話從 `blocks/` 拖一個）。整套字型、配色、風格：點畫面最上層，改 `font`、`font_size`、`palette`（10 套；選「自訂」會出現 4 個取色器，自己配；選「跟標題一樣」就用標題畫面那套顏色）、`style`（7 種：像素復古、乾淨極簡、可愛圓角、木牌、科幻、漫畫、復古遊戲機）。
 素材顏色兜不起來：從 `skins/` 拖 `ColorGrade` 進關卡，選色調、拉強度，整個畫面就會統一成同一種氣氛。
+
+**加背景**：從 `skins/` 拖 `SkinBackground` 進關卡，圖拖進 `texture`。`cover_area` 決定蓋多大：整個關卡（預設）、所在的房間（把背景拖到某個 Room 底下，每個房間可以不一樣）、自己拉範圍。
+範圍小的會自動蓋在上面，所以「整個關卡一張＋某個房間換一張」直接放就好。
 
 **做標題畫面**：`ui/templates/` 裡三個標題範本（`TitleScreenTemplate` 上中下三段、`_Center` 主視覺當背景、`_Side` 左文右圖）挑一個
 右鍵**再製**到 `_my/` → 點最上層填 `game_name`、`hook`，把主視覺圖拖進 `key_art`（也可以直接點裡面的字和圖改）→
 點「開始遊戲」按鈕，在 `level` 下拉選自己的關卡 → 在 `_my/` 裡的標題上按右鍵 **設為主場景**。
 按 **F5** 就從標題開始；過關畫面、暫停選單的「回標題」會自動出現。標題畫面不要拖進關卡，它自己就是一個場景。
+放了主角的主視覺不知道怎麼配色：標題最上層的 `palette` 選「**跟主視覺配**」，從圖自動配顏色（`tone` 換深底／淺底、`main_color` 換主色）；
+想自己挑就選「自訂」，用取色器的滴管吸主視覺的顏色（口訣見 `零件手冊.md` §7.2）。HUD、暫停選單、過關畫面的 `palette` 選「跟標題一樣」，整套 UI 就同一套顏色。
 
-**換角色**：Player → Visual 底下的 `Sprite2D` 換成 `AnimatedSprite2D`，在 Sprite Frames 做「待機」「跑步」「跳起」「落下」
-（還可以做「受傷」「死亡」「攻擊」）→ 從 `juice/` 拖 `Juice_Animator` 到 **Player → Juice**。圖朝左畫的，在 `AnimatedSprite2D` 勾 **Flip H**。
+**換角色**：Player → Visual 底下的 `Sprite2D` 換成 `AnimatedSprite2D`，在 Sprite Frames 做站著、跑步、跳起、落下的動畫
+（名字隨便取，取 idle、run 這類常見名字會自動對上）→ 從 `juice/` 拖 `Juice_Animator` 到 **Player → Juice**，每個狀態在下拉選播哪段。
+還可以選落地、轉向、撞牆這類一次型動畫，調跑多快才算跑步，見 `零件手冊.md` §7.3。圖朝左畫的，在 `AnimatedSprite2D` 勾 **Flip H**。
 
 **換地形**：`art/default_tile.tres` 右鍵再製到 `_my/` → 照 `art/tile_template.png` 的格子畫自己的圖（每格 16×16，
 放大版說明看 `art/tile_template_guide.png`）→ 點再製的圖塊集，把圖拖進去取代原本的圖片 → 關卡的 `TileMapLayer` 換成自己的圖塊集。
 畫地形時在圖塊面板選「地形」（Terrains）分頁，選「地面」或「平台」用筆刷刷，邊會自動接好。
+用網路下載的圖塊（排法跟範本不一樣）：要自己設接邊規則，見 `零件手冊.md` §7.4「進階」。
 
 **背景圖**：從 `skins/` 拖 `SkinBackground` 進關卡（放最上層底下）→ 把圖拖進 `texture`。預設「重複鋪滿」自動鋪滿所有房間，
 永遠在所有東西後面，不用管場景樹順序。一張大圖用「拉伸蓋滿」；想要遠景（鏡頭移動時背景動得比較慢）就勾 `parallax`、拉 `depth`。
 
 每個零件有哪些設定 → `零件手冊.md` §7；動畫名稱 → `速查表.md` §6。
 
-**練習關**：打開 `levels/_starts/W4_SkinPractice.tscn` → **場景 → 另存場景為** 存到 `_my/` → 照天上 8 塊告示牌的題目做 →
-按 **F6**，做對的告示牌會變綠色。
+**練習關**：打開 `levels/_starts/W4_SkinPractice.tscn` → **場景 → 另存場景為** 存到 `_my/` → 照天上 13 塊告示牌的題目做（關卡比較長，往右走看後面的題目；做了沒變綠看 `零件手冊.md` §8）→
+按 **F6**，做對的告示牌會變綠色。第 13 題（標題畫面）要把標題的「開始遊戲」選成你另存的這一關，再把標題設為主場景。
 
 ---
 
@@ -188,7 +200,7 @@
 
 - 選 **None** = 不改，維持預設
 - **方向鍵永遠都能用**，改的只是字母鍵和空白鍵
-- 設定存在你的關卡裡，重灌也不會不見。**不要**去改「專案設定」裡的 Input Map，那個重灌會被蓋掉
+- 設定存在你的關卡裡，重灌也不會不見（要綁手把等其他裝置，看下面的「進階：Input Map」）
 - 選到跟卡片或其他動作一樣的鍵，輸出面板會提醒
 
 **加自己的按鍵**（例如按 E 開門）：
@@ -197,6 +209,18 @@
 2. Inspector：`key_source` 預設就是「自訂按鍵」，`key` 選 E；`trigger` 選什麼時候觸發（按下時／放開時／按住時）
 3. 右邊「**節點**」分頁 → 雙擊 `triggered` → 選門 → 函式選 `toggle` → 連接
 4. 要再加一個 → 選它按 **Ctrl+D** 複製，再改名字、按鍵、連線
+
+**進階：Input Map（綁手把等其他裝置）**
+
+上面的下拉選單只能選鍵盤和滑鼠。要用手把，到「專案 → 專案設定 → **Input Map**」：
+
+- **基本操作**：點 `jump`、`move_left` 這些動作右邊的 **+**，按一下手把上的按鈕就加好了，不用改其他地方
+- **卡片、能力**：上面先加一個新動作（例如 `attack`）並綁好按鍵或手把按鈕；
+  再到卡片的 Inspector，「按鍵種類」選 **Input Map 動作**，下面出現的 `action` 選剛剛加的動作
+- **按鍵觸發器**：`key_source` 選「跟基本操作同一顆鍵」，`same_key_as` 也能選你加的動作
+
+⚠ Input Map 存在專案設定裡，**不在 `_my/`**：重灌（第 7 節）之後要**重新加一次**，加了什麼先記下來。
+別把 `jump`、`move_left` 原本的按鍵刪光，刪光的話一按 Play 輸出面板會提醒你。
 
 ---
 
@@ -215,8 +239,8 @@
 | 背景音樂沒播 | `Juice_BGM` 的 `music` 是空的（場景樹上有黃色驚嘆號），或兩個都勾了 `play_on_start`（只會播第一個） |
 | 走到某個地方鏡頭突然跑掉 | Room 被 Scale 縮放過（場景樹上有黃色驚嘆號）：Scale 改回 1，用 `width_in_tiles`／`height_in_tiles` 拉大小 |
 | 鏡頭不會跟著換房間 | 關卡裡沒有 `Room`，或兩個 Room 之間留了縫，對照第 5.1 節 |
-| 套了皮還是顯示色塊 | `Skin` 的 `texture_normal` 沒放圖，或 `SkinAnimated` 缺「平常」（敵人缺「走路」）動畫；名稱要一字不差，看場景樹上的黃色驚嘆號 |
-| 角色不會動、不會轉身 | 沒有拖 `Juice_Animator` 到 Player → Juice，或缺「待機」動畫；也可能按過 **0** 把 Juice 關掉了 |
+| 套了皮還是顯示色塊 | `Skin` 的 `texture_normal` 沒放圖，或 `SkinAnimated` 的 `normal_animation` 沒選到動畫；看場景樹上的黃色驚嘆號 |
+| 角色不會動、不會轉身 | 沒有拖 `Juice_Animator` 到 Player → Juice，或 `idle_animation` 沒選到動畫；也可能按過 **0** 把 Juice 關掉了 |
 | 角色倒著跑 | 圖是朝左畫的：在 Visual 底下的 `AnimatedSprite2D` 勾 **Flip H**（敵人的皮也一樣） |
 | 自己的 HUD 沒出現 | HUD 要拖進關卡（或放進 `UISettings` 的 `hud_scene`）；同一種畫面只能放一個 |
 | 地形邊緣接不起來 | 用的是一般筆刷，改到圖塊面板的「地形」分頁選「地面」再刷 |
@@ -239,7 +263,8 @@
 3. 解壓新的專案壓縮檔
 4. 把桌面的 `_my/` **貼回**專案裡，問要不要取代時選 **全部取代**
 5. 用 Godot 重新匯入（同第 1 節步驟 4）
-6. 重新設定主場景（第 4 節第 3 步）
+6. 重新設定主場景（第 4 節第 3 步）。沒設之前，`palette` 選「跟標題一樣」的 HUD、選單會有黃色驚嘆號、先用預設配色
+7. 有改過 Input Map 的話，重新加一次（第 5.3 節「進階：Input Map」）
 
 大約 30 秒。
 
@@ -282,5 +307,5 @@
 
 1. 把 `build/web/` **裡面的所有檔案**壓成一個 zip（`index.html` 要在 zip 最外層）
 2. itch.io → **Upload new project** → Kind of project 選 **HTML**
-3. 上傳 zip → 勾選 **This file will be played in the browser** → 存檔
+3. 上傳 zip → 勾選 **This file will be played in the browser** → 把 `_my/CREDITS.txt` 的內容貼到頁面說明（Description）→ 存檔
 4. 分享網址給別人

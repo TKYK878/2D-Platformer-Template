@@ -16,6 +16,7 @@ mouse_filter = 2
 script = ExtResource("1")
 kind = 1
 palette = 1
+style = 1
 
 [node name="Dim" type="ColorRect" parent="."]
 layout_mode = 1

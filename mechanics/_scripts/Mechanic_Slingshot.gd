@@ -4,10 +4,13 @@ extends MechanicBase
 # 放開往反方向射出去。拖進 Player → Mechanics 底下就能用，不用連任何線。
 
 ## 用哪一種按鍵拖曳；選鍵盤按鍵時，按住那顆鍵移動滑鼠瞄準，放開發射
-@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵") var input_type: int = 1
+@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "Input Map 動作") var input_type: int = 1
 
 ## 拖曳鍵（「按鍵種類」選鍵盤按鍵時才會顯示這一欄）
 @export var key: Key = KEY_E
+
+## 「按鍵種類」選 Input Map 動作時，要聽哪一個動作（動作在「專案設定 → Input Map」裡加，可以綁手把等其他裝置）
+@export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin") var action: StringName = &""
 
 ## 拖到最遠時發射的力道上限
 @export_range(200.0, 1200.0) var max_launch_force: float = 700.0
@@ -33,17 +36,22 @@ var _dragging: bool = false
 var _drag_start: Vector2 = Vector2.ZERO
 var _aim_line: Line2D
 
+# input_type 的「Input Map 動作」選項
+const _INPUT_MAP_ACTION := 4
+
 # 選滑鼠按鍵時隱藏 key 欄位
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "key" and input_type != 0:
+		property.usage = PROPERTY_USAGE_NONE
+	elif property.name == "action" and input_type != _INPUT_MAP_ACTION:
 		property.usage = PROPERTY_USAGE_NONE
 
 # 向 InputRouter 註冊拖曳鍵的按下／放開；show_aim_line 開啟時自己生成一條瞄準線，學員不用擺
 func _on_setup() -> void:
 	if input_type == 0:
 		InputRouter.warn_if_dangerous_key(key, "[彈弓]")
-	InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _on_drag_pressed, _PRIORITY)
-	InputRouter.bind_input(self, input_type, key, InputRouter.RELEASED, _on_drag_released, _PRIORITY)
+	InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _on_drag_pressed, _PRIORITY, action)
+	InputRouter.bind_input(self, input_type, key, InputRouter.RELEASED, _on_drag_released, _PRIORITY, action)
 	if not show_aim_line:
 		return
 	_aim_line = Line2D.new()

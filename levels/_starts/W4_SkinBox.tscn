@@ -29,15 +29,21 @@
 [ext_resource type="PackedScene" path="res://levels/_starts/_W4SkinBox/ui/HudDemo.tscn" id="w4_hud"]
 [ext_resource type="PackedScene" path="res://levels/_starts/_W4SkinBox/ui/PauseMenuDemo.tscn" id="w4_pause"]
 [ext_resource type="PackedScene" path="res://levels/_starts/_W4SkinBox/ui/ClearScreenDemo.tscn" id="w4_clear"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_idle.png" id="w4_player_idle"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_run.png" id="w4_player_run"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_jump.png" id="w4_player_jump"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_hurt.png" id="w4_player_hurt"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_die.png" id="w4_player_die"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/player_attack.png" id="w4_player_attack"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/enemy_walk.png" id="w4_enemy_walk"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/coin.png" id="w4_coin"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/spike.png" id="w4_spike"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/Ansimuz/player_idle.png" id="w4_player_idle"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/Ansimuz/player_run.png" id="w4_player_run"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/Ansimuz/player_jump.png" id="w4_player_jump"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/Ansimuz/player_hurt.png" id="w4_player_hurt"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/Ansimuz/player_die.png" id="w4_player_die"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/Ansimuz/player_attack.png" id="w4_player_attack"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/PixelFrog/enemy_walk.png" id="w4_enemy_walk"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Pickup_coin.png" id="w4_coin"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Checkpoint.png" id="w4_checkpoint"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Checkpoint_active.png" id="w4_checkpoint_active"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/PixelFrog/background.png" id="w4_background"]
+[ext_resource type="PackedScene" path="res://blocks/Checkpoint.tscn" id="w4_checkpoint_block"]
+[ext_resource type="PackedScene" path="res://skins/SkinBackground.tscn" id="w4_skin_background"]
+[ext_resource type="PackedScene" path="res://skins/ColorGrade.tscn" id="w4_color_grade"]
+[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/PixelFrog/spike.png" id="w4_spike"]
 [ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/goal.png" id="w4_goal"]
 
 [sub_resource type="AtlasTexture" id="w4_player_idle_0"]
@@ -336,6 +342,13 @@ position = Vector2(936, 240)
 [node name="Skin" parent="Room1/Goal" instance=ExtResource("w4_skin")]
 texture_normal = ExtResource("w4_goal")
 
+[node name="Checkpoint" parent="Room1" instance=ExtResource("w4_checkpoint_block")]
+position = Vector2(600, 240)
+
+[node name="Skin" parent="Room1/Checkpoint" instance=ExtResource("w4_skin")]
+texture_normal = ExtResource("w4_checkpoint")
+texture_active = ExtResource("w4_checkpoint_active")
+
 [node name="Player" parent="." unique_id=573226474 instance=ExtResource("1")]
 position = Vector2(-184, 159)
 
@@ -423,3 +436,10 @@ mode = 1
 [node name="UISettings" parent="." instance=ExtResource("w4_ui_settings")]
 pause_menu_scene = ExtResource("w4_pause")
 clear_screen_scene = ExtResource("w4_clear")
+
+[node name="SkinBackground" parent="." instance=ExtResource("w4_skin_background")]
+texture = ExtResource("w4_background")
+parallax = true
+
+[node name="ColorGrade" parent="." instance=ExtResource("w4_color_grade")]
+strength = 0.2

@@ -11,6 +11,7 @@ const _NUMBER := preload("res://ui/HudNumber.tscn")
 
 var _hud: CanvasLayer = null
 var _rows_box: Container = null
+var _panel: Control = null  # 範本裡包住每一列的底框（沒有任何一列要顯示時藏起來）
 var _rows: Dictionary = {}   # kind(String) -> 那一列的 Control
 var _seen: Dictionary = {}   # kind(String) -> true：已經該出現了（設定成顯示，或被用到過）
 var _corner_layer: CanvasLayer = null
@@ -47,6 +48,14 @@ func _refresh_visibility() -> void:
 		var row: Control = _rows[kind]
 		if is_instance_valid(row):
 			row.visible = _seen.has(kind) and Stats.is_hud_visible(kind) and not HudData.is_claimed(kind)
+	_fit_panel()
+
+# 底框跟著顯示中的列縮放；一列都沒有時整個藏起來（不然左上角會有一個空框）
+func _fit_panel() -> void:
+	if not is_instance_valid(_panel):
+		return
+	_panel.visible = _rows_box.get_children().any(func(r): return r is Control and r.visible)
+	_panel.reset_size.call_deferred()
 
 # 拿到畫面某個角落的共用容器：機制卡、零件把自己的預設 UI 加進來，好幾個同時出現時自動上下排、不會疊在一起。
 # 加進來的東西屬於這裡，不會跟著卡片一起刪掉，卡片被拔掉時要自己 queue_free 掉
@@ -87,6 +96,7 @@ func reset_for_new_scene() -> void:
 		_hud.queue_free()
 	_hud = null
 	_rows_box = null
+	_panel = null
 	_rows.clear()
 	_seen.clear()
 	for box in _corners.values():
@@ -102,7 +112,8 @@ func _ensure_hud() -> void:
 	var root: Control = _TEMPLATE.instantiate()
 	_mark_default(root)
 	_hud.add_child(root)
-	_rows_box = root.get_node("Rows")
+	_panel = root.get_node("Panel")
+	_rows_box = root.get_node("Panel/Rows")
 	for row in _rows_box.get_children():
 		var kind := _row_kind(row)
 		if kind != "":

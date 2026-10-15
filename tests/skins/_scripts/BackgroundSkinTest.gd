@@ -4,7 +4,7 @@ extends Node2D
 # 場景樹裡背景放在最下面（最後畫），還是在所有東西後面。
 
 const _SKIN_BACKGROUND := preload("res://skins/SkinBackground.tscn")
-const _TEXTURES := [preload("res://tests/skins/_art/Background/Blue.png"), preload("res://tests/skins/_art/Background/Pink.png")]
+const _TEXTURES := [preload("res://tests/skins/_art/PixelFrog/Background/Blue.png"), preload("res://tests/skins/_art/PixelFrog/Background/Pink.png")]
 const _FILL_NAMES := ["只放一張", "重複鋪滿", "拉伸蓋滿"]
 
 @onready var _background: Node2D = $SkinBackground

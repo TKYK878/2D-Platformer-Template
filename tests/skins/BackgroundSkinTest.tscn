@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" path="res://blocks/Room.tscn" id="5"]
 [ext_resource type="Script" uid="uid://ddmv38ww06tgv" path="res://levels/_shared/CameraRig.gd" id="6"]
 [ext_resource type="PackedScene" path="res://skins/SkinBackground.tscn" id="7"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Background/Blue.png" id="8"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/PixelFrog/Background/Blue.png" id="8"]
 
 [node name="BackgroundSkinTest" type="Node2D"]
 script = ExtResource("1")

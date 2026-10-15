@@ -2,8 +2,10 @@
 extends Node2D
 
 # 關卡的背景：拖進關卡（放最上層底下），把圖片拖進 texture 就好。永遠畫在所有東西後面，不用管場景樹的順序。
-# 「重複鋪滿」「拉伸蓋滿」自動蓋住整個關卡（所有 Room 加起來的範圍；沒有 Room 就看地形），關卡變大也跟著變；
+# 「重複鋪滿」「拉伸蓋滿」蓋多大看 cover_area：整個關卡（所有 Room 加起來；沒有 Room 就看地形，關卡變大也跟著變）、
+# 所在的房間（拖到某個 Room 底下，只蓋那個房間）、自己拉範圍（從這個節點的位置往右下，寬高用格數拉）。
 # 「只放一張」放在這個節點的位置，自己拖。勾 parallax 會變成遠景：鏡頭移動時背景動得比較慢。
+# 好幾個背景疊在一起時，範圍小的自動蓋在上面（自己拉的 > 所在的房間 > 整個關卡，遠景再往後一層）；同一種的話場景樹排後面的蓋在上面。
 
 ## 背景圖：從檔案系統把圖片拖進來
 @export var texture: Texture2D:
@@ -15,6 +17,24 @@ extends Node2D
 @export_enum("只放一張", "重複鋪滿", "拉伸蓋滿") var fill_style: int = FILL_TILE:
 	set(value):
 		fill_style = value
+		notify_property_list_changed()
+		_rebuild()
+## 蓋多大：整個關卡、所在的房間（把背景拖到某個 Room 底下）、自己拉範圍（從這個節點的位置往右下）
+@export_enum("整個關卡", "所在的房間", "自己拉範圍") var cover_area: int = COVER_LEVEL:
+	set(value):
+		cover_area = value
+		notify_property_list_changed()
+		_rebuild()
+		update_configuration_warnings()
+## 自己拉範圍：寬幾格（一格 16 像素）
+@export_range(1, 256, 1, "or_greater") var width_in_tiles: int = 30:
+	set(value):
+		width_in_tiles = value
+		_rebuild()
+## 自己拉範圍：高幾格（一格 16 像素）
+@export_range(1, 128, 1, "or_greater") var height_in_tiles: int = 17:
+	set(value):
+		height_in_tiles = value
 		_rebuild()
 ## 遠景：鏡頭移動時背景動得比較慢，看起來比較遠
 @export var parallax: bool = false:
@@ -36,8 +56,14 @@ extends Node2D
 const FILL_ONE := 0
 const FILL_TILE := 1
 const FILL_STRETCH := 2
+const COVER_LEVEL := 0
+const COVER_ROOM := 1
+const COVER_CUSTOM := 2
 
 const _Z := -100
+# 每種範圍往上加幾層（整個關卡最底、所在的房間、自己拉的範圍和只放一張最上），遠景再往下幾層
+const _Z_COVER := [0, 1, 2]
+const _Z_PARALLAX := -3
 const _TILE_SIZE := 16
 const _DEFAULT_VIEW := Vector2(480, 270)
 const _EDITOR_REFIT_SEC := 0.5
@@ -47,6 +73,7 @@ var _sprite: Sprite2D = null
 var _tile_texture: Texture2D = null   # 從圖集切出來的圖要重複鋪滿時，先轉成單張圖
 var _last_bounds := Rect2()
 var _refit_timer := 0.0
+var _outline: Node2D = null  # 編輯器裡畫「自己拉範圍」的框（畫在最上面，不被背景蓋住）
 
 # 建內部的遠景層和圖、放到最底下；遊戲中等鏡頭準備好再對齊關卡範圍，放錯地方印中文警告
 func _ready() -> void:
@@ -58,6 +85,12 @@ func _ready() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.centered = false
 	_parallax_node.add_child(_sprite)
+	if Engine.is_editor_hint():
+		_outline = Node2D.new()
+		_outline.z_index = 100
+		_outline.z_as_relative = false
+		_outline.draw.connect(_draw_outline)
+		add_child(_outline, false, Node.INTERNAL_MODE_BACK)
 	_rebuild()
 	set_process(Engine.is_editor_hint())
 	if Engine.is_editor_hint():
@@ -73,18 +106,23 @@ func _process(delta: float) -> void:
 	if _refit_timer < _EDITOR_REFIT_SEC:
 		return
 	_refit_timer = 0.0
-	if _level_bounds() != _last_bounds:
+	if _target_bounds() != _last_bounds:
 		_rebuild()
 	update_configuration_warnings()
 
-# 被拖到別的地方時重新檢查黃色驚嘆號
+# 被拖到別的地方時重新檢查黃色驚嘆號；拖到別的 Room 底下時重新對齊
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PARENTED or what == NOTIFICATION_UNPARENTED:
 		update_configuration_warnings()
+		_rebuild.call_deferred()
 
-# depth 只在勾了 parallax 時顯示
+# 用不到的欄位不顯示：depth 只在勾了 parallax 時；cover_area 只在重複鋪滿、拉伸蓋滿時；寬高只在自己拉範圍時
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "depth" and not parallax:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name == "cover_area" and fill_style == FILL_ONE:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name in ["width_in_tiles", "height_in_tiles"] and (fill_style == FILL_ONE or cover_area != COVER_CUSTOM):
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 
 # 編輯器裡就看得到：沒放圖、放錯地方、跟別的背景疊在一起、圖會糊或縮放不是整數倍
@@ -105,14 +143,17 @@ func _get_problems() -> PackedStringArray:
 	if texture == null:
 		problems.append("還沒放背景圖：從檔案系統把圖片拖進 texture")
 	var parent := get_parent()
-	if parent != null and parent != _scene_root() and not _is_plain_folder(parent):
-		problems.append("背景放在「%s」底下，會跟著它動或被它藏起來：拖到關卡最上層底下" % parent.name)
+	if parent != null and parent != _scene_root() and not _is_plain_folder(parent) and not _is_room(parent):
+		problems.append("背景放在「%s」底下，會跟著它動或被它藏起來：拖到關卡最上層或某個 Room 底下" % parent.name)
+	if fill_style != FILL_ONE and cover_area == COVER_ROOM and not _is_room(parent):
+		problems.append("cover_area 選「所在的房間」，但背景不在 Room 底下，先蓋住整個關卡：把背景拖到要蓋的那個 Room 底下")
 	if not parallax and fill_style != FILL_ONE:
+		var mine := _target_bounds()
 		for other in _scene_backgrounds():
 			if other == self:
 				break
-			if not other.parallax and other.fill_style != FILL_ONE:
-				problems.append("前面已經有一個蓋滿整個關卡的背景「%s」，這個會把它蓋住；要遠景加近景的話，把其中一個勾 parallax" % other.name)
+			if not other.parallax and other.fill_style != FILL_ONE and other._layer() == _layer() and mine.encloses(other._target_bounds()):
+				problems.append("這個背景把前面的背景「%s」整個蓋住了，它完全看不到（場景樹排後面的蓋在上面）；要遠景加近景的話，把其中一個勾 parallax" % other.name)
 				break
 	return problems
 
@@ -121,10 +162,13 @@ func _rebuild() -> void:
 	if _sprite == null:
 		return
 	_parallax_node.scroll_scale = Vector2.ONE * (depth if parallax else 1.0)
+	z_index = _layer()
 	_sprite.visible = texture != null
 	if texture == null:
 		return
-	_last_bounds = _level_bounds()
+	_last_bounds = _target_bounds()
+	if _outline != null:
+		_outline.queue_redraw()
 	_sprite.region_enabled = false
 	_sprite.scale = Vector2.ONE
 	_sprite.texture_repeat = CanvasItem.TEXTURE_REPEAT_PARENT_NODE
@@ -165,6 +209,33 @@ func _view_size() -> Vector2:
 		if camera != null:
 			view /= camera.zoom
 	return view
+
+# 畫在第幾層：範圍小的在上面，遠景在下面
+func _layer() -> int:
+	var cover := COVER_CUSTOM if fill_style == FILL_ONE else cover_area
+	return _Z + _Z_COVER[cover] + (_Z_PARALLAX if parallax else 0)
+
+# 這個背景要蓋的範圍（世界座標，還沒算遠景）：照 cover_area 是整個關卡、所在的房間、還是自己拉的範圍
+func _target_bounds() -> Rect2:
+	if cover_area == COVER_CUSTOM:
+		return Rect2(global_position, Vector2(width_in_tiles, height_in_tiles) * _TILE_SIZE)
+	if cover_area == COVER_ROOM and _is_room(get_parent()):
+		return get_parent().get_rect()
+	return _level_bounds()
+
+# 編輯器裡畫「自己拉範圍」的虛線框（跟 AreaTrigger 一樣的黃色虛線）
+func _draw_outline() -> void:
+	if cover_area != COVER_CUSTOM or fill_style == FILL_ONE:
+		return
+	var size := Vector2(width_in_tiles, height_in_tiles) * _TILE_SIZE
+	var color := Color(1.0, 0.85, 0.2, 0.9)
+	var corners := [Vector2.ZERO, Vector2(size.x, 0), size, Vector2(0, size.y)]
+	for i in 4:
+		_outline.draw_dashed_line(corners[i], corners[(i + 1) % 4], color, 1.0, 4.0)
+
+# 這個節點是不是 Room（有房間範圍和起點）
+func _is_room(node: Node) -> bool:
+	return node != null and node.has_method("get_rect") and node.has_method("get_spawn_point")
 
 # 整個關卡的範圍：所有 Room 加起來；沒有 Room 就用地形畫到的範圍；都沒有就一個畫面大
 func _level_bounds() -> Rect2:

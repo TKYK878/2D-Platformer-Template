@@ -103,7 +103,10 @@ Claude Code 在這個專案裡的所有對話回覆、進度回報、驗收結�
 空白就用預設的（不警告）；最上層不是 `UIRoot`、種類拖錯欄位、跟直接放進關卡的同一種畫面重複時，黃色驚嘆號＋執行時中文警告，改用預設的（見 `documents/04_skin_and_ui.md` §3.1）。
 `Skin.texture_normal`／`texture_active`（`Texture2D`）同屬資源欄位例外：學員把圖片拖進來；`texture_normal` 空白時黃色驚嘆號＋執行時中文警告，零件照舊顯示色塊；
 `texture_active` 空白就把平常的圖變色，不警告（見 `documents/04_skin_and_ui.md` §6.1）。
+`Skin.more_textures`（`Array[Texture2D]`，訊號換圖用的更多張圖）同屬資源欄位例外：按「新增元素」再把圖拖進格子；空的格子黃色驚嘆號，遊戲中跳過（見 `documents/progress.md` U208）。
 `SkinBackground.texture`（`Texture2D`，關卡背景）同屬資源欄位例外：空白時黃色驚嘆號＋執行時中文警告，不顯示背景（見 `documents/04_skin_and_ui.md`、`documents/progress.md` U190）。
+**取色器例外（講師決定，U213）**：`UIRoot.text_color`／`panel_color`／`button_color`／`accent_color`（`Color`）只在 `palette` 選「自訂」時出現，學員用滑鼠點色塊選顏色、不打字；
+預設值就能用，字跟底框亮度太接近時黃色驚嘆號＋執行時中文警告。
 `UIRoot.key_art`（`Texture2D`，標題畫面的主視覺）同屬資源欄位例外：空白就用範本裡原本的圖，不警告（見 `documents/progress.md` U189）。
 `Ability_Ranged.bullet_texture`／`EnemyShooter.bullet_texture`／`Ability_Melee.slash_texture`（`Texture2D`）同屬資源欄位例外：學員把子彈、揮擊的圖拖進來；
 空白就照舊顯示色塊，不警告（見 `documents/04_skin_and_ui.md` §6.3）。

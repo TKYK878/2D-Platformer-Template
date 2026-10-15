@@ -1,0 +1,94 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/systems/_scripts/InputMapActionTest.gd" id="1"]
+[ext_resource type="PackedScene" path="res://player/Player.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://art/white_block.png" id="3"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://abilities/Ability_Ranged.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://mechanics/Mechanic_GravityFlip.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://mechanics/_extra/Extra_Dash.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://blocks/KeyTrigger.tscn" id="8"]
+
+[sub_resource type="RectangleShape2D" id="Floor_Shape"]
+size = Vector2(460, 16)
+
+[node name="InputMapActionTest" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Floor" type="StaticBody2D" parent="."]
+position = Vector2(0, 8)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+shape = SubResource("Floor_Shape")
+
+[node name="ColorRect" type="ColorRect" parent="Floor"]
+offset_left = -230.0
+offset_top = -8.0
+offset_right = 230.0
+offset_bottom = 8.0
+color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="Ceiling" type="StaticBody2D" parent="."]
+position = Vector2(0, -120)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ceiling"]
+shape = SubResource("Floor_Shape")
+
+[node name="ColorRect" type="ColorRect" parent="Ceiling"]
+offset_left = -230.0
+offset_top = -8.0
+offset_right = 230.0
+offset_bottom = 8.0
+color = Color(0.3, 0.3, 0.35, 1)
+
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(0, -20)
+
+[node name="Visual" type="Node2D" parent="Player"]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player/Visual"]
+texture = ExtResource("3")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 32)
+
+[node name="Mechanics" type="Node2D" parent="Player"]
+
+[node name="Mechanic_GravityFlip" parent="Player/Mechanics" instance=ExtResource("6")]
+input_type = 4
+action = &"test_flip"
+
+[node name="Extra_Dash" parent="Player/Mechanics" instance=ExtResource("7")]
+input_type = 4
+
+[node name="Juice" type="Node2D" parent="Player"]
+
+[node name="Abilities" type="Node2D" parent="Player"]
+
+[node name="Ability_Melee" parent="Player/Abilities" instance=ExtResource("4")]
+input_type = 4
+action = &"test_attack"
+
+[node name="Ability_Ranged" parent="Player/Abilities" instance=ExtResource("5")]
+input_type = 5
+action = &"test_shoot"
+
+[node name="KeyTrigger_Action" parent="." instance=ExtResource("8")]
+key_source = 4
+same_key_as = "test_attack"
+
+[node name="KeyTrigger_Typo" parent="." instance=ExtResource("8")]
+key_source = 4
+same_key_as = "test_atack"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(0, -60)
+
+[connection signal="triggered" from="KeyTrigger_Action" to="." method="_on_trigger_action"]
+[connection signal="triggered" from="KeyTrigger_Typo" to="." method="_on_trigger_typo"]
+[connection signal="attacked" from="Player/Abilities/Ability_Melee" to="." method="_on_melee_attacked"]
+[connection signal="attacked" from="Player/Abilities/Ability_Ranged" to="." method="_on_ranged_attacked"]
+[connection signal="flipped" from="Player/Mechanics/Mechanic_GravityFlip" to="." method="_on_flipped"]

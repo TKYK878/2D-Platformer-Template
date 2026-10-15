@@ -6,6 +6,7 @@ extends Sprite2D
 # 編輯器裡的黃色虛線框是原本色塊的範圍：碰撞範圍不會跟著圖片變，圖要畫在框裡。
 # fill_style 選「重複鋪滿」「拉伸蓋滿」時，位置和大小自動對齊色塊（可以拉大小的無反彈方塊、單向平台用得到）。
 # 也可以放在 Player → Visual 底下當角色的圖。
+# 訊號換圖：別的零件的訊號可以連到 show_active／show_normal／next_look…，圖照 texture_normal → texture_active → more_textures 的順序排。
 
 ## 平常的樣子：從檔案系統把圖片拖進來
 @export var texture_normal: Texture2D:
@@ -37,31 +38,51 @@ extends Sprite2D
 		ignore_style_check = value
 		update_configuration_warnings()
 
+@export_group("訊號換圖")
+## 兩張以上的圖：按「新增元素」把圖一張一張拖進來，排在 texture_active 後面。
+## 別的零件的訊號連到這個皮的 next_look 就會一張一張換
+@export var more_textures: Array[Texture2D] = []:
+	set(value):
+		more_textures = value
+		update_configuration_warnings()
+## 訊號換過圖之後，零件自己的狀態又改變時（例如踩到終點、整關重來）聽誰的：
+## 零件的狀態優先（換回零件該有的樣子）、訊號優先（維持訊號換的圖，零件只加原本效果）
+@export_enum("零件的狀態優先", "訊號優先") var signal_priority: int = 0
+## next_look 換到最後一張之後回到第一張；不勾就停在最後一張（previous_look 也一樣停在第一張）
+@export var loop_looks: bool = true
+
 const FILL_ONE := 0
 const FILL_TILE := 1
 const FILL_STRETCH := 2
+const PRIORITY_SIGNAL := 1
 
 var _shown: Texture2D = null  # 現在顯示的是哪一張（平常或狀態改變後）
 var _tile_textures := {}  # 從圖集切出來的圖要重複鋪滿時，先轉成單張圖（圖集直接重複會鋪到整張大圖）
 var _base_flip := false  # 編輯器裡 Flip H 有沒有勾（當作「朝右」的樣子）
 var _style_timer := 0.0
+var _look := -1  # 訊號換到第幾張（從 0 數）；-1 代表沒被訊號換過，照零件的狀態顯示
+var _hidden_block: ColorRect = null  # 編輯器裡藏起來的零件色塊
 
 # 顯示平常的圖；編輯器裡持續重畫外框（零件大小改了框跟著變）
 func _ready() -> void:
 	_show(texture_normal)
 	set_process(Engine.is_editor_hint())
 
-# 編輯器裡每一幀重畫外框，並跟著零件的大小、方向重新對齊；每秒重新檢查黃色驚嘆號（縮放、Filter 改了要更新）
+# 編輯器裡每一幀重畫外框、有放圖時藏起零件的色塊，並跟著零件的大小、方向重新對齊；每秒重新檢查黃色驚嘆號（縮放、Filter 改了要更新）
 func _process(delta: float) -> void:
 	queue_redraw()
+	_hidden_block = SkinLink.editor_hide_block(self, texture_normal != null, _hidden_block)
 	_fit()
 	_style_timer += delta
 	if _style_timer >= 1.0:
 		_style_timer = 0.0
 		update_configuration_warnings()
 
-# 被拖到別的地方時重新檢查黃色驚嘆號、Inspector 要顯示哪些欄位
+# 被拖到別的地方時重新檢查黃色驚嘆號、Inspector 要顯示哪些欄位；被刪掉、拖走時把藏起來的色塊顯示回來
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_EXIT_TREE or what == NOTIFICATION_UNPARENTED:
+		SkinLink.editor_show_block(_hidden_block)
+		_hidden_block = null
 	if what == NOTIFICATION_PARENTED or what == NOTIFICATION_UNPARENTED:
 		update_configuration_warnings()
 		notify_property_list_changed()
@@ -91,6 +112,9 @@ func _get_configuration_warnings() -> PackedStringArray:
 		warnings.append(problem)
 	if texture_normal == null:
 		warnings.append("texture_normal 是空的：從檔案系統把圖片拖進來，不然遊戲中還是顯示原本的色塊")
+	for i in more_textures.size():
+		if more_textures[i] == null:
+			warnings.append("more_textures 第 %d 格是空的：把圖拖進去，或按旁邊的垃圾桶刪掉這一格（遊戲中會跳過它）" % (i + 1))
 	warnings.append_array(StyleCheck.problems(self, true))
 	return warnings
 
@@ -151,6 +175,7 @@ func _fit() -> void:
 func skin_setup(_is_enemy: bool) -> String:
 	if texture_normal == null:
 		return "texture_normal 是空的，請把圖片拖進來"
+	_look = -1
 	_show(texture_normal)
 	_base_flip = flip_h
 	return ""
@@ -161,6 +186,10 @@ func skin_active_look() -> int:
 
 # 零件呼叫：換成 texture_active（use_active）或平常的圖，再用 tint 染色／變淡（不加效果時是白色）
 func skin_set_state(use_active: bool, tint: Color) -> void:
+	if _look >= 0 and signal_priority == PRIORITY_SIGNAL:
+		self_modulate = tint
+		return
+	_look = -1
 	var tex := texture_active if use_active and texture_active != null else texture_normal
 	if tex != _shown:
 		_show(tex)
@@ -182,3 +211,76 @@ func skin_anim_length(_anim_name: String) -> float:
 # 零件呼叫：靜態圖沒有動畫，什麼都不做
 func skin_reset() -> void:
 	pass
+
+# ---- 訊號換圖（別的零件的訊號連過來，或自己寫程式呼叫）
+
+# 換回平常的圖（texture_normal）
+func show_normal() -> void:
+	_go_to_look(0)
+
+# 換成狀態改變後的圖（texture_active）；沒放 texture_active 時印警告、不換
+func show_active() -> void:
+	if texture_active == null:
+		SkinLink.warn("「%s」的 show_active 被呼叫了，但 texture_active 是空的，圖沒有換" % _host_name())
+		return
+	_go_to_look(1)
+
+# 換下一張；最後一張之後回到第一張（loop_looks 沒勾就停在最後一張）
+func next_look() -> void:
+	var count := _looks().size()
+	var next := _current_look() + 1
+	if next >= count:
+		next = 0 if loop_looks else count - 1
+	_go_to_look(next)
+
+# 換上一張；第一張之前回到最後一張（loop_looks 沒勾就停在第一張）
+func previous_look() -> void:
+	var count := _looks().size()
+	var previous := _current_look() - 1
+	if previous < 0:
+		previous = count - 1 if loop_looks else 0
+	_go_to_look(previous)
+
+# 換成第一張（texture_normal）
+func show_first() -> void:
+	_go_to_look(0)
+
+# 換成最後一張
+func show_last() -> void:
+	_go_to_look(_looks().size() - 1)
+
+# 換成第幾張（從 1 開始數：1 是 texture_normal、2 是 texture_active、3 以後是 more_textures），會寫程式的人用
+func show_look(number: int) -> void:
+	var count := _looks().size()
+	if number < 1 or number > count:
+		SkinLink.warn("「%s」的 show_look(%d)：只有 %d 張圖（1～%d），圖沒有換" % [_host_name(), number, count, count])
+		return
+	_go_to_look(number - 1)
+
+# 全部的樣子照順序排：平常、狀態改變後、更多的圖（空的格子跳過）
+func _looks() -> Array[Texture2D]:
+	var list: Array[Texture2D] = []
+	for tex in [texture_normal, texture_active] + Array(more_textures):
+		if tex != null:
+			list.append(tex)
+	return list
+
+# 現在顯示的是第幾張（從 0 數）；被訊號換過就用記下來的，不然看現在的圖
+func _current_look() -> int:
+	if _look >= 0:
+		return _look
+	return maxi(_looks().find(_shown), 0)
+
+# 換到第幾張（從 0 數）並記下來，零件的狀態改變時依 signal_priority 決定要不要換回去
+func _go_to_look(index: int) -> void:
+	var list := _looks()
+	if list.is_empty():
+		return
+	_look = clampi(index, 0, list.size() - 1)
+	if list[_look] != _shown:
+		_show(list[_look])
+
+# 警告訊息裡用的名字：零件名稱／皮的名稱
+func _host_name() -> String:
+	var host := get_parent()
+	return "%s/%s" % [host.name, name] if host != null else str(name)

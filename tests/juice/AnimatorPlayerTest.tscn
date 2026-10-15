@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" path="res://abilities/Ability_Melee.tscn" id="melee"]
 [ext_resource type="PackedScene" path="res://mechanics/Mechanic_AutoRun.tscn" id="autorun"]
 [ext_resource type="PackedScene" path="res://blocks/RespawnHandler.tscn" id="respawn"]
-[ext_resource type="Texture2D" path="res://tests/skins/_art/Foxy/atlas.png" id="atlas"]
+[ext_resource type="Texture2D" path="res://tests/skins/_art/Ansimuz/Foxy/atlas.png" id="atlas"]
 
 [sub_resource type="Animation" id="A_idle"]
 resource_name = "待機"

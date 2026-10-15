@@ -7,11 +7,14 @@ extends MechanicBase
 ## 什麼時候切換大小
 @export_enum("按下按鍵", "隨時間") var trigger_timing: int = 0
 
-## 按下按鍵時用鍵盤按鍵還是滑鼠按鍵（只有「觸發時機」選按下按鍵時才會顯示這一欄）
-@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵") var input_type: int = 0
+## 按下按鍵時用鍵盤按鍵、滑鼠按鍵，還是 Input Map 動作（可以綁手把）（只有「觸發時機」選按下按鍵時才會顯示這一欄）
+@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "Input Map 動作") var input_type: int = 0
 
 ## 按下按鍵時要按哪一鍵切換（「觸發時機」選按下按鍵、「按鍵種類」選鍵盤按鍵時才會顯示這一欄）
 @export var key: Key = KEY_SHIFT
+
+## 「按鍵種類」選 Input Map 動作時，要聽哪一個動作（動作在「專案設定 → Input Map」裡加，可以綁手把等其他裝置）
+@export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin") var action: StringName = &""
 
 ## 變小時的體型倍率
 @export_range(0.3, 1.0) var small_scale: float = 0.5
@@ -54,11 +57,16 @@ var _is_big: bool = false
 var _pending_factor: float = 0.0
 var _auto_time_left: float = _AUTO_INTERVAL
 
+# input_type 的「Input Map 動作」選項
+const _INPUT_MAP_ACTION := 4
+
 # 依 trigger_timing 決定要不要顯示按鍵欄位；選滑鼠按鍵時也隱藏 key 欄位
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "input_type" and trigger_timing != _TRIGGER_KEY:
 		property.usage = PROPERTY_USAGE_NONE
 	elif property.name == "key" and (trigger_timing != _TRIGGER_KEY or input_type != 0):
+		property.usage = PROPERTY_USAGE_NONE
+	elif property.name == "action" and (trigger_timing != _TRIGGER_KEY or input_type != _INPUT_MAP_ACTION):
 		property.usage = PROPERTY_USAGE_NONE
 
 # 套用一開始的體型（小），依觸發時機接對應的按鍵
@@ -67,7 +75,7 @@ func _on_setup() -> void:
 	if trigger_timing == _TRIGGER_KEY:
 		if input_type == 0:
 			InputRouter.warn_if_dangerous_key(key, "[忽大忽小]")
-		InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _toggle)
+		InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _toggle, 0, action)
 
 # 隨時間模式的倒數；有待處理的變大請求時，每幀重新檢查空間夠不夠
 func apply(ctx: MoveContext) -> void:

@@ -15,6 +15,18 @@ const RELEASED := 2
 # 組件下拉選單「滑鼠左鍵／滑鼠右鍵／滑鼠中鍵」依序對應的滑鼠按鍵
 const MOUSE_BUTTONS: Array[MouseButton] = [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MIDDLE]
 
+# 組件「按鍵種類」下拉的「Input Map 動作」選項（接在滑鼠中鍵後面），選了就聽專案設定 Input Map 裡的動作
+const INPUT_TYPE_ACTION := 4
+
+# 角色基本操作用到的動作，開場檢查學員改 Input Map 時有沒有把它們刪掉或清空
+const _BASIC_ACTIONS := {
+	"move_left": "往左",
+	"move_right": "往右",
+	"move_up": "往上",
+	"move_down": "往下",
+	"jump": "跳躍",
+}
+
 # 學員按鍵觸發器專用的優先權：故意設到不可能有人蓋過去的低點
 const STUDENT_PRIORITY := -2147483648
 
@@ -40,6 +52,18 @@ var _press_started_at: Dictionary = {}   # trigger(StringName) -> 按下當下�
 var _temp_action_refs: Dictionary = {}   # 臨時動作(StringName) -> 有幾條綁定在用它
 var _watched_owners: Dictionary = {}     # owner(Node) -> true，避免對同一個 owner 重複接 tree_exiting
 
+# 開場檢查基本操作的動作還在、也還有按鍵，學員改 Input Map 改壞時馬上提醒
+func _ready() -> void:
+	for action in _BASIC_ACTIONS:
+		var message := ""
+		if not InputMap.has_action(action):
+			message = "[按鍵] Input Map 裡找不到「%s」（%s），角色會不能%s：到「專案設定 → Input Map」把它加回來" % [action, _BASIC_ACTIONS[action], _BASIC_ACTIONS[action]]
+		elif InputMap.action_get_events(action).is_empty():
+			message = "[按鍵] Input Map 裡的「%s」（%s）沒有任何按鍵，角色會不能%s：到「專案設定 → Input Map」幫它加按鍵" % [action, _BASIC_ACTIONS[action], _BASIC_ACTIONS[action]]
+		if message != "":
+			push_warning(message)
+			printerr("⚠ %s" % message)
+
 # 用動作名稱綁定；機制卡、能力、資工生用這個，priority 越大越先收到
 @warning_ignore("shadowed_variable_base_class")
 func bind(owner: Node, action: StringName, phase: int, callback: Callable, priority: int = 0) -> void:
@@ -58,13 +82,44 @@ func bind_mouse(owner: Node, button: MouseButton, phase: int, callback: Callable
 	_add_binding(owner, action, phase, callback, priority, action, false)
 
 # 依組件的「按鍵種類」下拉選單綁定：0 是鍵盤按鍵（用 key），1~3 是滑鼠左鍵／右鍵／中鍵，
-# 能力跟機制卡的按鍵欄位用這個
+# 4 是 Input Map 動作（用 action，動作沒選或找不到時印中文警告、不綁定）；能力跟機制卡的按鍵欄位用這個
 @warning_ignore("shadowed_variable_base_class")
-func bind_input(owner: Node, input_type: int, key: Key, phase: int, callback: Callable, priority: int = 0) -> void:
+func bind_input(owner: Node, input_type: int, key: Key, phase: int, callback: Callable, priority: int = 0, action: StringName = &"") -> void:
 	if input_type == 0:
 		bind_key(owner, key, phase, callback, priority)
+	elif input_type == INPUT_TYPE_ACTION:
+		if check_action(action, "[%s]" % owner.name):
+			bind(owner, action, phase, callback, priority)
 	else:
 		bind_mouse(owner, MOUSE_BUTTONS[input_type - 1], phase, callback, priority)
+
+# 檢查組件選的 Input Map 動作能不能用：沒選、Input Map 裡找不到、或沒有任何按鍵時印中文警告並回傳 false；
+# label 是訊息開頭，例如「[近戰]」
+func check_action(action: StringName, label: String) -> bool:
+	var message := ""
+	if action == &"":
+		message = "%s 「按鍵種類」選了 Input Map 動作，但還沒選是哪一個動作，按了不會有反應" % label
+	elif not InputMap.has_action(action):
+		var names: Array = []       # 列在訊息裡的動作，內建的 ui_ 動作太多不列
+		var all_names: Array = []   # 找近似名稱用，包含 ui_ 動作
+		for name in InputMap.get_actions():
+			var text := String(name)
+			if text.begins_with("_input_router_"):
+				continue
+			all_names.append(text)
+			if not text.begins_with("ui_"):
+				names.append(text)
+		message = "%s 選的動作「%s」在 Input Map 裡找不到（可能被刪掉或改名了），按了不會有反應。專案自己加的動作：%s" % [label, action, NameCheck.list_text(names)]
+		var similar := NameCheck.find_similar(String(action), all_names)
+		if similar != "":
+			message += "。是不是想選「%s」？" % similar
+	elif InputMap.action_get_events(action).is_empty():
+		message = "%s 選的動作「%s」在 Input Map 裡沒有任何按鍵，按了不會有反應：到「專案設定 → Input Map」幫它加按鍵" % [label, action]
+	if message == "":
+		return true
+	push_warning(message)
+	printerr("⚠ %s" % message)
+	return false
 
 # 組件選到網頁版會出事的按鍵時印中文警告；label 是訊息開頭，例如「[近戰]」
 func warn_if_dangerous_key(key: Key, label: String) -> void:
@@ -166,20 +221,33 @@ func _release_temp_action(action: StringName) -> void:
 		if InputMap.has_action(action):
 			InputMap.erase_action(action)
 
-# 把一個動作換算成實際的按鍵／滑鼠按鍵清單（例如 "key:32"、"mouse:1"），供衝突檢查比對用
+# 把一個動作換算成實際的按鍵／滑鼠按鍵／手把按鈕清單（例如 "key:32"、"mouse:1"、"joy:0"），供衝突檢查比對用
 func _resolve_inputs(trigger: StringName) -> Array[String]:
 	var inputs: Array[String] = []
+	if not InputMap.has_action(trigger):
+		return inputs
 	for event in InputMap.action_get_events(trigger):
 		if event is InputEventKey:
-			inputs.append("key:%d" % (event as InputEventKey).physical_keycode)
+			var key_event := event as InputEventKey
+			var code := key_event.physical_keycode if key_event.physical_keycode != KEY_NONE else key_event.keycode
+			inputs.append("key:%d" % code)
 		elif event is InputEventMouseButton:
 			inputs.append("mouse:%d" % (event as InputEventMouseButton).button_index)
+		elif event is InputEventJoypadButton:
+			inputs.append("joy:%d" % (event as InputEventJoypadButton).button_index)
+		elif event is InputEventJoypadMotion:
+			var motion := event as InputEventJoypadMotion
+			inputs.append("axis:%d:%d" % [motion.axis, 1 if motion.axis_value > 0 else -1])
 	return inputs
 
 # 把衝突檢查用的輸入代號轉成看得懂的名稱，印在警告裡
 func _input_label(input: String) -> String:
 	var parts := input.split(":")
 	var code := int(parts[1])
+	if parts[0] == "joy":
+		return "手把按鈕 %d" % code
+	if parts[0] == "axis":
+		return "手把搖桿 %d%s" % [code, "+" if parts[2] == "1" else "-"]
 	if parts[0] == "mouse":
 		match code:
 			MOUSE_BUTTON_LEFT:

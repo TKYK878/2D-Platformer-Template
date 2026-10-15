@@ -9,7 +9,8 @@ func _ready() -> void:
 	print("[測試] 第 2 層 Enemy2（Skin 靜態圖）：轉身時跟著翻面")
 	print("[測試] 第 3 層 Enemy3（朝左畫的圖，勾了 Flip H）：臉朝走的方向，跟第 1 層一樣")
 	print("[測試] 第 4 層 Enemy4（朝左畫的圖，沒勾 Flip H）：倒著走（臉朝後面）——這是故意的，示範為什麼要勾 Flip H")
-	print("[測試] 第 5 層 Enemy5 的動畫名稱打成「走」：編輯器黃色驚嘆號建議改成「走路」，執行時顯示色塊＋輸出面板中文警告；Enemy6 沒有皮")
+	print("[測試] 第 5 層 Enemy5 的動畫名稱叫「走」（不在（自動）認得的名字裡）：編輯器黃色驚嘆號「沒有走路的動畫…是不是要選「走」？」，執行時顯示色塊＋輸出面板中文警告；Enemy6 沒有皮")
+	print("[測試] 　（U215）點 Enemy5 的 SkinAnimated，「動畫」群組只有 normal、hurt、die 三格（沒有 active）；normal_animation 選「走」就會動")
 	print("[測試] H：Enemy1 播受傷動畫後回到走路；第 3 下 Enemy1 播完頭暈（死亡）動畫才消失，其他敵人立刻消失")
 	print("[測試] Y：全部復活回到原位、面朝右，Enemy1 回到走路動畫")
 

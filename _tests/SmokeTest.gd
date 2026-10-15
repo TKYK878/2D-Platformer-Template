@@ -546,7 +546,7 @@ func _test_animator() -> void:
 	await _wait_frames(2)
 
 # blocks/ 裡每個有色塊的零件輪流套 Skin（白色方塊圖）或 SkinAnimated（平常／啟動／走路），
-# 放在遠離玩家的地方，開關、打、重置一輪後拿掉；不崩潰、Player 還在
+# 放在遠離玩家的地方，開關、打、重置一輪後拿掉；中間穿插訊號換圖（兩種優先輪流）；不崩潰、Player 還在
 func _test_skins() -> void:
 	var tex: Texture2D = preload("res://art/white_block.png")
 	var frames := _make_frames(["平常", "啟動", "走路", "受傷", "死亡"])
@@ -563,15 +563,21 @@ func _test_skins() -> void:
 			skin = skin_scene.instantiate()
 			skin.texture_normal = tex
 			skin.texture_active = tex if index % 4 == 0 else null
+			skin.more_textures = Array([tex, null], TYPE_OBJECT, &"Texture2D", null)
 		else:
 			skin = anim_scene.instantiate()
 			skin.sprite_frames = frames
+		skin.signal_priority = (index / 2) % 2
+		skin.loop_looks = index % 3 != 0
 		block.add_child(skin)
 		if block is Node2D:
 			block.position = Vector2(3000 + index * 40, 0)
 		add_child(block)
 		index += 1
 		await _wait_frames(5)
+		for look in ["next_look", "next_look", "next_look", "previous_look", "show_last", "show_first", "show_active", "show_normal"]:
+			skin.call(look)
+		skin.show_look(2)
 		for method in ["deactivate", "activate", "toggle"]:
 			if block.has_method(method):
 				block.call(method)
@@ -579,6 +585,7 @@ func _test_skins() -> void:
 			for k in 3:
 				block.take_hit(1, Vector2.ZERO, self)
 		await _wait_frames(5)
+		skin.next_look()
 		if block.has_method("reset"):
 			block.reset()
 		await _wait_frames(5)
@@ -590,7 +597,7 @@ func _test_skins() -> void:
 		_fail("套皮測試時 Player 消失了")
 
 # 三個 UI 範本跟 W4_SkinBox 的示範 UI：一輪直接放進場景（接法 B），一輪放進 UISettings（接法 A），
-# 中間讓數值變化（扣血、補血、撿金幣），最後全部拿掉；不崩潰、Player 還在
+# 中間讓數值變化（扣血、補血、撿金幣），HUD 的 hud_background 兩種輪一次，最後全部拿掉；不崩潰、Player 還在
 func _test_ui_templates() -> void:
 	var sets := [
 		["res://ui/templates/HudTemplate.tscn", "res://ui/templates/PauseMenuTemplate.tscn", "res://ui/templates/ClearScreenTemplate.tscn"],
@@ -602,6 +609,9 @@ func _test_ui_templates() -> void:
 			var root: Node = (load(p) as PackedScene).instantiate()
 			add_child(root)
 			placed.append(root)
+		for bg in [UIRoot.HUD_BG_NONE, UIRoot.HUD_BG_OUTLINE]:
+			placed[0].hud_background = bg
+			await _wait_frames(2)
 		await _ui_value_round()
 		for n in placed:
 			if is_instance_valid(n):
@@ -636,6 +646,27 @@ func _test_title_screen() -> void:
 		await _wait_frames(2)
 		if is_instance_valid(title):
 			_fail("%s 放進別的場景沒有自己拿掉" % p)
+	# 跟主視覺配（U218）：每個範本的主視覺都配得出顏色、字看得清楚；HUD 選了要警告
+	var art_palette: Script = load("res://ui/_scripts/ArtPalette.gd")
+	for p in ["res://ui/templates/_art/KeyArtPlaceholder.png", "res://levels/_starts/_W4SkinBox/art/Ansimuz/player_idle.png"]:
+		for tone in 3:
+			var c: PackedColorArray = art_palette.make_colors(art_palette.analyze(art_palette.read_image(load(p))), tone, 0)
+			if c.size() < 4 or absf(c[0].get_luminance() - c[1].get_luminance()) < 0.5:
+				_fail("跟主視覺配：%s 深淺 %d 配不出看得清楚的顏色" % [p.get_file(), tone])
+	var hud: UIRoot = (load("res://ui/templates/HudTemplate.tscn") as PackedScene).instantiate()
+	hud.palette = UIRoot.PALETTE_ART
+	if hud.art_problem() != UIRoot.ART_NOT_TITLE:
+		_fail("HUD 選了「跟主視覺配」沒有警告")
+	# 跟標題一樣（U219）：主場景是標題就用它的顏色，不是標題要警告
+	hud.palette = UIRoot.PALETTE_TITLE
+	for case in [["res://tests/ui/TitleArtPaletteTest.tscn", true], ["res://tests/ui/TitleFlowLevel.tscn", false]]:
+		UIRoot.title_scene_override = case[0]
+		UIRoot._title_cache_time = -1
+		if (hud.title_palette_problem() == "") != case[1]:
+			_fail("跟標題一樣：%s 的結果不對" % case[0])
+	UIRoot.title_scene_override = ""
+	UIRoot._title_cache_time = -1
+	hud.free()
 	var menu_action: Script = load("res://ui/_scripts/MenuAction.gd")
 	var levels: PackedStringArray = menu_action.find_levels()
 	if levels.is_empty():
@@ -653,7 +684,7 @@ func _test_title_screen() -> void:
 	if Stats.get_value(Stats.HEALTH_KIND) != 3:
 		_fail("換場景前的歸零之後血量不是 3")
 
-# UIRoot 的三種風格 × 五套配色輪流套一次；ColorGrade 放兩個、換色調、拔掉
+# UIRoot 的七種風格 × 十一套配色（含自訂）輪流套一次；ColorGrade 放兩個、換色調、拔掉
 func _test_styles_and_grade() -> void:
 	var roots: Array[Node] = []
 	for p in ["res://ui/templates/PauseMenuTemplate.tscn", "res://ui/templates/ClearScreenTemplate.tscn"]:
@@ -661,8 +692,8 @@ func _test_styles_and_grade() -> void:
 		r.set_meta(HudBinding.DEFAULT_META, true)
 		add_child(r)
 		roots.append(r)
-	for style in 3:
-		for palette in 5:
+	for style in 7:
+		for palette in 11:
 			for r in roots:
 				if is_instance_valid(r):
 					r.style = style
@@ -700,10 +731,12 @@ func _test_background() -> void:
 	placed.append(under_player)
 	for fill in 3:
 		for par in [false, true]:
-			for bg in placed:
-				bg.fill_style = fill
-				bg.parallax = par
-			await _wait_frames(2)
+			for cover in 3:
+				for bg in placed:
+					bg.fill_style = fill
+					bg.parallax = par
+					bg.cover_area = cover
+				await _wait_frames(2)
 	for bg in placed:
 		bg.queue_free()
 	await _wait_frames(3)

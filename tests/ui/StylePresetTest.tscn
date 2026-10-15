@@ -81,5 +81,5 @@ text = "停用"
 [node name="Hint" parent="UIRoot/Center/Panel/List" instance=ExtResource("3")]
 layout_mode = 2
 theme_type_variation = &"HintLabel"
-text = "Q／W／E 換風格、1～5 換配色"
+text = "Q～U 換風格、1～0 和減號 換配色"
 horizontal_alignment = 1

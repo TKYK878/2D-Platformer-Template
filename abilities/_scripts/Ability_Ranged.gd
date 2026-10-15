@@ -4,11 +4,14 @@ extends AbilityBase
 # 拖進 Player → Abilities 底下就能用，不用連任何線。
 # 也可以把任何訊號（例如後座力卡的 fired）連到 shoot()，讓別的東西幫你開槍。
 
-## 用鍵盤按鍵還是滑鼠按鍵攻擊；選「只用訊號觸發」時不綁按鍵，要把別的訊號連到 shoot() 才會開槍
-@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "只用訊號觸發") var input_type: int = 0
+## 用鍵盤按鍵、滑鼠按鍵，還是 Input Map 動作（可以綁手把）攻擊；選「只用訊號觸發」時不綁按鍵，要把別的訊號連到 shoot() 才會開槍
+@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "只用訊號觸發", "Input Map 動作") var input_type: int = 0
 
 ## 攻擊鍵（「按鍵種類」選鍵盤按鍵時才會顯示這一欄）
 @export var key: Key = KEY_G
+
+## 「按鍵種類」選 Input Map 動作時，要聽哪一個動作（動作在「專案設定 → Input Map」裡加，可以綁手把等其他裝置）
+@export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin") var action: StringName = &""
 
 ## 子彈速度
 @export_range(100.0, 900.0) var bullet_speed: float = 400.0
@@ -41,6 +44,8 @@ extends AbilityBase
 const _TILE_SIZE := 16.0
 # input_type 的「只用訊號觸發」選項
 const _SIGNAL_ONLY := 4
+# input_type 的「Input Map 動作」選項
+const _INPUT_MAP_ACTION := 5
 
 var _facing: int = 1
 var _cooldown_left: float = 0.0
@@ -48,6 +53,8 @@ var _cooldown_left: float = 0.0
 # 選滑鼠按鍵時隱藏 key 欄位
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "key" and input_type != 0:
+		property.usage = PROPERTY_USAGE_NONE
+	elif property.name == "action" and input_type != _INPUT_MAP_ACTION:
 		property.usage = PROPERTY_USAGE_NONE
 
 # 接玩家面向訊號，向 InputRouter 註冊攻擊鍵；選「只用訊號觸發」時不綁按鍵，改檢查有沒有訊號連到 shoot()
@@ -59,7 +66,7 @@ func _on_setup() -> void:
 	if input_type == _SIGNAL_ONLY:
 		_warn_if_shoot_not_connected()
 	else:
-		InputRouter.bind_input(self, input_type, key, InputRouter.PRESSED, _on_shoot_pressed)
+		InputRouter.bind_input(self, InputRouter.INPUT_TYPE_ACTION if input_type == _INPUT_MAP_ACTION else input_type, key, InputRouter.PRESSED, _on_shoot_pressed, 0, action)
 
 # 按下攻擊鍵：冷卻中不生效，否則開一槍
 func _on_shoot_pressed() -> void:

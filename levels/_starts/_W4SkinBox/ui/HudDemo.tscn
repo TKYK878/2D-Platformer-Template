@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" path="res://ui/HudIcons.tscn" id="3"]
 [ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/heart_full.png" id="4"]
 [ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/heart_empty.png" id="5"]
-[ext_resource type="Texture2D" path="res://levels/_starts/_W4SkinBox/art/coin.png" id="6"]
+[ext_resource type="Texture2D" path="res://art/blocks_skin/Pickup_coin.png" id="6"]
 
 [node name="HudDemo" type="Control"]
 layout_mode = 3
@@ -17,6 +17,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1")
 palette = 4
+style = 2
 
 [node name="Rows" type="VBoxContainer" parent="."]
 layout_mode = 0

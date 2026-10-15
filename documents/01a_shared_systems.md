@@ -52,7 +52,7 @@
 
 ### 3.1 預先定義的輸入動作
 
-學員不修改 Input Map，只保留最基本、所有卡牌都可能用到的動作，其餘一律不預先註冊，改由各機制卡／
+一般學員不修改 Input Map（進階做法見本節最後），只保留最基本、所有卡牌都可能用到的動作，其餘一律不預先註冊，改由各機制卡／
 能力自己的 `key: Key` 欄位讓學員自訂（見第 3.2 節），或走 `KeyTrigger` 的零連線訊號（見
 `01c_blocks_and_abilities.md`）。
 
@@ -77,6 +77,14 @@
 這些卡片／能力的 `key` 欄位上方另外有一個「按鍵種類」下拉選單
 `@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵") var input_type`，選滑鼠按鍵時 `key` 隱藏；
 綁定一律呼叫 `InputRouter.bind_input(self, input_type, key, ...)`，由 Router 決定走 `bind_key()` 或 `bind_mouse()`。
+
+**進階：Input Map 動作**（U201，講師決定開放）：「按鍵種類」下拉最後面多一個「Input Map 動作」（`input_type` 4；
+`Ability_Ranged` 因為前面有「只用訊號觸發」，是 5），選了才出現 `action` 下拉
+（`@export_custom(PROPERTY_HINT_INPUT_NAME, "show_builtin")`，自動列出 Input Map 的動作，含 `ui_` 開頭的內建動作，不用打字）。
+學員到「專案設定 → Input Map」自己加動作、錄按鍵或手把按鈕。綁定時傳 `bind_input(..., priority, action)`，
+`InputRouter.check_action()` 在動作沒選、找不到（附近似名稱建議）、沒有任何按鍵時印中文警告並不綁定。
+`KeyTrigger` 的 `same_key_as` 同樣改成列出整個 Input Map。`InputRouter` 開場檢查五個基本動作還在、也還有按鍵。
+Input Map 存在 `project.godot`、不在 `_my/`，重灌後要重加（README §5.3、§7.1 提醒）。
 
 ### 3.2 自訂按鍵
 
