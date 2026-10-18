@@ -1,12 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b6u2hmarpy0li"]
 
-[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="Script" uid="uid://w61x3i18lq1x" path="res://ui/_scripts/UIRoot.gd" id="1"]
 [ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://ui/MenuAction.tscn" id="3"]
-[ext_resource type="Texture2D" path="res://ui/templates/_art/KeyArtPlaceholder.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://ci3o04hljy5o7" path="res://ui/templates/_art/KeyArtPlaceholder.png" id="4"]
 
-[node name="TitleScreenTemplate_Center" type="Control"]
-layout_mode = 1
+[node name="TitleScreenTemplate_Center" type="Control" unique_id=1171358602]
+process_mode = 3
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -16,8 +17,9 @@ mouse_filter = 2
 script = ExtResource("1")
 kind = 3
 palette = 1
+art_colors = PackedColorArray()
 
-[node name="Background" type="Panel" parent="."]
+[node name="Background" type="Panel" parent="." unique_id=777492954]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,7 +28,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="KeyArt" type="TextureRect" parent="."]
+[node name="KeyArt" type="TextureRect" parent="." unique_id=2079127334]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,21 +40,21 @@ texture = ExtResource("4")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Layout" type="VBoxContainer" parent="."]
+[node name="Layout" type="VBoxContainer" parent="." unique_id=1201952004]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 offset_left = 16.0
 offset_top = 24.0
 offset_right = -16.0
 offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 alignment = 1
 
-[node name="GameName" parent="Layout" instance=ExtResource("2")]
+[node name="GameName" parent="Layout" unique_id=919082655 instance=ExtResource("2")]
 layout_mode = 2
 size_flags_vertical = 3
 theme_type_variation = &"TitleLabel"
@@ -61,33 +63,33 @@ theme_override_constants/outline_size = 4
 text = "我的遊戲"
 horizontal_alignment = 1
 
-[node name="Box" type="PanelContainer" parent="Layout"]
+[node name="Box" type="PanelContainer" parent="Layout" unique_id=387209982]
 layout_mode = 2
 size_flags_horizontal = 4
 mouse_filter = 2
 
-[node name="List" type="VBoxContainer" parent="Layout/Box"]
+[node name="List" type="VBoxContainer" parent="Layout/Box" unique_id=484584433]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Buttons" type="VBoxContainer" parent="Layout/Box/List"]
+[node name="Buttons" type="VBoxContainer" parent="Layout/Box/List" unique_id=781611274]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 4
 
-[node name="Start" parent="Layout/Box/List/Buttons" instance=ExtResource("3")]
+[node name="Start" parent="Layout/Box/List/Buttons" unique_id=688476242 instance=ExtResource("3")]
 custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "開始遊戲"
 action = 3
 
-[node name="Quit" parent="Layout/Box/List/Buttons" instance=ExtResource("3")]
+[node name="Quit" parent="Layout/Box/List/Buttons" unique_id=1062871376 instance=ExtResource("3")]
 custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "離開遊戲"
 action = 2
 
-[node name="Hook" parent="Layout/Box/List" instance=ExtResource("2")]
+[node name="Hook" parent="Layout/Box/List" unique_id=61736746 instance=ExtResource("2")]
 layout_mode = 2
 theme_type_variation = &"HintLabel"
 text = "一句話告訴玩家這是什麼遊戲"

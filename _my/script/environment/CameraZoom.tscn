@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://_my/script/environment/script/CameraZoom.gd" id="1"]
+
+[node name="CameraZoom" type="Node"]
+script = ExtResource("1")

@@ -79,6 +79,10 @@ extends MechanicBase
 ## 回收時，玩家到殼中間如果有這些碰撞層的碰撞箱（實體或 Area 都算）擋著，那顆殼就收不回來；一個都不勾就不檢查
 @export_flags_2d_physics var recall_block_mask: int = 0
 
+## 回收時除了從身體中心，也從身體左右兩側再往外這麼多像素的地方各拉一條線到殼，只要有一條沒被擋住就收得回來；
+## 殼在平台正下方時，數字越大越不用走到平台邊緣（太大會像隔著東西收殼）
+@export_range(0, 16, 1) var recall_side_distance: float = 6.0
+
 ## 只有站在地面上才能回收；不勾的話在空中也能回收，就能「脫殼、回收、再脫殼」一直飛上去
 @export var recall_on_ground_only: bool = true
 
@@ -195,7 +199,7 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage = PROPERTY_USAGE_NONE
 	elif property.name == "default_direction" and start_inside:
 		property.usage = PROPERTY_USAGE_NONE
-	elif property.name in ["recall_action", "recall_hold_time", "show_recall_bar", "show_recall_line", "recall_block_mask", "recall_on_ground_only"] and not require_recall:
+	elif property.name in ["recall_action", "recall_hold_time", "show_recall_bar", "show_recall_line", "recall_block_mask", "recall_side_distance", "recall_on_ground_only"] and not require_recall:
 		property.usage = PROPERTY_USAGE_NONE
 
 # 一進場景就把底下的殼收起來當模板（趁它們還沒啟動），不然它們會變成黏在玩家身上的真的殼。
@@ -510,12 +514,11 @@ func _update_recall_line(delta: float) -> void:
 	else:
 		_recall_line.visible = false
 
-# 從玩家身體中心畫虛線到每顆殼：沒被擋住是白色，被擋住是紅色、畫到擋住的地方
+# 從檢查時用的起點畫虛線到每顆殼：沒被擋住是白色，被擋住是紅色、從身體中心畫到擋住的地方
 func _draw_recall_line() -> void:
-	var from := _body_center()
 	for line in _recall_lines:
 		var color: Color = Color(1.0, 0.3, 0.3) if line["blocked"] else Color.WHITE
-		_recall_line.draw_dashed_line(from, line["to"], color, 1.5, _RECALL_LINE_DASH)
+		_recall_line.draw_dashed_line(line["from"], line["to"], color, 1.5, _RECALL_LINE_DASH)
 
 # 回收鍵的處理：按下的那一刻先判斷能不能回收（場上有殼、站在地面），可以才開始長按計時；
 # 計時中玩家不能走動、不能跳，中途放開、殼沒了、離開地面都會取消，要重新按；計時滿了回收一次
@@ -576,12 +579,11 @@ func _recall_shells(index: int) -> void:
 	for shell in _shells.duplicate():
 		if not is_instance_valid(shell) or shell.is_broken() or _shell_template.get(shell, -1) != index:
 			continue
-		var hit: Variant = _recall_hit(shell)
-		if hit != null:
+		var line := _recall_check(shell)
+		_recall_lines.append(line)
+		if line["blocked"]:
 			blocked += 1
-			_recall_lines.append({"to": hit, "blocked": true})
 			continue
-		_recall_lines.append({"to": shell.global_position, "blocked": false})
 		_uses[index] = maxi(int(_uses.get(index, 0)) - 1, 0)
 		_forget_shell(shell)
 		shell.break_shell()
@@ -596,21 +598,52 @@ func _recall_shells(index: int) -> void:
 		shells_recalled.emit()
 		Events.mechanic_event.emit("Extra_Molt", "shells_recalled")
 
-# 從玩家身體中心到殼的中心拉一條線，碰到 recall_block_mask 的碰撞箱就回傳碰到的位置（被擋住），
-# 沒碰到（或沒勾任何層）回傳 null；殼自己跟玩家不算
-func _recall_hit(shell: Shell) -> Variant:
+# 檢查這顆殼收不收得回來：先從玩家身體中心拉線到殼，被擋住的話再從身體左右兩側（往外多 recall_side_distance）各試一條，
+# 有一條沒碰到 recall_block_mask 的碰撞箱就收得回來；回傳 {"from": 起點, "to": 終點, "blocked": 有沒有被擋住}，
+# 全部被擋住時回傳身體中心那條、終點是擋住的地方
+func _recall_check(shell: Shell) -> Dictionary:
+	var center := _body_center()
+	var target := shell.global_position
 	if recall_block_mask == 0:
-		return null
-	var query := PhysicsRayQueryParameters2D.create(_body_center(), shell.global_position, recall_block_mask)
-	query.collide_with_areas = true
+		return {"from": center, "to": target, "blocked": false}
+	var exclude := _recall_exclude(shell)
+	var center_hit: Variant = _recall_ray(center, target, exclude)
+	if center_hit == null:
+		return {"from": center, "to": target, "blocked": false}
+	for origin in _recall_side_origins(center, exclude):
+		if _recall_ray(origin, target, exclude) == null:
+			return {"from": origin, "to": target, "blocked": false}
+	return {"from": center, "to": center_hit, "blocked": true}
+
+# 身體左右兩側往外 recall_side_distance 的起點；從身體中心走過去會被擋住的（例如貼著牆）不算，才不會隔著牆收殼
+func _recall_side_origins(center: Vector2, exclude: Array[RID]) -> Array[Vector2]:
+	var half_width := 8.0
+	var col := player.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if col != null and col.shape is RectangleShape2D:
+		half_width = (col.shape as RectangleShape2D).size.x / 2.0
+	var side: Vector2 = player.up_direction.orthogonal()
+	var result: Array[Vector2] = []
+	for dir in [1.0, -1.0]:
+		var origin: Vector2 = center + side * dir * (half_width + recall_side_distance)
+		if _recall_ray(center, origin, exclude) == null:
+			result.append(origin)
+	return result
+
+# 回收檢查時不算的碰撞：玩家自己、殼跟殼底下的碰撞
+func _recall_exclude(shell: Shell) -> Array[RID]:
 	var exclude: Array[RID] = [player.get_rid()]
 	if shell is CollisionObject2D:
 		exclude.append((shell as CollisionObject2D).get_rid())
 	for child in shell.find_children("*", "CollisionObject2D", true, false):
 		exclude.append((child as CollisionObject2D).get_rid())
+	return exclude
+
+# 從 from 拉一條線到 to，碰到 recall_block_mask 的碰撞箱（實體或 Area 都算）就回傳碰到的位置，沒碰到回傳 null
+func _recall_ray(from: Vector2, to: Vector2, exclude: Array[RID]) -> Variant:
+	var query := PhysicsRayQueryParameters2D.create(from, to, recall_block_mask)
+	query.collide_with_areas = true
 	query.exclude = exclude
-	var space_state: PhysicsDirectSpaceState2D = player.get_world_2d().direct_space_state
-	var result: Dictionary = space_state.intersect_ray(query)
+	var result: Dictionary = player.get_world_2d().direct_space_state.intersect_ray(query)
 	if result.is_empty():
 		return null
 	return result["position"]

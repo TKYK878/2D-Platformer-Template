@@ -16,6 +16,7 @@ extends Camera2D
 # 偏移的限制範圍用放大後的畫面大小計算
 # （鏡頭本身的跟隨範圍不變，推近結束時不會露出房間外）。Juice 總開關關掉、玩家重生時，進行中的震動與推近立刻停止；
 # 玩家重生時進行中的換房間轉場也會立刻結束。
+# 房間底下放了鏡頭縮放（CameraZoom，群組 camera_zoom）的話，走進那個房間時鏡頭平滑放大到它設的倍率，離開再平滑恢復。
 
 ## 鏡頭模式：瞬切（每個房間一個固定畫面）、房間內跟隨（跟著玩家但不超出房間）、自由跟隨（不管房間，一直跟著玩家）
 @export_enum("瞬切", "房間內跟隨", "自由跟隨") var mode: int = 0
@@ -43,6 +44,8 @@ const _STYLE_PIN := 1       # 定在原地：放大中心在畫面上的位置�
 const _STYLE_CENTER := 2    # 拉到正中央：放大到最大時放大中心在畫面正中間
 # 推近的前面這段比例時間用來放大，剩下的時間慢慢回到原本大小
 const _ZOOM_IN_PART := 0.25
+# 房間鏡頭縮放的平滑速度：數字越大變得越快（8 大約 0.4 秒到位）
+const _ROOM_ZOOM_SPEED := 8.0
 
 var _shake_strength: float = 0.0
 var _shake_duration: float = 0.0
@@ -56,6 +59,8 @@ var _base_zoom: Vector2 = Vector2.ONE
 var _follow_target: Node2D = null
 var _room: Node = null
 var _view_sources: Dictionary = {}   # 把鏡頭拉遠的組件(Node) -> 畫面看到幾倍大，好幾個同時拉取最大的
+var _room_zoom: float = 1.0          # 房間鏡頭縮放目前的倍率（平滑變化中）
+var _room_zoom_target: float = 1.0   # 房間鏡頭縮放要變到的倍率（目前房間的 CameraZoom，沒有就是 1）
 
 var _fade_rect: ColorRect = null
 var _fade_tween: Tween = null
@@ -89,6 +94,9 @@ func _build_fade_overlay() -> void:
 # 玩家進入房間：自由跟隨只記下房間；其他模式依「換房間方式」換過去。
 # 第一次進房間（遊戲剛開始）沒有舊房間可以轉場，一律直接到位
 func _on_room_entered(room: Node) -> void:
+	_room_zoom_target = _zoom_for_room(room)
+	if not is_instance_valid(_room):
+		_room_zoom = _room_zoom_target  # 遊戲剛開始：直接到位，不要從 1 倍慢慢變
 	if mode == _MODE_FREE_FOLLOW:
 		_room = room
 		return
@@ -105,6 +113,13 @@ func _on_room_entered(room: Node) -> void:
 			_start_slide(room)
 		_:
 			_apply_room(room)
+
+# 這個房間底下的鏡頭縮放倍率（找群組 camera_zoom 裡放在這個房間底下的第一個），沒有就是 1 倍
+func _zoom_for_room(room: Node) -> float:
+	for node in get_tree().get_nodes_in_group("camera_zoom"):
+		if room.is_ancestor_of(node) and "strength" in node:
+			return maxf(float(node.strength), 0.1)
+	return 1.0
 
 # 直接換到這個房間：瞬切模式跳到房間中心，房間內跟隨模式換成這個房間的範圍並瞬間到位
 func _apply_room(room: Node) -> void:
@@ -214,6 +229,9 @@ func _current_zoom_amount() -> float:
 
 # 每幀更新推近、跟隨（或換房間的平滑移動）與震動偏移
 func _process(delta: float) -> void:
+	_room_zoom = lerpf(_room_zoom, _room_zoom_target, 1.0 - exp(-_ROOM_ZOOM_SPEED * delta))
+	if absf(_room_zoom - _room_zoom_target) < 0.001:
+		_room_zoom = _room_zoom_target
 	_zoom_time_left = maxf(_zoom_time_left - delta, 0.0)
 	var zoom_amount := _current_zoom_amount()
 	zoom = _view_zoom() * (1.0 + zoom_amount)
@@ -289,7 +307,7 @@ func set_view_size(source: Node, on: bool, size: float = 2.0) -> void:
 	else:
 		_view_sources.erase(source)
 
-# 現在不算推近的鏡頭縮放：原本的縮放，有人拉遠就照拉最遠的那個縮小
+# 現在不算推近的鏡頭縮放：原本的縮放乘上房間鏡頭縮放，有人拉遠就照拉最遠的那個縮小
 func _view_zoom() -> Vector2:
 	var size := 1.0
 	for source in _view_sources.keys():
@@ -297,7 +315,7 @@ func _view_zoom() -> Vector2:
 			size = maxf(size, _view_sources[source])
 		else:
 			_view_sources.erase(source)
-	return _base_zoom / size
+	return _base_zoom * _room_zoom / size
 
 # 把鏡頭中心限制在房間裡，讓畫面不超出房間（view_zoom 決定畫面多大：跟隨用原本大小，
 # 推近時往玩家偏移用放大後的大小）；房間比畫面小的那一軸固定在房間中心

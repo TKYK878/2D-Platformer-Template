@@ -94,6 +94,8 @@ func _check_connection(source: Node, signal_name: String, arg_count: int, callab
 	if not arity["found"]:
 		_warn("「%s」的 %s 訊號連到「%s」的 %s()，但這個方法不存在，是不是改名或打錯字了？" % [source.name, signal_name, target_name, method_name])
 		return
+	# 程式裡用 bind() 多綁的參數、unbind() 丟掉的參數也要算進去，不然會誤報數量對不上
+	arg_count += callable.get_bound_arguments().size() - callable.get_unbound_arguments_count()
 	if arg_count < arity["min"] or arg_count > arity["max"]:
 		_warn("「%s」的 %s 訊號帶 %d 個參數，但「%s」的 %s() 需要 %d 個，數量對不上" % [source.name, signal_name, arg_count, target_name, method_name, arity["min"]])
 

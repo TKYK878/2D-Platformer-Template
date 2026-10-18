@@ -29,6 +29,10 @@ extends Button
 # 選關卡時順便記下檔案的 UID：學員之後把關卡改名、搬資料夾，還找得到
 @export_storage var level_uid: String = ""
 
+## 按下去之後畫面變黑再亮回來的總秒數（變黑一半、亮回來一半），全黑的時候才換場景／整關重來；0 就直接換
+## （動作選「整關重來」「開始遊戲」「回標題」才出現）
+@export_range(0.0, 2.0, 0.05) var fade_duration: float = 0.5
+
 @export_group("音效")
 ## 按下這顆按鈕播什麼音效：「跟畫面一樣」用最上層 UIRoot 的按鈕音效；想跟別顆不一樣再選
 @export_enum("跟畫面一樣", "無", "嗶", "金幣", "撿東西", "跳躍", "落地", "雷射", "自訂") var press_sound: int = SOUND_FOLLOW:
@@ -149,13 +153,13 @@ func _on_pressed() -> void:
 			else:
 				PauseMenu.close()
 		ACTION_RESTART:
-			PauseMenu.restart_level()
+			PauseMenu.restart_level(fade_duration)
 		ACTION_QUIT:
 			PauseMenu.quit_game()
 		ACTION_START:
 			_start_level()
 		ACTION_TITLE:
-			PauseMenu.go_to_title()
+			PauseMenu.go_to_title(fade_duration)
 		ACTION_SETTINGS:
 			_open_settings()
 		ACTION_BACK:
@@ -221,7 +225,7 @@ func _start_level() -> void:
 		return
 	if path != _level_path(level):
 		print("[%s] 「%s」改名或搬家了，現在在 %s；選這顆按鈕把 level 重新選一次就不會再看到這行" % [name, level, path])
-	PauseMenu.change_scene(path)
+	PauseMenu.change_scene(path, fade_duration)
 
 # 「開始遊戲」要去的關卡完整路徑；檔案改名或搬家時用記下的 UID 找；找不到回傳空字串
 func get_level_path() -> String:
@@ -242,6 +246,8 @@ func _validate_property(property: Dictionary) -> void:
 	if property.name == "custom_press_sound" and press_sound != SOUND_CUSTOM:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 	elif property.name == "custom_select_sound" and select_sound != SOUND_CUSTOM:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name == "fade_duration" and action not in [ACTION_RESTART, ACTION_START, ACTION_TITLE]:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 	if property.name != "level":
 		return

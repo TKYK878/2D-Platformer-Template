@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://b124mr2l8sept"]
 
-[ext_resource type="Script" uid="uid://w61x3i18lq1x" path="res://ui/_scripts/UIRoot.gd" id="1"]
-[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://ui/MenuAction.tscn" id="3"]
-[ext_resource type="Texture2D" uid="uid://ci3o04hljy5o7" path="res://ui/templates/_art/KeyArtPlaceholder.png" id="4"]
+[ext_resource type="Script" uid="uid://w61x3i18lq1x" path="res://ui/_scripts/UIRoot.gd" id="1_jatqu"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2_rc0tu"]
+[ext_resource type="PackedScene" path="res://ui/MenuAction.tscn" id="3_b3umf"]
+[ext_resource type="Texture2D" uid="uid://ci3o04hljy5o7" path="res://ui/templates/_art/KeyArtPlaceholder.png" id="4_firaw"]
 
 [node name="TitleScreenTemplate_Side" type="Control" unique_id=605391944]
 process_mode = 3
@@ -14,13 +14,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("1")
+script = ExtResource("1_jatqu")
 kind = 3
 palette = 1
 style = 3
 art_colors = PackedColorArray()
-game_name = "脫殼旅行"
-hook = "解謎"
+game_name = "Sheller 脫殼旅行"
+hook = "脫殼型解謎遊戲"
+press_sound = 2
+select_sound = 1
 
 [node name="Background" type="Panel" parent="." unique_id=443623743]
 layout_mode = 1
@@ -52,15 +54,15 @@ mouse_filter = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="GameName" parent="Layout/Left" unique_id=2097633513 instance=ExtResource("2")]
+[node name="GameName" parent="Layout/Left" unique_id=2097633513 instance=ExtResource("2_rc0tu")]
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
-text = "脫殼旅行"
+text = "Sheller 脫殼旅行"
 
-[node name="Hook" parent="Layout/Left" unique_id=1031100754 instance=ExtResource("2")]
+[node name="Hook" parent="Layout/Left" unique_id=1031100754 instance=ExtResource("2_rc0tu")]
 layout_mode = 2
 theme_type_variation = &"HintLabel"
-text = "解謎"
+text = "脫殼型解謎遊戲"
 autowrap_mode = 3
 
 [node name="Buttons" type="VBoxContainer" parent="Layout/Left" unique_id=1165535276]
@@ -68,15 +70,15 @@ layout_mode = 2
 size_flags_horizontal = 0
 theme_override_constants/separation = 4
 
-[node name="Start_room_design" parent="Layout/Left/Buttons" unique_id=2077729956 instance=ExtResource("3")]
+[node name="Start_room_design" parent="Layout/Left/Buttons" unique_id=2077729956 instance=ExtResource("3_b3umf")]
 custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
-text = "開始操作測試"
+text = "開始測試"
 action = 3
 level = "_my/room_design.tscn"
 level_uid = "uid://bmlxjyeyw0p0j"
 
-[node name="Start_main" parent="Layout/Left/Buttons" unique_id=869653559 instance=ExtResource("3")]
+[node name="Start_main" parent="Layout/Left/Buttons" unique_id=869653559 instance=ExtResource("3_b3umf")]
 custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "開始主線demo
@@ -85,7 +87,7 @@ action = 3
 level = "_my/Template.tscn"
 level_uid = "uid://7v5td2cnanp8"
 
-[node name="Setting" parent="Layout/Left/Buttons" unique_id=1061693866 instance=ExtResource("3")]
+[node name="Setting" parent="Layout/Left/Buttons" unique_id=1061693866 instance=ExtResource("3_b3umf")]
 custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "設置
@@ -94,7 +96,7 @@ action = 3
 level = "_my/ui/Setting.tscn"
 level_uid = "uid://doksyha7ofhlm"
 
-[node name="Quit" parent="Layout/Left/Buttons" unique_id=1753929718 instance=ExtResource("3")]
+[node name="Quit" parent="Layout/Left/Buttons" unique_id=1753929718 instance=ExtResource("3_b3umf")]
 custom_minimum_size = Vector2(96, 0)
 layout_mode = 2
 text = "離開遊戲"
@@ -105,6 +107,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.2
 mouse_filter = 2
-texture = ExtResource("4")
+texture = ExtResource("4_firaw")
 expand_mode = 1
 stretch_mode = 5

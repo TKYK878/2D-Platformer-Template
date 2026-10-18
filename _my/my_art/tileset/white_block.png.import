@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d2x67bsubd4cx"
-path="res://.godot/imported/white_block.png-41c34c9d4b69bd5a14ef87f08a26e4cb.ctex"
+path="res://.godot/imported/white_block.png-af7f93af4582896029b2666f50a56017.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://_my/my_art/white_block.png"
-dest_files=["res://.godot/imported/white_block.png-41c34c9d4b69bd5a14ef87f08a26e4cb.ctex"]
+source_file="res://_my/my_art/tileset/white_block.png"
+dest_files=["res://.godot/imported/white_block.png-af7f93af4582896029b2666f50a56017.ctex"]
 
 [params]
 

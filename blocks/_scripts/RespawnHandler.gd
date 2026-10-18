@@ -9,7 +9,7 @@ extends Node
 
 @export_group("重生設定")
 ## 死亡後隔多久重生（秒）
-@export_range(0.0, 3.0) var delay: float = 0.8
+@export_range(0.0, 3.0) var delay: float = 0.5
 ## 死亡後要怎麼重來：回到目前房間，或是整關從頭開始
 @export_enum("回到目前房間", "整關重來") var mode: int = 0
 ## 重生時把房間裡的箱子、敵人、金幣等零件放回去，撿到的金幣、用掉的鑰匙也跟著倒回（整關重來時處理整個關卡）；
@@ -17,6 +17,8 @@ extends Node
 @export var reset_room_objects: bool = true
 ## 每次重生都發出「關卡重新開始」事件，給想在重來時做事的組件聽
 @export var send_restart_signal: bool = true
+## 死亡後畫面在 delay 秒內慢慢變黑，全黑時才重生（看不到鏡頭跳回去、零件放回去），再用 delay 秒慢慢亮回來；delay 是 0 就不會變黑
+@export var fade_screen: bool = true
 
 @export_group("長按重來")
 ## 長按 restart 動作（預設鍵盤 R、手把 Y）幾秒就馬上重來（跟死掉後一樣照上面的設定：回到目前房間或整關重來），箱子推錯卡關時用；0 表示不能長按重來
@@ -30,6 +32,8 @@ const _RESTART_ACTION := &"restart"
 # 進度條的大小、離玩家多高（玩家位置往頭頂方向）
 const _BAR_SIZE := Vector2(28.0, 4.0)
 const _BAR_GAP := 30.0
+# 黑畫面的圖層要蓋過 HUD
+const _FADE_LAYER := 120
 
 var _current_room: Node2D = null
 var _start_position: Vector2 = Vector2.ZERO
@@ -38,6 +42,8 @@ var _warned_no_room: bool = false
 var _held: float = 0.0          # restart 已經連續按住幾秒
 var _holding: bool = false      # 這次按住是在遊戲中按下的（暫停、過關畫面中按下的不算），而且還沒重來過
 var _bar: Node2D = null
+var _fade_rect: ColorRect = null
+var _fade_tween: Tween = null
 
 # 加入群組、接上訊號，記住玩家一開始的位置
 func _ready() -> void:
@@ -50,10 +56,13 @@ func _ready() -> void:
 	if not _is_active_handler():
 		push_warning("[重生] 場景裡有不只一個 RespawnHandler，只有第一個會生效")
 		printerr("⚠ [重生] 場景裡有不只一個 RespawnHandler，%s 不會生效，可以刪掉" % name)
-	elif hold_time > 0.0:
-		_check_restart_action()
-		if show_hold_bar:
-			_make_bar()
+	else:
+		if fade_screen:
+			_make_fade()
+		if hold_time > 0.0:
+			_check_restart_action()
+			if show_hold_bar:
+				_make_bar()
 
 # 記住玩家一開始的位置，找得到玩家就回傳 true
 func _remember_start_position() -> bool:
@@ -74,11 +83,21 @@ func _is_active_handler() -> bool:
 func _on_room_entered(room: Node) -> void:
 	_current_room = room as Node2D
 
-# 玩家死亡：等 delay 秒，復位零件、還原數值，再把玩家復活到重生位置
+# 玩家死亡：等 delay 秒（勾了 fade_screen 的話這段時間畫面慢慢變黑），復位零件、還原數值，
+# 再把玩家復活到重生位置，最後畫面再慢慢亮回來
 func _on_player_died() -> void:
 	if not _is_active_handler():
 		return
+	var fading := _fade_rect != null and delay > 0.0
+	if fading:
+		_fade_to(1.0, delay)
 	await get_tree().create_timer(delay).timeout
+	_respawn_after_death()
+	if fading:
+		_fade_to(0.0, delay)
+
+# 死亡等待結束後真正重生：照「重來方式」回到目前房間或整關重來
+func _respawn_after_death() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null or not player.has_method("revive"):
 		return
@@ -90,6 +109,25 @@ func _on_player_died() -> void:
 		_respawn_in_room(player)
 	if send_restart_signal:
 		Events.level_restarted.emit()
+
+# 建立蓋住整個畫面的黑色方塊（程式建的，學員不用擺節點），平常是透明的、不擋滑鼠
+func _make_fade() -> void:
+	var layer := CanvasLayer.new()
+	layer.name = "DeathFade"
+	layer.layer = _FADE_LAYER
+	add_child(layer)
+	_fade_rect = ColorRect.new()
+	_fade_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(_fade_rect)
+
+# 讓黑畫面在 duration 秒內變到 alpha 的不透明度（1 是全黑、0 是透明），上一段還沒做完就從目前的樣子接著變
+func _fade_to(alpha: float, duration: float) -> void:
+	if _fade_tween != null:
+		_fade_tween.kill()
+	_fade_tween = create_tween()
+	_fade_tween.tween_property(_fade_rect, "color:a", alpha, duration)
 
 # 長按重來用的 restart 動作不在 Input Map、或沒有任何按鍵時印中文警告
 func _check_restart_action() -> void:
@@ -151,12 +189,12 @@ func _update_bar(player: Node) -> void:
 	_bar.global_position = (player as Node2D).global_position + up * _BAR_GAP
 	_bar.queue_redraw()
 
-# 畫進度條：黑底、白色填滿到按住的比例
+# 畫進度條：黑底、紅色填滿到按住的比例（跟回收殼的白色進度條區分）
 func _draw_bar() -> void:
 	var ratio := clampf(_held / maxf(hold_time, 0.01), 0.0, 1.0)
 	var rect := Rect2(-_BAR_SIZE / 2.0, _BAR_SIZE)
 	_bar.draw_rect(rect, Color(0.0, 0.0, 0.0, 0.6))
-	_bar.draw_rect(Rect2(rect.position, Vector2(_BAR_SIZE.x * ratio, _BAR_SIZE.y)), Color.WHITE)
+	_bar.draw_rect(Rect2(rect.position, Vector2(_BAR_SIZE.x * ratio, _BAR_SIZE.y)), Color(1.0, 0.3, 0.3))
 	_bar.draw_rect(rect, Color(0.0, 0.0, 0.0, 0.9), false, 1.0)
 
 # 馬上整關重來（玩家沒死也可以），過關畫面按「再玩一次」用這個

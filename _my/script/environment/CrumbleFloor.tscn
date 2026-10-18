@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b7dkr0pysapoe"]
 
-[ext_resource type="Script" path="res://_my/script/environment/script/CrumbleFloor.gd" id="1"]
+[ext_resource type="Script" uid="uid://5na0fhx56535" path="res://_my/script/environment/script/CrumbleFloor.gd" id="1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(16, 16)
@@ -10,6 +10,8 @@ size = Vector2(16, 16)
 
 [node name="CrumbleFloor" type="Node2D" unique_id=992951332]
 script = ExtResource("1")
+custom_group = &""
+check_player_size = true
 
 [node name="Body" type="StaticBody2D" parent="." unique_id=641137908]
 collision_layer = 2
@@ -23,7 +25,7 @@ offset_left = -8.0
 offset_top = -8.0
 offset_right = 8.0
 offset_bottom = 8.0
-color = Color(0.56078434, 0.3372549, 0.23137255, 0.9843137)
+color = Color(0.79607844, 0.85882354, 0.9882353, 1)
 
 [node name="Detector" type="Area2D" parent="." unique_id=232552569]
 collision_layer = 0

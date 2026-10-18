@@ -1,6 +1,6 @@
 [gd_scene format=4 uid="uid://7v5td2cnanp8"]
 
-[ext_resource type="TileSet" uid="uid://ckqigu4hb8w5p" path="res://_my/my_art/my_default_tile.tres" id="1_074xy"]
+[ext_resource type="TileSet" uid="uid://ckqigu4hb8w5p" path="res://_my/my_art/tileset/my_default_tile.tres" id="1_074xy"]
 [ext_resource type="PackedScene" path="res://blocks/Room.tscn" id="2_vt36h"]
 [ext_resource type="PackedScene" path="res://player/Player.tscn" id="3_e520q"]
 [ext_resource type="Texture2D" uid="uid://cm8ymciwkvttp" path="res://art/white_block.png" id="4_wkfod"]
@@ -19,7 +19,7 @@
 [ext_resource type="PackedScene" path="res://blocks/Door.tscn" id="15_2ggpm"]
 [ext_resource type="PackedScene" path="res://blocks/Enemy.tscn" id="15_axfbn"]
 [ext_resource type="PackedScene" path="res://blocks/EnemyShooter.tscn" id="16_twqbj"]
-[ext_resource type="PackedScene" path="res://blocks/Button.tscn" id="16_u40vm"]
+[ext_resource type="PackedScene" path="res://_my/script/environment/Button.tscn" id="16_u40vm"]
 [ext_resource type="Texture2D" uid="uid://cc0wqunyt8kg0" path="res://_my/my_art/u_get_a_cake.png" id="17_cake"]
 [ext_resource type="PackedScene" path="res://blocks/Pickup.tscn" id="18_gad5q"]
 [ext_resource type="PackedScene" path="res://blocks/Portal.tscn" id="21_jsmcc"]
@@ -48,6 +48,7 @@ show_in_hud = false
 
 [node name="Player" parent="." unique_id=1135007289 instance=ExtResource("3_e520q")]
 position = Vector2(-8, 96)
+move_speed = 150.0
 jump_force = 275.0
 
 [node name="Visual" type="Node2D" parent="Player" unique_id=484430576]
@@ -71,17 +72,20 @@ big_scale = 1.45
 
 [node name="Extra_Molt" parent="Player/Mechanics" unique_id=445892033 instance=ExtResource("10_pinwj")]
 script = ExtResource("12_gad5q")
-max_push_speed = 450.0
+shell_strength = 200.0
+max_push_speed = 300.0
 start_inside = false
 prev_action_name = &"prev_shell"
 next_action_name = &"next_shell"
 require_recall = true
-recall_action = &""
-recall_hold_time = 1.0
+recall_action = &"recall_shell"
+recall_hold_time = 0.25
 show_recall_bar = true
 show_recall_line = true
-recall_block_mask = 0
+recall_block_mask = 2
+recall_side_distance = 3.0
 recall_on_ground_only = true
+clear_on_room_change = true
 
 [node name="Shell_Cicada" parent="Player/Mechanics/Extra_Molt" unique_id=1654546155 instance=ExtResource("9_jsmcc")]
 process_mode = 4
@@ -336,9 +340,10 @@ show_in_hud = false
 [node name="KeySettings" parent="." unique_id=1610486089 instance=ExtResource("9_cvgsk")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=225422157]
-zoom = Vector2(1.2, 1.2)
 script = ExtResource("6_fdp7u")
 mode = 1
+room_transition = 2
+transition_duration = 0.4
 
 [node name="Pickup_Shell_Cicada" parent="." unique_id=1722888252 instance=ExtResource("18_gad5q")]
 position = Vector2(1432, 400)

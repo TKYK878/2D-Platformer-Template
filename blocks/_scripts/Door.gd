@@ -212,3 +212,7 @@ func _on_area_trigger_entered() -> void:
 
 func _on_button_hold_turned_on() -> void:
 	pass # Replace with function body.
+
+
+func _on_area_trigger_5_entered() -> void:
+	pass # Replace with function body.

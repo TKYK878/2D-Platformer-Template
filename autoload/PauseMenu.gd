@@ -20,6 +20,12 @@ const _JOY_PAUSE := JOY_BUTTON_START
 # 拉音效拉桿時播的試聽音效；拖著拉時最快隔這麼久才播一次（毫秒），免得疊成一團
 const _PREVIEW_SOUND := preload("res://sfx/pickup.wav")
 const _PREVIEW_GAP_MS := 120
+# 換場景、整關重來的黑畫面要蓋過所有東西（包含換房間、死亡的黑畫面）
+const _SCENE_FADE_LAYER := 128
+# 單獨開的選單畫面按 Esc／手把 B 回標題時，畫面變黑再亮回來的總秒數（沒有按鈕可以設，用這個）
+const BACK_FADE_DURATION := 0.5
+# 新場景放進來之後，再維持全黑幾幀才開始亮回來（等房間、鏡頭、物理就定位，載入卡住的那一幀也過去）
+const _SCENE_FADE_HOLD_FRAMES := 4
 
 var _default_root: Control = null    # 預設的範本畫面（第一次打開時才生）
 var _shown: Control = null           # 現在顯示中的畫面
@@ -31,6 +37,9 @@ var _last_preview_ms: int = -_PREVIEW_GAP_MS
 var _changing_scene: bool = false
 var _title_cache: Dictionary = {}    # 場景路徑 -> 是不是標題畫面
 var _unpause_id: int = 0             # 每次關選單加一，晚一步解除暫停時用來認是不是最新的那一次
+var _scene_fade_rect: ColorRect = null
+var _scene_fade_tween: Tween = null
+var _restart_fading: bool = false    # 整關重來的黑畫面變黑中，再按一次不理
 
 # 測試場景用：「回標題」改回這個場景，不用改專案的主場景；空白就是主場景
 var title_scene_override: String = ""
@@ -104,14 +113,14 @@ func _on_joy_button(event: InputEventJoypadButton) -> void:
 			back_from_menu_scene()
 
 # 單獨開的選單畫面（設定畫面這類）按返回：回標題；本來就在標題畫面、或沒有標題畫面可回就不動。
-# 設定畫面上的「繼續遊戲」按鈕也用這個
-func back_from_menu_scene() -> void:
+# 設定畫面上的「繼續遊戲」按鈕也用這個；fade 是畫面變黑再亮回來的總秒數
+func back_from_menu_scene(fade: float = BACK_FADE_DURATION) -> void:
 	if is_title_scene():
 		return
 	if not can_go_to_title():
 		print("[暫停選單] 主場景不是標題畫面，按返回沒有地方可以回去")
 		return
-	go_to_title()
+	go_to_title(fade)
 
 # 打開暫停選單；過關畫面這類別人造成的暫停中就不開，免得關掉時把別人的暫停一起解除；
 # 標題畫面、單獨開的選單畫面上不開
@@ -159,13 +168,32 @@ func is_open() -> bool:
 func can_restart() -> bool:
 	return _find_respawn_handler() != null
 
-# 整關重來：關掉選單，終點恢復成還沒踩過，請重生處理者整關重來
-func restart_level() -> void:
+# 整關重來：關掉選單，終點恢復成還沒踩過，請重生處理者整關重來；
+# fade 大於 0 的話先花一半時間變黑（選單開著、遊戲暫停中），全黑時重來，再花一半時間亮回來
+func restart_level(fade: float = 0.0) -> void:
+	if _restart_fading:
+		return
 	var handler := _find_respawn_handler()
-	close()
 	if handler == null:
+		close()
 		print("[暫停選單] 關卡裡沒有 RespawnHandler，沒辦法整關重來。想要的話把 blocks/RespawnHandler.tscn 拖進關卡")
 		return
+	if fade <= 0.0:
+		_restart_now(handler)
+		return
+	_restart_fading = true
+	_fade_scene_to(1.0, fade / 2.0, func():
+		_restart_fading = false
+		if is_instance_valid(handler):
+			_restart_now(handler)
+		else:
+			close()
+		_fade_scene_to(0.0, fade / 2.0)
+	)
+
+# 真的整關重來：關掉選單、終點恢復成還沒踩過，請重生處理者整關重來
+func _restart_now(handler: Node) -> void:
+	close()
 	get_tree().call_group("goal", "reset")
 	handler.restart_level_now()
 
@@ -178,8 +206,9 @@ func quit_game() -> void:
 # ---- 換場景（只有標題畫面的「開始遊戲」、選單的「回標題」用；重生、整關重來不換場景）
 
 # 換到另一個場景：關掉選單、解除暫停，舊場景拿掉之後把數值、顯示來源、重生記憶、預設 HUD 歸零，再放進新場景。
+# fade 大於 0 的話先花一半時間變黑，全黑時換場景，新場景出來後再花一半時間亮回來（選單按鈕用這個）。
 # 換得了回傳 true；路徑空白、檔案不見了回傳 false 並印中文警告
-func change_scene(path: String) -> bool:
+func change_scene(path: String, fade: float = 0.0) -> bool:
 	if _changing_scene:
 		return false
 	if path == "" or not ResourceLoader.exists(path):
@@ -189,15 +218,22 @@ func change_scene(path: String) -> bool:
 	var scene := get_tree().current_scene
 	if scene is UIRoot:
 		(scene as UIRoot).hand_off_music(self)
+	if fade > 0.0:
+		_fade_scene_to(1.0, fade / 2.0, _begin_swap.bind(path, fade))
+	else:
+		_begin_swap(path, 0.0)
+	return true
+
+# 開始換場景：關掉選單、解除暫停、時間速度恢復，等這一幀結束再真的換
+func _begin_swap(path: String, fade: float) -> void:
 	close()
 	get_tree().paused = false
 	Engine.time_scale = 1.0
-	_swap_scene.call_deferred(path)
-	return true
+	_swap_scene.call_deferred(path, fade)
 
-# 回到標題畫面（主場景）
-func go_to_title() -> bool:
-	return change_scene(get_title_scene())
+# 回到標題畫面（主場景）；fade 是畫面變黑再亮回來的總秒數
+func go_to_title(fade: float = 0.0) -> bool:
+	return change_scene(get_title_scene(), fade)
 
 # 標題畫面是哪個場景：專案的主場景（測試場景可以用 title_scene_override 換掉）
 func get_title_scene() -> String:
@@ -232,8 +268,9 @@ func is_title_scene_file(path: String) -> bool:
 	_title_cache[path] = result
 	return result
 
-# 真的換場景：先拿掉舊場景（舊場景的東西不會再改到數值），歸零之後再放進新場景（新場景的 ValueSettings 才套得上）
-func _swap_scene(path: String) -> void:
+# 真的換場景：先拿掉舊場景（舊場景的東西不會再改到數值），歸零之後再放進新場景（新場景的 ValueSettings 才套得上）；
+# 有黑畫面的話換好之後亮回來
+func _swap_scene(path: String, fade: float = 0.0) -> void:
 	get_tree().unload_current_scene()
 	Stats.reset_for_new_scene()
 	HudData.reset_for_new_scene()
@@ -242,9 +279,41 @@ func _swap_scene(path: String) -> void:
 	var error := get_tree().change_scene_to_file(path)
 	_changing_scene = false
 	if error != OK:
+		if fade > 0.0:
+			_fade_scene_to(0.0, fade / 2.0)
 		_warn_scene("換到「%s」失敗（錯誤代碼 %d）" % [path, error])
 		return
 	print("[換場景] 換到 %s" % path)
+	if fade > 0.0:
+		_fade_in_after_swap(fade / 2.0)
+
+# 換場景後亮回來：等新場景真的放進場景樹，再維持全黑幾幀，才開始慢慢亮回來
+func _fade_in_after_swap(duration: float) -> void:
+	await get_tree().scene_changed
+	for i in _SCENE_FADE_HOLD_FRAMES:
+		await get_tree().process_frame
+	_fade_scene_to(0.0, duration)
+
+# 讓換場景用的黑畫面在 duration 秒內變到 alpha 的不透明度（1 全黑、0 透明），變完呼叫 done；
+# 暫停中、慢動作中也照實際時間變；黑畫面第一次用到才建，放在自動載入底下，換場景時不會被拿掉
+func _fade_scene_to(alpha: float, duration: float, done: Callable = Callable()) -> void:
+	if _scene_fade_rect == null:
+		var layer := CanvasLayer.new()
+		layer.name = "SceneFade"
+		layer.layer = _SCENE_FADE_LAYER
+		add_child(layer)
+		_scene_fade_rect = ColorRect.new()
+		_scene_fade_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+		_scene_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_scene_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		layer.add_child(_scene_fade_rect)
+	if _scene_fade_tween != null:
+		_scene_fade_tween.kill()
+	_scene_fade_tween = create_tween()
+	_scene_fade_tween.set_ignore_time_scale(true)
+	_scene_fade_tween.tween_property(_scene_fade_rect, "color:a", alpha, duration)
+	if done.is_valid():
+		_scene_fade_tween.tween_callback(done)
 
 # 換場景出問題時印中文警告
 func _warn_scene(message: String) -> void:

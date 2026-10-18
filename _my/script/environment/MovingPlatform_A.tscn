@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://cqn0ewwqkei4q"]
+
+[ext_resource type="Script" uid="uid://xwf6fyjcnoji" path="res://_my/script/environment/script/MovingPlatform.gd" id="1_pf13o"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(32, 8)
+
+[node name="MovingPlatform" type="AnimatableBody2D" unique_id=153614965]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_pf13o")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1384514059]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=1785673518]
+offset_left = -8.0
+offset_bottom = 8.0
+color = Color(0.6, 0.8980392, 0.3137255, 1)
+
+[node name="Visual2" type="ColorRect" parent="." unique_id=146725255]
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(0.6, 0.8980392, 0.3137255, 1)
+
+[node name="Visual3" type="ColorRect" parent="." unique_id=724143918]
+offset_left = 8.0
+offset_right = 16.0
+offset_bottom = 8.0
+color = Color(0, 0, 0, 1)
+
+[node name="Visual4" type="ColorRect" parent="." unique_id=1250736906]
+offset_left = -16.0
+offset_right = -8.0
+offset_bottom = 8.0
+color = Color(0, 0, 0, 1)
