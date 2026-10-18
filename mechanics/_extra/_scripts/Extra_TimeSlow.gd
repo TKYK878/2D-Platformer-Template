@@ -38,11 +38,11 @@ func _on_key_pressed() -> bool:
 # 把時間變慢，過了 duration 秒（現實時間）後自動恢復正常
 func _run_time_slow() -> void:
 	_active = true
-	Engine.time_scale = time_scale
+	Engine.time_scale = time_scale * HitStopManager.get_game_speed()
 	started.emit()
 	Events.mechanic_event.emit("Extra_TimeSlow", "started")
 	await get_tree().create_timer(duration, true, false, true).timeout
-	Engine.time_scale = 1.0
+	Engine.time_scale = HitStopManager.get_game_speed()
 	_active = false
 	ended.emit()
 	Events.mechanic_event.emit("Extra_TimeSlow", "ended")

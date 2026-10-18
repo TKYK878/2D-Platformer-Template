@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/TouchButton.gd" id="1"]
+
+[node name="TouchButton" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 222.0
+offset_right = 48.0
+offset_bottom = 262.0
+mouse_filter = 2
+focus_mode = 0
+script = ExtResource("1")

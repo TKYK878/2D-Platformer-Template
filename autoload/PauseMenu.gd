@@ -186,6 +186,9 @@ func change_scene(path: String) -> bool:
 		_warn_scene("找不到要去的場景「%s」，檔案可能被刪掉或改名了" % path)
 		return false
 	_changing_scene = true
+	var scene := get_tree().current_scene
+	if scene is UIRoot:
+		(scene as UIRoot).hand_off_music(self)
 	close()
 	get_tree().paused = false
 	Engine.time_scale = 1.0

@@ -90,7 +90,7 @@
 | 崩塌地板 | `CrumbleFloor.tscn` | 實心 | `break_delay`（碎裂延遲秒數）、`respawn_time`（重生秒數，0 為不重生）、`triggered_by`（只有玩家／任何物體） | `crumbled` |
 | 單向平台 | `OneWayPlatform.tscn` | 實心（單向） | `width_tiles`（寬度格數） | 無 |
 | 不反彈方塊 | `NoBounceBlock.tscn` | 實心 | `width_tiles`、`height_tiles`（寬高格數，編輯器即時顯示） | 無 |
-| 岩漿 | `Lava.tscn` | 實心 | `damage_per_second`（每秒扣血）、`instant_kill`（即死）、`start_on`（一開始就開；關著時是普通地板）；可連接 `activate`、`deactivate`、`toggle` | 無 |
+| 岩漿 | `Lava.tscn` | 實心 | `width_tiles`／`height_tiles`（大小，格數；U221）、`damage_per_second`（每秒扣血）、`instant_kill`（即死）、`start_on`（一開始就開；關著時是普通地板）；可連接 `activate`、`deactivate`、`toggle` | 無 |
 | 可破壞方塊 | `Breakable.tscn` | 實心 | `durability`（耐久次數）、`respawn_time`（重生秒數，0 為不重生）、`break_by_impact`（高速撞擊也能破壞）、`impact_speed`（撞擊速度門檻） | `broken` |
 | 開關方塊 | `SwitchBlock.tscn` | 實心 | `color`（紅／藍） | 無 |
 
@@ -104,7 +104,7 @@
 
 | 零件 | 檔名 | 身體 | 欄位 | 訊號 |
 |---|---|---|---|---|
-| 箱子 | `Box.tscn` | 會動 | `weight`（輕／重）、`block_bullets`（會不會擋子彈，預設會） | 無 |
+| 箱子 | `Box.tscn` | 會動（實體，玩家擋得住、站得上去） | `can_push`（推得動，預設勾；取消勾＝固定的實心方塊）、`weight`（輕／重，重的推得比較慢）、`block_bullets`（會不會擋子彈，預設會） | 無 |
 | 道具 | `Pickup.tscn` | 感應 | `kind`（金幣／鑰匙／血包／分數／自訂）、`custom_kind`（自訂的數值種類名稱，選「自訂」才出現，可打字）、`amount`（數量） | `collected` |
 | 彈射台 | `Launcher.tscn` | 實心 | `mode`（彈簧／彈跳床）、`direction`（上／左／右）、`force`（力道）、`start_on`（一開始就開；關著時還是實心，只是不彈）；可連接 `activate`、`deactivate`、`toggle` | `launched` |
 | 尖刺 | `Spike.tscn` | 感應 | `penalty`（扣血／即死）、`damage`（扣血量）、`knockback`（扣血時彈開玩家的力道，0 不彈開）、`start_on`（一開始就開；關著時碰到不會怎樣）；可連接 `activate`、`deactivate`、`toggle` | 無 |
@@ -112,7 +112,8 @@
 | 敵人射擊 | `EnemyShooter.tscn` | 無（掛在 Enemy 底下） | 「射擊」組：`aim_type`（朝玩家／朝面向方向／固定往左右上下）、`cooldown`（射擊間隔）、`detect_range_tiles`（偵測格數，0 不限）、`stop_to_shoot`（開槍前停一下）、`start_on`（一開始就會開槍）；可連接 `activate`、`deactivate`、`toggle`；「子彈」組：`bullet_speed`、`use_gravity`、`damage`、`hit_objects`（會不會打壞物件） | `shot` |
 
 - 箱子實作受擊介面，被攻擊時只受擊退。
-- 箱子可以站上去（頂端一片只擋上面的薄平台），推到牆邊（地形、推不動的殼、同一邊已經貼牆的箱子或殼）就推不動，一排、疊起來、放大的箱子都一樣，不會被擠進牆裡；跟殼共用 `blocks/_scripts/PushBlock.gd`。
+- 箱子是實體（U241～U243）：玩家碰撞遮罩含箱子層；玩家從側面撞到有 `push(dir, speed)` 的東西（箱子、推得動的殼）就呼叫它，
+  速度乘 `ctx.push_scale`；卡在牆角推不動時玩家被擋住。箱子速度上限 960（不穿牆），跟敵人互相擋住。
 - 道具：血包加血量，但不超過上限。種類選「自訂」時可以打數值種類名稱（`CLAUDE.md` 鐵律 4 的打字欄位，用 `NameCheck`）：
   名稱空白、或跟場景裡現有名稱很像但不一樣（疑似打錯字）時，場景樹出現黃色驚嘆號、執行時印中文警告並建議近似名稱；
   全新的名稱不算錯（撿到就出現在 HUD），執行時只印一行提示列出現有名稱。現有名稱 = 場景裡有 `get_value_kind()` 的節點

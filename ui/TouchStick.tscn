@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/TouchStick.gd" id="1"]
+
+[node name="TouchStick" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 8.0
+offset_top = 190.0
+offset_right = 80.0
+offset_bottom = 262.0
+mouse_filter = 2
+focus_mode = 0
+script = ExtResource("1")

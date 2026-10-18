@@ -87,12 +87,13 @@ Claude Code 在這個專案裡的所有對話回覆、進度回報、驗收結�
 
 名稱的整理與近似比對一律呼叫共用工具 `NameCheck`，不要在組件裡各寫一份。
 目前的打字欄位：`ValueSettings.kind`（數值種類，見 `documents/01a_shared_systems.md` §4.1）、
-`Button.tag`、`AreaTrigger.tag`（誰會觸發選「指定群組」才出現）、`Pickup.custom_kind`（種類選「自訂」才出現）、`Door.custom_kind`（開門方式選「自訂數值」才出現）（見 `documents/01c_blocks_and_abilities.md`）、`Juice_TextPopup.custom_kind`（種類選「自訂」才出現，見 `documents/03_game_feel_juice.md` §3.2）。新增打字欄位時要補進這份清單。
+`Button.tag`、`AreaTrigger.tag`（誰會觸發選「指定群組」才出現）、`Pickup.custom_kind`（種類選「自訂」才出現）、`Door.custom_kind`（開門方式選「自訂數值」才出現）（見 `documents/01c_blocks_and_abilities.md`）、`Juice_TextPopup.custom_kind`（種類選「自訂」才出現，見 `documents/03_game_feel_juice.md` §3.2）、`Cheat.code`（作弊的按鍵指令，解鎖方式選「按鍵指令」才出現；不是名稱而是要按的鍵，講師決定開放，只收英文字母與數字、去空白、全形轉半形、轉小寫，見 `documents/progress.md` U235）、`Cheat.custom_kind`（勾加數值、種類選「自訂」才出現，規則跟 `Pickup.custom_kind` 一樣，見 U238）。新增打字欄位時要補進這份清單。
 
 **顯示文字例外（講師決定）**：`ClearScreen.message`（過關畫面最下面製作者選填的一行字）是純顯示用的文字，不拿去比對任何東西，
 所以只需要做到「不打字也能用（空白就不顯示）」和「去掉頭尾空白」，不需要編輯器檢查與近似建議。
 `ValueSettings.display_name`（數值在 HUD、跳字上顯示的名字，空白就顯示 `kind`）同屬顯示文字例外（見 `documents/progress.md` U166）。
 `UIRoot.game_name`／`hook`（標題畫面的遊戲名稱、一行小字，空白就用範本裡原本的字）同屬顯示文字例外（見 `documents/progress.md` U189）。
+`Cheat.label`（作弊選單勾選框上的字，空白就用「作弊：」加上開了哪些功能）同屬顯示文字例外（見 `documents/progress.md` U236）。
 
 **資源欄位例外（講師決定）**：`Juice_Sound.custom_sound`（`AudioStream`）讓學員把自己的音檔從檔案系統拖進欄位，屬於「拖」而不是打字。
 只在下拉選「自訂」時出現；空白時編輯器黃色驚嘆號＋執行時中文警告，並改用預設值照常運作（見 `documents/03_game_feel_juice.md` §3.1）。
@@ -107,7 +108,14 @@ Claude Code 在這個專案裡的所有對話回覆、進度回報、驗收結�
 `SkinBackground.texture`（`Texture2D`，關卡背景）同屬資源欄位例外：空白時黃色驚嘆號＋執行時中文警告，不顯示背景（見 `documents/04_skin_and_ui.md`、`documents/progress.md` U190）。
 **取色器例外（講師決定，U213）**：`UIRoot.text_color`／`panel_color`／`button_color`／`accent_color`（`Color`）只在 `palette` 選「自訂」時出現，學員用滑鼠點色塊選顏色、不打字；
 預設值就能用，字跟底框亮度太接近時黃色驚嘆號＋執行時中文警告。
+`Mechanic_Slingshot.center_color`／`range_color`／`band_color`（`Color`，彈弓拉的時候中心點、範圍圈、拉線的顏色）同屬取色器例外：只在 `palette` 選「自訂」時出現，
+預設值就能用，透明度拉到 0 時執行時中文警告（見 `documents/progress.md` U247、U248）。
+`Mechanic_Slingshot.center_texture`（`Texture2D`，中心點換成自己的圖）同屬資源欄位例外：空白就畫圓點，不警告（見 U247）。
 `UIRoot.key_art`（`Texture2D`，標題畫面的主視覺）同屬資源欄位例外：空白就用範本裡原本的圖，不警告（見 `documents/progress.md` U189）。
+`UIRoot.music`（`AudioStream`，標題畫面的背景音樂）同屬資源欄位例外：空白就不播，不警告（見 `documents/progress.md` U223）。
+`UIRoot.custom_press_sound`／`custom_select_sound`、`MenuAction.custom_press_sound`／`custom_select_sound`（`AudioStream`，按鈕按下、選到的音效）同屬資源欄位例外：
+只在下拉選「自訂」時出現；空白時黃色驚嘆號＋執行時中文警告，改播嗶照常運作（見 `documents/progress.md` U224）。
+`TouchButton.texture`（`Texture2D`，手機按鈕的圖）同屬資源欄位例外：空白就畫預設的圓角框＋箭頭或字，不警告（見 `documents/progress.md` U226）。
 `Ability_Ranged.bullet_texture`／`EnemyShooter.bullet_texture`／`Ability_Melee.slash_texture`（`Texture2D`）同屬資源欄位例外：學員把子彈、揮擊的圖拖進來；
 空白就照舊顯示色塊，不警告（見 `documents/04_skin_and_ui.md` §6.3）。
 
@@ -154,7 +162,7 @@ Claude Code 在這個專案裡的所有對話回覆、進度回報、驗收結�
 - ❌ 不得在 `Player.gd` 裡處理死亡後的流程，死亡一律透過 `Events` 廣播（`kill()` 只宣告死亡，重生由 `RespawnHandler` 這類處理者呼叫 `revive()`）
 - ❌ 不要用 `reload_current_scene()` 或切換場景做重生／換關，一律在同一個場景內用 `Room` 與軟重生（見 `documents/00b_rooms_and_soft_respawn.md`）
   - 唯一例外（講師決定，U189）：標題畫面的「開始遊戲」、選單的「回標題」換場景，一律透過 `MenuAction` → `PauseMenu.change_scene()`，
-    它會在換之前把自動載入裡上一關的狀態歸零（`Stats`／`HudData`／`StatsHud` 的 `reset_for_new_scene()`、`RespawnMemory.clear()`）
+	它會在換之前把自動載入裡上一關的狀態歸零（`Stats`／`HudData`／`StatsHud` 的 `reset_for_new_scene()`、`RespawnMemory.clear()`）
 - ❌ 不要新增需要學員安裝的外掛或 addon
 - ❌ 不要用 Godot 3.x 的 API（`KinematicBody2D`、`move_and_slide(velocity, UP)` 舊簽章等）
 
@@ -219,9 +227,9 @@ godot --headless --path . res://_tests/SmokeTest.tscn
 - 小技巧：
   - 手動測試場景不會自己結束，headless 跑的時候加 `--quit-after <幀數>`；要自動結束的場景自己呼叫 `get_tree().quit()`。
   - 用 `-s` 跑臨時 `extends SceneTree` 腳本時，不能直接寫自動載入的名稱（`Stats`、`Events`…），要用 `root.get_node("Stats")`；
-    臨時腳本用完要刪掉（含 `.uid`）。
+	臨時腳本用完要刪掉（含 `.uid`）。
   - 幫**已存在**的腳本加 `class_name` 後，編輯器的全域類別快取可能沒更新（出現「Identifier not declared」），
-    跑 `godot --headless --editor --quit --path .` 重新掃描，並請使用者「專案 → 重新載入目前專案」。
+	跑 `godot --headless --editor --quit --path .` 重新掃描，並請使用者「專案 → 重新載入目前專案」。
 
 ---
 

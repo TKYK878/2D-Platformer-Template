@@ -24,6 +24,18 @@ func _check_scene() -> void:
 	_check_missing_targets()
 	_check_live_connections()
 
+# 找開場自己移進 CanvasLayer 的節點（UI 畫面、手機按鈕會在原本的位置多一層「名字Layer」），
+# 場景檔裡存的路徑少了這一層，所以每一層都試試看插進「名字Layer」
+func _find_moved_to_layer(scene: Node, path: NodePath) -> Node:
+	var names := String(path).split("/")
+	for i in names.size():
+		var tried := names.duplicate()
+		tried.insert(i, names[i] + "Layer")
+		var found := scene.get_node_or_null(NodePath("/".join(tried)))
+		if found != null:
+			return found
+	return null
+
 # 第一關：比對場景檔裡存的連接清單，抓連到的目標節點已經不存在的情況。
 # 這種連接在場景載入時就會失敗、不會真的建立起來，所以要對場景檔本身檢查，
 # 不能只看場景裡目前活著的連接。
@@ -37,7 +49,7 @@ func _check_missing_targets() -> void:
 	var state := packed.get_state()
 	for i in state.get_connection_count():
 		var target_path: NodePath = state.get_connection_target(i)
-		if scene.get_node_or_null(target_path) != null:
+		if scene.get_node_or_null(target_path) != null or _find_moved_to_layer(scene, target_path) != null:
 			continue
 		var source_name: String = String(state.get_connection_source(i)).get_file()
 		var signal_name: String = state.get_connection_signal(i)

@@ -44,6 +44,10 @@ func _on_respawn_requested(_player: Node) -> void:
 		await get_tree().physics_frame
 	_ignore_room_enter = false
 
+# 把重生位置改成指定的位置，作弊的「在這裡設重生點」這類組件用這個；label 是印在輸出面板的說明
+func save_point(at_position: Vector2, label: String) -> void:
+	_save(at_position, label)
+
 # 記下新的重生位置，並在輸出面板說一聲，學員看得出現在會重生在哪
 func _save(at_position: Vector2, label: String) -> void:
 	_has_respawn_point = true

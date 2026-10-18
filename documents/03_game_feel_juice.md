@@ -85,6 +85,9 @@ func clear_juice(source: Node) -> void:
 
 `Juice_BGM` 覆寫 `turn_off()`／`turn_on()`：淡出靜音／淡回來（音樂照樣往下走）。煙霧測試的總開關測試輪流呼叫這三個。
 
+U225：再加 `set_on(on: bool)`，`on` 為 true 呼叫 `turn_on()`、false 呼叫 `turn_off()`，讓勾選框的 `toggled` 直接連得上；U229：再加 `set_off(off: bool)`，跟 `set_on` 相反（勾著就關），給「關掉…」的勾選框用
+（學員做「關掉畫面震動」的設定：暫停選單直接放進關卡、可編輯的子節點加 `CheckButton`，見 `tests/juice/JuiceSetOnTest.tscn`）。
+
 ### 2.4 Juice 總開關
 
 自動載入 `JuiceSwitch`：按 `0`（`InputRouter.bind_key`，低優先、只聽不搶；不用 F1：F 鍵在網頁版會被瀏覽器攔截）切換全部 Juice 開／關，

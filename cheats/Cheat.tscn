@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://cheats/_scripts/Cheat.gd" id="1"]
+
+[node name="Cheat" type="HBoxContainer"]
+offset_right = 120.0
+offset_bottom = 16.0
+size_flags_vertical = 4
+script = ExtResource("1")

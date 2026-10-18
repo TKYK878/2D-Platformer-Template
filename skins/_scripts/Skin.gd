@@ -94,7 +94,7 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage = PROPERTY_USAGE_NONE
 	elif property.name == "active_style" and texture_active == null:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
-	elif property.name == "fill_style" and SkinLink.block_visual(get_parent()) == null:
+	elif property.name == "fill_style" and not SkinLink.is_block_host(get_parent()):
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 	elif property.name == "follow_direction" and not SkinLink.is_directional_host(get_parent()):
 		property.usage = PROPERTY_USAGE_NO_EDITOR
@@ -120,11 +120,11 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 # 風格檢查用：拉伸蓋滿會自己縮放，不檢查縮放與像素大小
 func style_scale_free() -> bool:
-	return fill_style == FILL_STRETCH and SkinLink.block_visual(get_parent()) != null
+	return fill_style == FILL_STRETCH and SkinLink.is_block_host(get_parent())
 
 # 風格檢查用：縮放不是整數倍時的補充建議（在零件底下才有 fill_style 可以選）
 func style_fill_hint() -> String:
-	if SkinLink.block_visual(get_parent()) == null:
+	if not SkinLink.is_block_host(get_parent()):
 		return ""
 	return "（要蓋住整個零件就把 fill_style 改成「重複鋪滿」）"
 

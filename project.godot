@@ -27,6 +27,7 @@ Stats="*res://autoload/Stats.gd"
 HudData="*res://autoload/HudData.gd"
 StatsHud="*res://autoload/StatsHud.gd"
 PauseMenu="*res://autoload/PauseMenu.gd"
+TouchSettings="*res://autoload/TouchSettings.gd"
 
 [display]
 

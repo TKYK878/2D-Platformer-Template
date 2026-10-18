@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://tests/skins/_scripts/TileTemplateTest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/Player.tscn" id="player"]
-[ext_resource type="TileSet" uid="uid://6xyxoqkb30in" path="res://art/default_tile.tres" id="tiles"]
+[ext_resource type="TileSet" path="res://art/terrain_tile.tres" id="tiles"]
 [ext_resource type="Texture2D" path="res://art/tile_template.png" id="tpl"]
 [ext_resource type="Texture2D" path="res://tests/skins/_art/Ansimuz/Foxy/idle/sprites/f-01.png" id="fox"]
 

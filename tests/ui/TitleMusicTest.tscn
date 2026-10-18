@@ -1,0 +1,95 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/MenuAction.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://ui/templates/_art/KeyArtPlaceholder.png" id="4"]
+[ext_resource type="Script" path="res://tests/ui/_scripts/TitleMusicTest.gd" id="5"]
+[ext_resource type="AudioStream" path="res://tests/ui/_audio/TestTune.wav" id="7"]
+
+[node name="TitleMusicTest" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+kind = 3
+game_name = "標題音樂測試"
+hook = "開場淡入、換關淡出"
+music = ExtResource("7")
+music_volume = 0.5
+palette = 3
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Layout" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 24.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = -16.0
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Left" type="VBoxContainer" parent="Layout"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="GameName" parent="Layout/Left" instance=ExtResource("2")]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "我的遊戲"
+
+[node name="Hook" parent="Layout/Left" instance=ExtResource("2")]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "一句話告訴玩家這是什麼遊戲"
+autowrap_mode = 3
+
+[node name="Buttons" type="VBoxContainer" parent="Layout/Left"]
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 4
+
+[node name="Start" parent="Layout/Left/Buttons" instance=ExtResource("3")]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+text = "開始遊戲"
+action = 3
+level = "tests/ui/TitleFlowLevel.tscn"
+
+[node name="Quit" parent="Layout/Left/Buttons" instance=ExtResource("3")]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+text = "離開遊戲"
+action = 2
+
+[node name="KeyArt" type="TextureRect" parent="Layout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.2
+mouse_filter = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TestDriver" type="Node" parent="."]
+script = ExtResource("5")

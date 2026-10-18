@@ -120,7 +120,7 @@ func _notification(what: int) -> void:
 # 用不到的欄位不顯示：不在零件底下時的 fill_style、零件沒有方向時的 follow_direction、
 # 敵人沒有「啟動」、一般零件沒有「受傷」「死亡」；「動畫」群組是下拉：（自動）、（沒有）＋做好的動畫
 func _validate_property(property: Dictionary) -> void:
-	if property.name == "fill_style" and SkinLink.block_visual(get_parent()) == null:
+	if property.name == "fill_style" and not SkinLink.is_block_host(get_parent()):
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 	elif property.name == "follow_direction" and not SkinLink.is_directional_host(get_parent()):
 		property.usage = PROPERTY_USAGE_NO_EDITOR
@@ -180,7 +180,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 # 風格檢查用：拉伸蓋滿會自己縮放，不檢查縮放與像素大小
 func style_scale_free() -> bool:
-	return fill_style == FILL_STRETCH and SkinLink.block_visual(get_parent()) != null
+	return fill_style == FILL_STRETCH and SkinLink.is_block_host(get_parent())
 
 # 必要的動畫在不在（一般零件的平常、敵人的走路）；能用回傳空字串
 func _anim_problem() -> String:

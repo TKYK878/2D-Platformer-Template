@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://cheats/_scripts/DevCheats.gd" id="1"]
+
+[node name="DevCheats" type="CanvasLayer"]
+layer = 31
+script = ExtResource("1")

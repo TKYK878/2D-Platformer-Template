@@ -1032,9 +1032,199 @@
 	  （驗證：`tests/ui/TitleColorFollowTest.tscn`）
 　　→ 實作：讀專案主場景的標題畫面拿顏色（不管是哪一套、自訂、跟主視覺配都跟）；只跟顏色，style、字型各自選；
 　　　主場景不是標題畫面時黃色驚嘆號＋執行時警告、用預設配色；「跟主視覺配」只在標題的下拉、「跟標題一樣」只在其他畫面的下拉
+- [x] U220 `art/blocks.png`、`art/default_tile.tres` 還原成 U184 之前的 32 格純色塊（全部實心碰撞、uid 不變）；U184 的圖塊另存成 `art/terrain_blocks.png`＋`art/terrain_tile.tres`（地形「地面」「平台」、自動接邊）
+	  （驗證：任一關卡（例如 `levels/Showroom.tscn`）照舊是綠色純色塊；`tests/skins/TileTemplateTest.tscn` 上面那片照舊有草皮、平台、裝飾）
+　　→ 講師決定：已經有學員用純色塊畫地圖，`default_tile.tres` 要保持純色塊，新的圖塊另存；README、速查表、零件手冊 §7.4、04 §8 的「再製」改指向 `terrain_tile.tres`
+- [x] U221 岩漿加 `width_tiles`／`height_tiles`（1～40 格，預設 1×1 跟原本一樣）：碰撞、偵測範圍、色塊跟著變，皮的重複鋪滿／拉伸蓋滿自動對齊整塊；
+	  改了 scale 時黃色驚嘆號＋執行時中文警告（驗證：`tests/skins/LavaSizeSkinTest.tscn`）
+　　→ 講師決定：學員要大塊岩漿＋圖重複鋪滿，改 scale 會把皮一起放大；照 NoBounceBlock／OneWayPlatform 用格數拉大小，不做「皮抵銷 scale」
+- [x] U222 共用皮 `skins/SkinShare`：`target` 下拉選零件種類（只列關卡裡有的），底下放一個 `Skin`／`SkinAnimated`，
+	  關卡裡這種零件沒自己掛皮的全部套用；編輯器裡有預覽（不存檔）；設定有問題時黃色驚嘆號＋中文警告；煙霧測試加共用皮
+	  （驗證：`tests/skins/SkinShareTest.tscn`）
+　　→ 講師決定：學員已經擺好一堆岩漿才想換皮，一個一個掛太慢；做成共用皮零件（不做「皮上按鈕複製到所有零件」），下拉只列關卡裡有的零件
+- [x] U223 標題畫面背景音樂：`UIRoot` 的「標題畫面」群組加 `music`（拖音檔）、`music_volume`（拉桿），只在標題畫面顯示；
+	  走 BGM 匯流排（暫停選單的音樂拉桿管得到）、開場淡入、播完自己從頭播；按「開始遊戲」換關時淡出，跟關卡的 Juice_BGM 交叉淡入淡出
+	  （驗證：`tests/ui/TitleMusicTest.tscn`）
+　　→ 講師決定：學員問標題畫面能不能放音樂、音效；Juice 要 Player 才會動，標題畫面沒有 Player。
+　　　音樂做在 UIRoot 欄位（不讓 Juice_BGM 單獨放）；空白就不播、不警告（資源欄位例外）
+- [x] U224 選單按鈕音效：`UIRoot` 設整個畫面的按鈕音效（按下、選到各一個下拉：無／內建音效／自訂），`MenuAction` 可以自己蓋過；
+	  都可以不填；「開始遊戲」「回標題」換場景時按下的音效要播得完
+	  （驗證：`tests/ui/ButtonSoundTest.tscn`）
+　　→ 講師決定：UIRoot 跟 MenuAction 兩邊都有（UIRoot 是整個畫面的預設，MenuAction 想不一樣再自己選）；按下、選到（滑鼠移上去、鍵盤／手把切換）都給
+　　→ 實作：預設「無」，既有畫面不會突然有聲音；UIRoot 往下找所有按鈕（普通 Button 也算）接上音效，MenuAction 選了「跟畫面一樣」以外的就自己播；
+　　　音效播放器放在場景樹最上層，換場景不會被切掉；畫面剛出現自動選第一顆、滑鼠點下去順便選到的不播「選到」；
+　　　MenuAction 自己選的音效音量固定 0.8（往上找 UIRoot 會違反禁止事項）；HUD 不顯示按鈕音效欄位
+- [x] U225 JuiceBase 加 `set_on(on)`：勾選框（CheckBox／CheckButton）的 `toggled` 連過來，勾著就 `turn_on()`、取消勾就 `turn_off()`，所有 Juice 都能用
+	  （驗證：`tests/juice/JuiceSetOnTest.tscn`：暫停選單範本直接放進關卡、開「可編輯的子節點」，List 底下加 CheckButton「畫面震動」連到兩個震動 Juice）
+　　→ 講師決定：學員想做「關掉畫面震動」的設定給不舒服的玩家用；不做 EffectToggle 零件，只讓勾選框接得上，學員自己接訊號。
+　　　已知限制：勾選框要跟 Juice 在同一個場景（暫停選單直接放進關卡）；每個 Juice 各連一條、每關重做；換關、重開遊戲不會記住
+- [x] U226 手機按鈕 `ui/TouchButton`：拖進關卡就出現在畫面角落（自己移進 CanvasLayer，不跟著鏡頭跑），手指按住＝那個鍵按住；
+	  `press` 下拉選左／右／上／下／跳／暫停／鍵盤按鍵（選鍵盤按鍵才出現 `key`，能力、機制卡用的鍵也按得到）；
+	  `corner` 選角落、`distance_x`／`distance_y` 離角落多遠、`button_size`、`opacity` 拉桿；`texture` 可拖圖換外觀（空白就畫預設的圓角框＋箭頭／字）；
+	  `show_on` 選只在觸控裝置顯示／一直顯示（在電腦上用滑鼠測）；多指同時按得到，手指從一顆滑到另一顆會換按
+	  （驗證：`tests/ui/TouchButtonTest.tscn`）
+　　→ 講師決定：學員想用手機玩；Input Map 沒有觸控可以加，做成虛擬按鈕假裝按鍵，程式其他地方都不用改。
+　　　不用內建 TouchScreenButton（動作名稱要打字、會跟著鏡頭跑）；預組套件、搖桿、暫停按鈕都要（U227、U228）
+　　→ 實作：左右上下跳按住 Input Map 動作（`Input.action_press`），暫停送一下 Esc，鍵盤按鍵送假的按鍵事件；
+　　　觸控模擬出來的滑鼠點擊不重複算；暫停鈕暫停中也收得到，其他按鈕暫停時自動放開；`modulate` 不動（編輯器裡會存進場景），透明度畫的時候套。
+　　　已知限制：能力選「滑鼠左鍵」的話，手機上手指點畫面任何地方都會觸發（觸控會模擬成滑鼠左鍵）；兩顆按鈕代表同一個鍵時，放開其中一顆就算放開
+- [x] U227 手機按鈕套件 `ui/TouchControls`：拖一個就有左、右、跳、暫停四顆按鈕擺好；想加攻擊鍵就再拖一顆 TouchButton 進來，
+	  想改位置、大小就開「可編輯的子節點」調
+	  （驗證：`tests/ui/TouchControlsTest.tscn`）
+　　→ 實作：套件只有 `show_on`、`opacity` 兩個欄位，管整組（opacity 會蓋過每顆自己的）；四顆的位置、大小開「可編輯的子節點」各自調。
+　　　套件藏起來時底下的按鈕不收輸入（TouchButton 看不到就不收，學員自己把按鈕藏起來也一樣）；電腦上只印一行「沒有觸控螢幕」
+- [x] U228 手機搖桿 `ui/TouchStick`：拖進關卡出現在角落，手指推多遠就走多快（類比），往上、下推也會按住上、下；
+	  `corner`／距離／大小／透明度跟 TouchButton 一樣；`dead_zone` 拉桿；可以拿來取代套件的左右鍵
+	  （驗證：`tests/ui/TouchStickTest.tscn`）
+　　→ 實作：左右用 `Input.action_press(動作, 力道)`，Player 本來就用 `get_axis`，推一半就半速走；上下推超過一半才算（跟 dead_zone 取大的），斜推不會誤按下；
+　　　手指按在圓圈裡才抓住，抓住後滑出圓圈照樣在推，放開才放掉；只放開搖桿自己按住的動作，不會把鍵盤按著的一起放掉；`use_up_down` 勾選框可以關掉上下。
+　　　取代套件左右鍵：套件開「可編輯的子節點」把 Left、Right 的「可見」取消勾（藏起來的按鈕不收輸入，U227）
+- [x] U229 JuiceBase 加 `set_off(off)`：跟 `set_on` 相反，勾著就 `turn_off()`、取消勾就 `turn_on()`；勾選框的字寫「關掉畫面震動」、預設不勾時用這個
+	  （驗證：`tests/juice/JuiceSetOffTest.tscn`：跟 JuiceSetOnTest 一樣，勾選框改成「關掉畫面震動」、toggled 連到 set_off）
+　　→ 講師決定：學員問怎麼改成「勾選才關閉」；訊號連線視窗沒辦法把 true／false 反過來，所以多一個 set_off 跟 set_on 成對
+- [x] U230 手機按鈕、套件、搖桿的 `show_on` 加「摸到螢幕才出現」：一開始藏著，手指碰到螢幕就出現，改按鍵盤、手把又藏起來；
+	  新增自動載入 `TouchSettings` 記住「現在是不是在用觸控」，換關也記得（新的一關開場就照上一關的狀態）；手機按鈕自己送出的假按鍵不算按鍵盤
+	  （驗證：`tests/ui/TouchAutoShowTest.tscn`）
+　　→ 實作：`show_on` 第三個選項接在原本兩個後面，既有場景不變；手機按鈕送假按鍵前先告訴 `TouchSettings`，收到時不算按鍵盤；
+　　　滑鼠不算（觸控會模擬成滑鼠）；學員自己把按鈕「可見」取消勾的，不管什麼狀態都一直藏著（套件藏 Left、Right 換搖桿要靠這個）
+　　→ 講師決定：學員問能不能自動偵測電腦還是手機；「只在觸控裝置」遇到有觸控螢幕的筆電也會出現，所以多一個看玩家實際用什麼的選項，讓學員自己選
+- [x] U231 手機按鈕開關 `ui/TouchSwitch`：拖進選單（標題畫面、暫停選單）就能用，玩家選「自動／顯示／隱藏」，存進設定檔（跟音量同一份），換關、重開遊戲都記得；
+	  「自動」照各零件的 `show_on`，「顯示」「隱藏」蓋過它；`style` 讓學員選做成勾選框（顯示／隱藏）或下拉選單（三個都有），也可以選「不顯示」只當接口；
+	  接口：`set_on(on)`／`set_off(off)`（勾選框的 toggled 連過來）、`show_controls()`／`hide_controls()`／`auto_controls()`／`toggle_controls()`（按鈕的 pressed 連過來），學員自己做的按鈕、勾選框也接得上
+	  （驗證：`tests/ui/TouchSwitchTest.tscn`）
+　　→ 實作：設定記在 `TouchSettings.mode`（設定檔 `[touch] mode`）；勾選框勾著＝「顯示」、取消勾＝「隱藏」，選「自動」時勾選框顯示現在看不看得到；
+　　　勾選框、下拉選單是開場建的（不存進場景），畫面的按鈕音效、鍵盤選取照樣套得上；學員自己的訊號接口跟 Juice 一樣用 set_on／set_off 命名。
+　　　順手修：連線驗證器比對場景檔的連線時，目標在開場會自己移進 CanvasLayer 的畫面裡（例如暫停選單直接放進關卡）會被誤報「目標節點不存在」，現在會多找一層「名字Layer」
+　　→ 講師決定：做成零件讓玩家在選單裡切換；樣式給學員選；要有接口讓學員自己的按鈕也能接
+
+---
+
+# 額外功能：作弊模式
+
+> 講師決定：學員想做作弊模式。主要給玩家玩（秘技彩蛋），也給學員自己測關卡用（開發熱鍵）；
+> 兩邊共用同一套 Player 公開 API，只差在怎麼打開。不屬於任何一週，放在「額外功能」。
+> 一個 `Cheat` 組件用勾選框多選要開哪些功能，分「開關類」（再觸發一次就關掉）與「一次性」（每觸發一次做一次）；
+> 解鎖方式用下拉選單分類：按鍵指令／選單勾選框／只當接口，每一種都有訊號可以串接。
+> 按鍵指令開放打字（例如 `wwssasas`），只限英文字母與數字，打什麼就是按鍵盤上的哪個鍵（大小寫不分、全形轉半形）。
+> 開發熱鍵做成獨立的 `DevCheats` 組件，拖進來就把所有功能綁好熱鍵，不用設定（原本規劃 F 鍵，實作時改掉，見 U239）。
+> 組件放新的 `cheats/`（`.gd` 放 `cheats/_scripts/`），測試場景放 `tests/cheats/`。
+
+## 階段 57：作弊模式
+
+- [x] U232 Player 加無敵 API：`set_invincible(source, on)`／`is_invincible()`，跟 juice 一樣用 source 記是誰開的，全部關掉才失效；
+	  無敵時 `take_damage`／`take_hit` 不扣血、不擊退；確認跟脫殼卡 `PinballBody` 自己的無敵計時不會互相蓋掉
+	  （驗證：`tests/cheats/InvincibleTest.tscn`）
+　　→ 講師決定：要有「連掉坑、岩漿都不會死」，做法是 `kill()` 直接什麼事都不發生（不死、不傳送、不發訊號），不動 RespawnHandler。
+　　　已知限制：掉進無底洞會一直往下掉，要靠飛行飛回來
+　　→ 實作：`set_invincible(source, on, no_death)`，source 記在字典裡，被刪掉的 source 自動拿掉；`take_damage`／`take_hit` 無敵時直接 return（不發 hurt、hit）。
+　　　脫殼卡 `PinballBody` 的無敵是自己的彈開冷卻（加上 `ctx.damage_scale` 歸零），跟這個 API 各管各的，不會互相蓋掉
+- [x] U233 Player 加自由移動 API：`set_free_move(source, on, pass_walls)`，開著時不受重力，用上下左右動作（WASD／方向鍵／手把／手機搖桿）自由飛，
+	  `pass_walls` 勾著就不撞地形；飛行時機制卡的移動修改（重力翻轉、無摩擦…）暫停，關掉後恢復；穿牆時房間切換、撿東西、碰觸發區照常運作
+	  （驗證：`tests/cheats/FreeMoveTest.tscn`）
+　　→ 實作：`set_free_move(source, on, pass_walls, speed)`；飛的時候 `_physics_process` 整段改走自由移動（機制卡的 `apply()` 不跑、不能跳、freeze() 照樣停住），
+　　　穿牆是把 Player 的 `collision_mask` 清成 0、關掉時還原（Room、道具、觸發區是它們自己偵測玩家的圖層，照常運作）。
+　　　已知限制：關掉穿牆時人卡在牆裡會出不來，要先飛出來再關
+- [x] U234 `cheats/Cheat`：先做開關類的無敵、飛行、穿牆三個勾選框，解鎖方式先做「只當接口」；
+	  接口 `turn_on()`／`turn_off()`／`toggle()`／`set_on(on)`／`set_off(off)`，訊號 `turned_on`／`turned_off`；
+	  `show_label` 勾選框：開著時畫面角落顯示「作弊中」；拔掉 Cheat 時會把自己開的效果全部關掉
+	  （驗證：`tests/cheats/CheatTest.tscn`）
+　　→ 實作：`Cheat` 繼承 HBoxContainer（跟 `TouchSwitch` 一樣，才能放進選單）；放關卡最上層就好，用 player 群組找玩家。
+　　　「作弊中」小字是共用的 `cheats/_scripts/CheatLabel.gd`（第一次需要時建在目前的關卡裡，一個作弊一行）
+- [x] U235 解鎖方式「按鍵指令」：`code` 打字欄（例如 `wwssasas`），`delay` 拉桿決定兩個鍵最多隔幾秒，超過就重來；輸入完成時觸發，並發出 `code_entered` 訊號
+	  （學員可以接 Juice 做音效、跳字）；打字欄四點防呆：空白時用預設指令、編輯器黃色驚嘆號（空白、有字母數字以外的字、太短、
+	  跟另一個 Cheat 的指令一樣或是它的開頭）、執行時中文警告、去空白＋全形轉半形＋轉小寫；CLAUDE.md 的打字欄位清單補上 `Cheat.code`
+	  （驗證：`tests/cheats/CheatCodeTest.tscn`）
+　　→ 實作：預設指令 `wwssadad`（上上下下左右左右），解鎖方式預設「按鍵指令」；用 `_input` 收實體按鍵，字母、上排數字、右邊數字鍵盤都算，
+　　　其他鍵（空白、方向鍵）不算也不打斷；比對「最後幾個鍵」所以按錯一個不用從頭來。指令被另一組包含時（例如 wwss 和 wwssadad）黃色驚嘆號
+- [x] U236 解鎖方式「選單勾選框」：Cheat 拖進暫停選單就出現一個勾選框，做法跟 `TouchSwitch` 一樣（開場建的、套得上按鈕音效與鍵盤選取）；
+	  勾選框的字預設用開了哪些功能組成，`label` 打字欄可以自己取（空白就用預設）
+	  （驗證：`tests/cheats/CheatMenuTest.tscn`）
+　　→ 講師決定：`Cheat.label` 開放打字，屬於顯示文字例外（只做「空白也能用」＋「去頭尾空白」），CLAUDE.md 顯示文字例外補上；
+　　　開關狀態不記住，換關、重開遊戲都從關著開始
+　　→ 實作：沒放在 Container 底下時黃色驚嘆號（拖到關卡最上層的話勾選框不會排進選單）；從別處開關時勾選框跟著變
+- [x] U237 更多開關類功能：無限跳、遊戲速度（拉桿，例如 0.25～2 倍）、敵人凍結、鏡頭拉遠看整個房間
+	  （驗證：`tests/cheats/CheatMoreTest.tscn`）
+	  　　→ 注意：`HitStopManager`、`PauseMenu` 結束時會把 `Engine.time_scale` 設回 1.0，要改成回到作弊設定的速度
+　　→ 實作：無限跳＝`Player.set_infinite_jump()`，開著時 `can_ground_jump()` 在空中也回傳 true（二段跳、蹬牆跳這類卡會讓給 Player 自己的跳）；
+　　　遊戲速度＝`HitStopManager.set_game_speed(source, on, speed)`，好幾個作弊一起開就乘起來，頓幀、子彈時間（`Extra_TimeSlow`）結束改回到遊戲速度；
+　　　換場景時 PauseMenu 照舊設回 1.0（作弊不記住，舊關卡的 Cheat 拔掉時也會拿掉自己的速度）。
+　　　敵人凍結＝把 enemy 群組的 `process_mode` 設成停用（連底下的 EnemyShooter 一起停，碰撞也會拿掉，所以碰到不會受傷、也打不到），
+　　　開著時每幀檢查新出現的敵人（重生放回來的），關掉還原。鏡頭拉遠＝`CameraRig.set_view_size(source, on, size)`，房間內跟隨的範圍照拉遠後的畫面算
+- [x] U238 一次性功能：數值補滿／加值（種類用下拉，跟 Pickup 一樣有「自訂」）、跳到下一個／上一個房間、在這裡設重生點、直接過關
+	  （驗證：`tests/cheats/CheatActionTest.tscn`）
+　　→ 實作：只勾一次性功能時，作弊不會一直「開著」，每次觸發都做一次（選單上變成按鈕）；有勾開關類的話，打開的那一次順便做一次性功能。
+　　　換房間用 `Player.teleport()`（新的公開 API，速度歸零，不算死亡），目前房間看玩家站在哪個房間範圍裡；
+　　　設重生點用 `RespawnMemory.save_point()`（新的公開函式）；直接過關發 `Events.level_cleared`（終點不會變色）。
+　　　`Cheat.custom_kind` 是新的打字欄位，規則跟 `Pickup.custom_kind` 一樣，CLAUDE.md 清單已補上
+- [x] U239 `cheats/DevCheats`：拖進關卡就把所有功能綁在 F 鍵上，畫面角落列出哪些開著；`editor_only` 勾選框預設勾著，只在編輯器按 Play 時有效，匯出的版本自動失效
+	  （驗證：`tests/cheats/DevCheatsTest.tscn`）
+　　→ 講師決定：Godot 4.7 預設把遊戲嵌在編輯器裡跑，F 鍵可能會被編輯器快捷鍵吃掉（例如 F8 停止），做之前先實測，不行就換一組鍵
+　　→ 實作：沒辦法在編輯器裡實測，F1～F8 本來就是編輯器快捷鍵，所以直接避開 F 鍵：按 `` ` ``（Tab 上面那顆）打開清單，
+　　　清單開著時 1～9、-、= 開關（0 是 Juice 總開關，不用）；清單收起來時數字鍵照常給遊戲用。功能是開場建出來的幾個「只當接口」的 Cheat。
+　　　`editor_only` 看 `OS.has_feature("editor")`。待驗收：遊戲嵌在編輯器的 Game 分頁裡時，` 和數字鍵有沒有被吃掉
+- [x] U240 煙霧測試加入 `cheats/`；README、速查表、零件手冊補上作弊模式
+　　→ 實作：煙霧測試第 18 步：cheats/ 每個場景放一次；兩個開關類全開的 Cheat 跟重力翻轉一起掛，頓幀、受傷、被秒殺、亂按跳和上，
+　　　開著時拔掉，檢查無敵、飛行、碰撞遮罩、遊戲速度都還原。README §3.3、速查表 §1～§3 加列＋§7、零件手冊 §1 加 `cheats/`＋§9
+
+## 階段 58：實體箱子
+
+> 講師決定：學員反映箱子「會穿過去」：站不上去、人走得進箱子裡、箱子推到牆角人還是過得去、箱子會穿過別的東西。
+> 原因是玩家的碰撞遮罩沒有箱子層，「推」其實是人走進箱子、物理引擎把箱子擠開。
+> 改成箱子是真的實體，並做成選項讓學員選「推得動」或「推不動」。
+
+- [x] U241 箱子變成實體：Player 的碰撞遮罩加上箱子層（擋得住、站得上去）；走路撞到箱子側面時，Player 呼叫對方的 `push()` 把它往那個方向推
+	  （通用介面，不寫死箱子，Player 不知道是誰）；推的速度乘上 `ctx.push_scale`（忽大忽小卡的推力第一次生效），重的箱子推得比較慢；
+	  箱子卡在牆角推不動時人也被擋住；脫殼卡推得動的殼一起用這套
+	  （驗證：`tests/blocks/SolidBoxTest.tscn`）
+- [x] U242 箱子加 `can_push` 勾選框：預設勾著＝推得動；取消勾＝固定的實心方塊（站得上去、推不動，攻擊、推力器、彈射台也推不動），
+	  仍然算箱子（踩按鈕、碰觸即死照常）
+	  （驗證：同上，場景裡放一個推不動的）
+- [x] U243 箱子不再穿過別的東西：開連續碰撞偵測（被彈射台、推力器推很快時不穿牆）；箱子跟敵人互相擋住
+	  （驗證：同上，彈射台把箱子射向牆、敵人走向箱子）
+　　→ 實作：推的方法是 Player 在 `move_and_slide()` 之後看撞到的東西，側面撞到有 `push()` 的就呼叫，速度用這一幀原本要走的水平速度×`push_scale`；
+　　　箱子自己決定推多快（輕 0.8 倍、重 0.4 倍，直接設水平速度、不用施力，地上摩擦力才推得動）。殼本來就有「剛脫下時先互相忽略」，不會卡住玩家。
+　　　推不動的箱子是 `freeze`（靜止），仍在箱子層、box 群組；磁鐵卡跳過固定住的（蜘蛛殼原本也會被磁鐵拉走，一起修好）。
+　　　穿牆：Godot 2D 的連續碰撞偵測擋不住每秒 3000 像素，改成箱子、殼的速度上限 960（每幀最多一格），連續碰撞偵測也開著。
+　　　自動奔跑卡規格寫「撞到箱子會轉向」，以前玩家撞不到箱子所以沒生效，現在照規格運作（自動奔跑時撞到箱子轉向，不會推著走）
+
+## 階段 59：設定頁
+
+> 講師決定：學員想在標題畫面加一個「設定」鍵，按了才打開設定（音量、手機按鈕…）。
+> 新增設定頁零件 `ui/SettingsPage`，`MenuAction` 的下拉多「打開設定」「返回」，不用連線；三個標題範本加上「設定」鍵。
+> 暫停選單範本維持原樣（音量照舊直接放在選單上），設定頁一樣可以拖進學員自己的暫停選單用。
+
+- [x] U244 設定頁 `ui/SettingsPage`：預設藏著（編輯器裡也藏著，要改裡面的東西點眼睛打開），底下放好三條音量、手機按鈕開關、「返回」鍵，
+	  學員可以再拖別的進去（例如作弊的選單勾選框）；`MenuAction` 的 `action` 加「打開設定」（打開同一個畫面裡的設定頁，選取跳到設定頁第一個能選的東西）
+	  與「返回」（關掉自己所在的設定頁，選取回到「設定」鍵）；設定頁開著時按 Esc 也會返回（暫停選單裡也是先關設定頁，不會連選單一起關）；
+	  找不到設定頁、「返回」不在設定頁裡時黃色驚嘆號＋執行時中文警告
+	  （驗證：`tests/ui/SettingsPageTest.tscn`）
+- [x] U245 三個標題範本（`TitleScreenTemplate`、`_Center`、`_Side`）加上「設定」鍵和設定頁；文件補上做法
+	  （驗證：`tests/ui/TitleSettingsTest.tscn`，場景就是 `TitleScreenTemplate` 本身再掛一個測試節點）
+　　→ 實作：「打開設定」找同一個場景檔（`owner` 相同）的設定頁，找不到而場景裡只有一個就用它；Esc 用 `_unhandled_input` 先收（關卡場景比自動載入的 PauseMenu 先收到）。
+　　　音量拉桿的 HSlider 是內部節點，選取要連內部節點一起找。已經再製過的標題不會自動多出設定鍵，README、速查表寫了怎麼自己加。
+　　　`W4_SkinBox` 的示範標題（`TitleDemo`）沒有加
+
+## 階段 60：彈弓的中心點
+
+> 講師決定：學員說彈弓拉的時候應該有一個中心點，但現在看不到；UI 只要加「可拉範圍圈」。
+
+- [x] U246 `Mechanic_Slingshot` 加 `show_drag_center`（預設開）：拖曳時在按下去的位置畫黃色中心點、半徑＝`max_drag_distance` 的淡白色範圍圈，
+	  和從中心點拉到滑鼠的黃線（拉出圈外停在圈上）；放開、重生時藏起來；中心點在世界座標，不跟著角色跑
+	  （驗證：`tests/mechanics/Mechanic_SlingshotTest.tscn`）
+- [x] U247 彈弓中心點的外觀：`@export_group("中心點外觀")` 加 `center_style`（實線圈／虛線圈／沒有圈／只有中心點）、`range_follow_drag`
+	  （預設開＝圈跟著 `max_drag_distance`；關掉才出現 `range_size` 自己調圈大小，只是畫的大小）、`line_width`、`center_size`、
+	  `center_color`／`range_color`／`band_color`（取色器）、`center_texture`（拖圖片，空白畫圓點）；`show_drag_center` 關掉時整組藏起來；
+	  每次開始拉時照欄位重畫（U246 的限制一起解掉）；透明度 0 時中文警告（驗證：`tests/mechanics/Mechanic_SlingshotTest.tscn`）
+　　→ 講師決定：風格四種調法都要（樣式下拉、取色器、粗細拉桿、換圖）；圓圈大小可以跟可拉距離分開調。取色器、換圖記進 CLAUDE.md 例外清單
+　　→ 實作：彈弓卡改成 `@tool`（比照脫殼卡，`_ready` 在編輯器裡直接跳過），原本「選鍵盤按鍵才出現 key」在編輯器裡其實沒作用，這次一起修好
+- [x] U248 彈弓中心點的風格與配色（類似 W4 的 UI）：加 `look`（簡單、虛線、像素復古、乾淨極簡、可愛圓角、木牌、科幻、漫畫、復古遊戲機）管形狀，
+	  `palette`（跟 UI 同名的預設～萬聖節、自訂）管顏色，顏色直接用 `UIRoot._PALETTES`（亮色＝中心點和拉線、字的顏色＝圈）；
+	  三個取色器改成配色選「自訂」才出現；`center_style` 的「實線圈／虛線圈」併成「中心點＋範圍圈＋拉線」，虛線改到 `look`
+	  （驗證：`tests/mechanics/Mechanic_SlingshotTest.tscn`）
+　　→ 講師決定：風格下拉、配色下拉兩個都要
+
 ## 之後再做（構想，還沒排進單元）
 
-- 手機觸控按鈕：拖進關卡的虛擬按鈕組件，下拉選它代表哪個動作，只在觸控裝置上顯示（講師決定先放待做，U201 時提出）
 - GameFlow 加上狀態：管理「開始 → 進行中 → 過關／Game Over」，學員可以聽狀態變化的訊號；
   可能一起做命數、Game Over 條件（命用完或某個數值歸零）與 Game Over 畫面，會牽涉 RespawnHandler、ClearScreen。
   U156 的訊號名稱不用變，學員已經連好的線不用重連。

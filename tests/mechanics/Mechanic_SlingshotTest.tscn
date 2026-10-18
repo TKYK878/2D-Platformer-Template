@@ -77,6 +77,7 @@ color = Color(0.4, 0.3, 0.3, 1)
 
 [node name="Player" parent="." unique_id=1854042287 instance=ExtResource("2")]
 position = Vector2(0, 95)
+collision_mask = 3
 
 [node name="Visual" type="Node2D" parent="Player" unique_id=460613492]
 
@@ -89,6 +90,8 @@ region_rect = Rect2(0, 0, 16, 32)
 
 [node name="Mechanic_Slingshot" parent="Player/Mechanics" unique_id=861133225 instance=ExtResource("4")]
 input_type = 0
+look = 8
+line_width = 3.94
 
 [node name="Ability_Melee" parent="Player/Mechanics" unique_id=942224850 instance=ExtResource("5_8eiyh")]
 input_type = 1

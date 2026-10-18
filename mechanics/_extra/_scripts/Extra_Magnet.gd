@@ -17,12 +17,12 @@ extends MechanicBase
 ## 箱子離多近就不再拉，避免貼著玩家抖動
 @export_range(10.0, 40.0) var min_distance: float = 20.0
 
-# 掃場上所有箱子，範圍內、還沒貼太近的直接拉近水平位置，不透過施力（摩擦力太大推
+# 掃場上所有箱子（推不動、固定住的箱子和殼跳過），範圍內、還沒貼太近的直接拉近水平位置，不透過施力（摩擦力太大推
 # 不動）。只動 x 軸，垂直方向留給箱子自己的重力／落地邏輯處理，不會被磁力吸到跟
 # 玩家同一個高度
 func apply(ctx: MoveContext) -> void:
 	for box in get_tree().get_nodes_in_group("box"):
-		if not (box is RigidBody2D):
+		if not (box is RigidBody2D) or (box as RigidBody2D).freeze:
 			continue
 		var target: RigidBody2D = box
 		var dx: float = player.global_position.x - target.global_position.x

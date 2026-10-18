@@ -104,6 +104,36 @@ class_name UIRoot
 	set(value):
 		hook = value
 		_apply_title()
+## 標題畫面的背景音樂：從檔案系統把 .ogg／.mp3／.wav 拖進來（建議放在 _my/ 底下）；空白就不播。按「開始遊戲」換關時自動淡出
+@export var music: AudioStream
+## 背景音樂的音量，1 是原本的大小
+@export_range(0.0, 1.0) var music_volume: float = 0.6
+
+@export_group("按鈕音效")
+## 按下這個畫面裡的按鈕時播什麼音效；選「自訂」可以放自己的音檔。個別按鈕（MenuAction）想不一樣可以自己選
+@export_enum("無", "嗶", "金幣", "撿東西", "跳躍", "落地", "雷射", "自訂") var press_sound: int = SOUND_NONE:
+	set(value):
+		press_sound = value
+		notify_property_list_changed()
+		update_configuration_warnings()
+## 自己的按下音效：從檔案系統把 .wav／.ogg／.mp3 拖進來
+@export var custom_press_sound: AudioStream:
+	set(value):
+		custom_press_sound = value
+		update_configuration_warnings()
+## 選到按鈕時（滑鼠移上去、用鍵盤或手把切換）播什麼音效；選「自訂」可以放自己的音檔
+@export_enum("無", "嗶", "金幣", "撿東西", "跳躍", "落地", "雷射", "自訂") var select_sound: int = SOUND_NONE:
+	set(value):
+		select_sound = value
+		notify_property_list_changed()
+		update_configuration_warnings()
+## 自己的選到音效：從檔案系統把 .wav／.ogg／.mp3 拖進來
+@export var custom_select_sound: AudioStream:
+	set(value):
+		custom_select_sound = value
+		update_configuration_warnings()
+## 按鈕音效的音量，1 是原本的大小
+@export_range(0.0, 1.0) var sound_volume: float = 0.8
 
 const KIND_HUD := 0
 const KIND_PAUSE_MENU := 1
@@ -122,6 +152,11 @@ static var _title_cache_problem := ""
 static var _title_cache_time := -1
 # 「跟標題一樣」上一次套用的顏色，編輯器裡比對標題有沒有改
 var _applied_title_colors := {}
+# 標題音樂的播放器和淡入淡出（沒放音樂就是 null）
+var _music_player: AudioStreamPlayer = null
+var _music_tween: Tween = null
+# 這個時間（毫秒）以前選到按鈕不播音效：畫面剛出現時會自動選第一顆按鈕
+var _select_quiet_until := 0
 const _ArtPalette := preload("res://ui/_scripts/ArtPalette.gd")
 const _ART_FIELDS := ["tone", "main_color"]
 const NO_KEY_ART := "palette 選「跟主視覺配」，但找不到主視覺的圖：把圖拖進 key_art（或範本裡的 KeyArt），先用預設配色"
@@ -184,7 +219,28 @@ const _KIND_NAMES := ["HUD", "暫停選單", "過關畫面", "標題畫面"]
 const _SCRIPT_PATH := "res://ui/_scripts/UIRoot.gd"
 # 標題畫面的欄位 -> 範本裡對應的節點名稱
 const _TITLE_NODES := { "game_name": "GameName", "key_art": "KeyArt", "hook": "Hook" }
-const TITLE_NOT_ALONE := "標題畫面要自己一個場景（設為主場景），不能放進關卡；從 ui/templates/ 再製一份到 _my/，右鍵「設為主場景」"
+# 標題畫面才有的音樂欄位
+const _TITLE_MUSIC_FIELDS := ["music", "music_volume"]
+# 標題音樂淡入、換關時淡出要幾秒
+const _MUSIC_FADE := 1.0
+# 淡到這個音量就算聽不到（線性音量）
+const _SILENT := 0.0001
+# 按鈕音效的選項：無、內建音效（跟下拉的順序一樣）、自訂；自訂卻沒放音檔時改播嗶
+const SOUND_NONE := 0
+const SOUND_CUSTOM := 7
+const _UI_SOUNDS := [
+	null,
+	preload("res://sfx/beep.wav"),
+	preload("res://sfx/coin.wav"),
+	preload("res://sfx/pickup.wav"),
+	preload("res://sfx/jump.wav"),
+	preload("res://sfx/land.wav"),
+	preload("res://sfx/laser.wav"),
+]
+const _SOUND_FIELDS := ["press_sound", "custom_press_sound", "select_sound", "custom_select_sound", "sound_volume"]
+# 畫面剛出現、程式自動選第一顆按鈕的這段時間（毫秒）不播選到的音效
+const SELECT_QUIET_MS := 200
+const TITLE_NOT_ALONE :="標題畫面要自己一個場景（設為主場景），不能放進關卡；從 ui/templates/ 再製一份到 _my/，右鍵「設為主場景」"
 
 # 每套配色的顏色：text 字、dim 次要的字、panel 底色、button 按鈕、hover 滑過、pressed 按下、accent 條和拉桿、back 條的底
 const _PALETTES := [
@@ -222,11 +278,14 @@ func _ready() -> void:
 	_apply_title()
 	if Engine.is_editor_hint():
 		return
-	for problem in [custom_contrast_problem(), art_problem(), title_palette_problem()]:
+	for problem in [custom_contrast_problem(), art_problem(), title_palette_problem()] + Array(_sound_problems()):
 		if problem != "":
 			push_warning("[%s] %s" % [name, problem])
 			printerr("⚠ [%s] %s" % [name, problem])
 	_snap_containers(self)
+	_connect_button_sounds(self)
+	_select_quiet_until = Time.get_ticks_msec() + SELECT_QUIET_MS
+	visibility_changed.connect(_on_visibility_changed_for_sounds)
 	if kind == KIND_TITLE:
 		_ready_title()
 		return
@@ -254,6 +313,7 @@ func _ready() -> void:
 func _ready_title() -> void:
 	if get_parent() == get_tree().root:
 		_focus_first_button.call_deferred(self)
+		_start_music()
 		return
 	push_warning("[%s] %s" % [name, TITLE_NOT_ALONE])
 	printerr("⚠ [%s] %s" % [name, TITLE_NOT_ALONE])
@@ -273,9 +333,15 @@ func is_alone() -> bool:
 func _validate_property(property: Dictionary) -> void:
 	if property.name == "theme":
 		property.usage = PROPERTY_USAGE_NONE
-	elif _TITLE_NODES.has(property.name) and kind != KIND_TITLE:
+	elif (_TITLE_NODES.has(property.name) or property.name in _TITLE_MUSIC_FIELDS) and kind != KIND_TITLE:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 	elif property.name == "hud_background" and kind != KIND_HUD:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name in _SOUND_FIELDS and kind == KIND_HUD:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name == "custom_press_sound" and press_sound != SOUND_CUSTOM:
+		property.usage = PROPERTY_USAGE_NO_EDITOR
+	elif property.name == "custom_select_sound" and select_sound != SOUND_CUSTOM:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
 	elif property.name in _CUSTOM_FIELDS and palette != PALETTE_CUSTOM:
 		property.usage = PROPERTY_USAGE_NO_EDITOR
@@ -308,6 +374,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	var follow := title_palette_problem()
 	if follow != "":
 		warnings.append(follow)
+	warnings.append_array(_sound_problems())
 	if kind == KIND_TITLE:
 		if scene_root != null and scene_root != self:
 			warnings.append(TITLE_NOT_ALONE)
@@ -333,6 +400,121 @@ func _focus_first_button(node: Node) -> bool:
 		if _focus_first_button(child):
 			return true
 	return false
+
+# 標題畫面的背景音樂：有放音樂檔就走 BGM 匯流排（音樂拉桿管得到）淡入播放，播完自己從頭再播
+func _start_music() -> void:
+	if music == null:
+		return
+	_music_player = AudioStreamPlayer.new()
+	_music_player.name = "TitleMusic"
+	_music_player.bus = &"BGM"
+	_music_player.stream = music
+	_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	_music_player.finished.connect(_music_player.play)
+	add_child(_music_player)
+	_set_music_level(0.0, _music_player)
+	_music_player.play()
+	_music_tween = _fade_music(_music_player, 0.0, music_volume)
+	print("[%s] 開始播放標題音樂" % name)
+
+# 換場景時 PauseMenu 呼叫：把還在播的標題音樂交給 keeper（不會跟著標題畫面一起消失），淡出之後拿掉
+func hand_off_music(keeper: Node) -> void:
+	if _music_player == null or not is_instance_valid(_music_player):
+		return
+	var player := _music_player
+	_music_player = null
+	if _music_tween != null and _music_tween.is_valid():
+		_music_tween.kill()
+	player.finished.disconnect(player.play)
+	# 播放器換位置時會停掉，記下播到哪裡、換好之後接著播
+	var at := player.get_playback_position()
+	var level := db_to_linear(player.volume_db)
+	player.reparent(keeper)
+	player.play(at)
+	_fade_music(player, level, 0.0).tween_callback(player.queue_free)
+
+# 把播放器的音量從 from 淡到 to（線性 0～1），用真實時間，頓幀、暫停都不影響
+func _fade_music(player: AudioStreamPlayer, from: float, to: float) -> Tween:
+	var tween := player.create_tween().set_ignore_time_scale(true)
+	tween.tween_method(_set_music_level.bind(player), from, to, _MUSIC_FADE)
+	return tween
+
+# 設定播放器的音量（線性 0～1）
+func _set_music_level(level: float, player: AudioStreamPlayer) -> void:
+	player.volume_db = linear_to_db(maxf(level, _SILENT))
+
+# 下拉選的按鈕音效：無回傳 null；自訂回傳學員的音檔，沒放音檔改播嗶。MenuAction 也用這個
+static func ui_sound(choice: int, custom: AudioStream) -> AudioStream:
+	if choice == SOUND_CUSTOM:
+		return custom if custom != null else _UI_SOUNDS[1]
+	if choice < 0 or choice >= _UI_SOUNDS.size():
+		return null
+	return _UI_SOUNDS[choice]
+
+# 播一次選單按鈕的音效（按下、選到）：播放器放在場景樹最上層，按「開始遊戲」換場景也不會被切掉；
+# 走 SFX 匯流排、暫停中照播，播完自己拿掉；stream 是 null 就不播。MenuAction 也用這個
+static func play_ui_sound(from: Node, stream: AudioStream, volume: float) -> void:
+	if stream == null or not from.is_inside_tree():
+		return
+	var player := AudioStreamPlayer.new()
+	player.name = "UISound"
+	player.stream = stream
+	player.bus = &"SFX"
+	player.volume_db = linear_to_db(maxf(volume, _SILENT))
+	player.process_mode = Node.PROCESS_MODE_ALWAYS
+	player.finished.connect(player.queue_free)
+	from.get_tree().root.add_child(player)
+	player.play()
+
+# 按鈕音效的設定問題：選了「自訂」卻沒放音檔
+func _sound_problems() -> PackedStringArray:
+	var problems := PackedStringArray()
+	if kind == KIND_HUD:
+		return problems
+	if press_sound == SOUND_CUSTOM and custom_press_sound == null:
+		problems.append("press_sound 選了「自訂」，但 custom_press_sound 是空的，請把音檔從檔案系統拖進來；沒放之前先播嗶")
+	if select_sound == SOUND_CUSTOM and custom_select_sound == null:
+		problems.append("select_sound 選了「自訂」，但 custom_select_sound 是空的，請把音檔從檔案系統拖進來；沒放之前先播嗶")
+	return problems
+
+# 往下找這個畫面裡所有按鈕，接上按下、選到的音效（不用學員連線）
+func _connect_button_sounds(node: Node) -> void:
+	for child in node.get_children():
+		if child is BaseButton:
+			var button := child as BaseButton
+			button.pressed.connect(_on_button_pressed.bind(button))
+			button.mouse_entered.connect(_on_button_selected.bind(button, true))
+			button.focus_entered.connect(_on_button_selected.bind(button, false))
+		_connect_button_sounds(child)
+
+# 畫面出現時（暫停選單、過關畫面打開）會自動選第一顆按鈕，這一下不播選到的音效
+func _on_visibility_changed_for_sounds() -> void:
+	if visible:
+		_select_quiet_until = Time.get_ticks_msec() + SELECT_QUIET_MS
+
+# 按下按鈕：播這個畫面的按下音效（按鈕自己選了音效的話由它自己播）
+func _on_button_pressed(button: BaseButton) -> void:
+	if button.has_method("has_own_sound") and button.has_own_sound(true):
+		return
+	play_ui_sound(self, ui_sound(press_sound, custom_press_sound), sound_volume)
+
+# 選到按鈕：滑鼠移上去，或用鍵盤、手把切換過去時播選到的音效；滑鼠點下去順便選到的、畫面剛出現自動選的不播
+func _on_button_selected(button: BaseButton, by_mouse: bool) -> void:
+	if not is_select_sound_wanted(button, by_mouse, _select_quiet_until):
+		return
+	if button.has_method("has_own_sound") and button.has_own_sound(false):
+		return
+	play_ui_sound(self, ui_sound(select_sound, custom_select_sound), sound_volume)
+
+# 這一次選到要不要播音效：按鈕停用、看不到的不播；鍵盤選到的時候滑鼠正按著（點下去順便選到）不播；quiet_until 以前不播
+static func is_select_sound_wanted(button: BaseButton, by_mouse: bool, quiet_until: int) -> bool:
+	if button.disabled or not button.is_visible_in_tree():
+		return false
+	if Time.get_ticks_msec() < quiet_until:
+		return false
+	if not by_mouse and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		return false
+	return true
 
 # 標題畫面的欄位填了，範本裡卻找不到對應的節點（被刪掉或改名）時的警告
 func _title_warnings() -> PackedStringArray:

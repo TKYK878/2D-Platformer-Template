@@ -15,6 +15,8 @@ const _SENSOR_THICKNESS := 6.0
 const _RISING_SPEED := 10.0
 # 玩家的腳底要在殼頂端往下這麼多像素以內才算「落到殼上」，從側面擠進殼的範圍時不會被彈起來
 const _FEET_TOLERANCE := 6.0
+# 殼頂端平台的厚度（跟 Shell.gd 的頂端平台一樣）
+const _TOP_THICKNESS := 2.0
 
 var _sensor: Area2D = null
 var _sensor_shape: RectangleShape2D = null
@@ -52,7 +54,7 @@ func _follow_shell() -> void:
 
 # 殼頂端（頂端平台上緣）的高度
 func _shell_top() -> float:
-	return shell.global_position.y - shell.get_body_size().y / 2.0 - PushBlock.TOP_THICKNESS
+	return shell.global_position.y - shell.get_body_size().y / 2.0 - _TOP_THICKNESS
 
 # 有東西落到殼上：往上彈起來（往上穿過的、從側面撞進來的、自己這顆殼、剛脫殼還沒鑽出來的玩家不算）
 func _on_body_entered(body: Node) -> void:

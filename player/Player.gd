@@ -70,6 +70,10 @@ var _late_jump_left: float = 0.0    # 離開地面後還剩幾秒可以跳（土
 var _early_jump_left: float = 0.0   # 空中按的跳躍還要記幾秒（預輸入）
 var _short_jump_armed: bool = false # 這一跳是按著跳躍鍵跳的，提早放開要砍掉往上的速度
 var _replaying_jump: bool = false   # 正在重播預輸入的跳躍鍵（這時跳起來也算「按著跳躍鍵跳的」）
+var _invincible_sources: Dictionary = {}  # 開無敵的組件(Node) -> 是不是連死都不會死（bool）
+var _free_move_sources: Dictionary = {}   # 開自由移動的組件(Node) -> [要不要穿牆(bool), 飛多快(float)]
+var _saved_collision_mask: int = -1       # 穿牆前原本的碰撞遮罩，-1 代表現在沒在穿牆
+var _infinite_jump_sources: Dictionary = {}  # 開無限跳的組件(Node) -> true
 
 const _JuiceLayer := preload("res://player/JuiceLayer.gd")
 
@@ -96,7 +100,7 @@ func _ready() -> void:
 
 # 預設跳躍：地面上按下跳躍鍵就跳，除非被更高優先權的機制卡攔截掉（例如蓄力青蛙跳）
 func _on_jump_pressed() -> bool:
-	if _is_dead or _cached_input_locked:
+	if _is_dead or _cached_input_locked or is_free_moving():
 		return false
 	if not can_ground_jump():
 		# 跳不起來：記下來，在 early_jump_time 秒內落地就自動跳（預輸入）
@@ -160,6 +164,9 @@ func _try_setup(child: Node, track_apply: bool) -> void:
 func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
+	if is_free_moving():
+		_free_move()
+		return
 
 	var ctx := MoveContext.new()
 	ctx.delta = delta
@@ -186,12 +193,47 @@ func _physics_process(delta: float) -> void:
 	velocity = velocity.limit_length(max_speed)
 	_fix_corner(delta)
 
+	var push_speed: float = velocity.x * ctx.push_scale
 	move_and_slide()
+	_push_bodies(push_speed)
 
 	_emit_landing(pre_on_floor, pre_fall_speed)
 	_emit_wall_hit()
 	_emit_ceiling_hit()
 	_update_jump_assist(delta)
+
+# 自由移動：不受重力、不跑機制卡，上下左右鍵往哪按就往哪飛；freeze() 中一樣不能動
+func _free_move() -> void:
+	var dir := Vector2.ZERO
+	if not _frozen:
+		dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var speed := 0.0
+	for setting in _free_move_sources.values():
+		speed = maxf(speed, setting[1])
+	velocity = dir * speed
+	if dir.x != 0.0:
+		_update_facing(dir.x)
+	_late_jump_left = 0.0
+	_early_jump_left = 0.0
+	_short_jump_armed = false
+	_impulse_grace_left = 0.0
+	move_and_slide()
+
+# 這一幀從側面撞到有 push() 的東西（箱子、推得動的殼）就推它：往撞過去的方向、用這一幀原本要走的速度（乘上推力倍率），
+# 推多快、推不推得動由對方自己決定；對方被牆卡住推不動時，玩家自然也被擋住
+func _push_bodies(push_speed: float) -> void:
+	if is_zero_approx(push_speed):
+		return
+	var dir := int(signf(push_speed))
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		var body := collision.get_collider() as Node
+		if body == null or not body.has_method("push"):
+			continue
+		var normal := collision.get_normal()
+		if absf(normal.x) < 0.7 or int(signf(normal.x)) == dir:
+			continue
+		body.push(dir, absf(push_speed))
 
 # 按鍵手感：站在地上時補滿土狼時間、離開地面後倒數；空中按過跳躍、在時間內落地就重播一次跳躍鍵
 func _update_jump_assist(delta: float) -> void:
@@ -350,7 +392,7 @@ func set_size_factor(f: float) -> void:
 
 # 讓角色受到傷害，內部委派給 Stats 扣血量；血量歸零時 Stats 會自動呼叫 kill()
 func take_damage(amount: float = 1.0) -> void:
-	if _is_dead:
+	if _is_dead or is_invincible():
 		return
 	Stats.add(Stats.HEALTH_KIND, -roundi(amount * _damage_scale))
 	hurt.emit()
@@ -360,7 +402,7 @@ func take_damage(amount: float = 1.0) -> void:
 # 再加上擊退（會乘上機制卡調的擊退倍率）；
 # 跟敵人、可破壞方塊用同一個受擊介面，攻擊方不用分辨打到的是誰
 func take_hit(damage: int, knockback: Vector2, source: Node) -> void:
-	if _is_dead:
+	if _is_dead or is_invincible():
 		return
 	Events.hit.emit(self, source)
 	take_damage(damage)
@@ -369,7 +411,7 @@ func take_hit(damage: int, knockback: Vector2, source: Node) -> void:
 
 # 宣告玩家死亡，實際要發生什麼事（重生、結算畫面…）由聽到 player_died 訊號的人決定
 func kill() -> void:
-	if _is_dead:
+	if _is_dead or _has_no_death():
 		return
 	_is_dead = true
 	velocity = Vector2.ZERO
@@ -398,6 +440,69 @@ func revive(at_position: Vector2) -> void:
 		if is_instance_valid(m) and m.has_method("on_respawn"):
 			m.on_respawn()
 	Events.player_respawned.emit(self)
+
+# 開關無敵，作弊這類組件用這個：開著時不扣血、不被擊退；no_death 勾著的話連掉進岩漿、被秒殺都什麼事都不會發生。
+# 用 source 記是誰開的，好幾個組件同時開時，全部關掉才失效
+func set_invincible(source: Node, on: bool, no_death: bool = false) -> void:
+	if on:
+		_invincible_sources[source] = no_death
+	else:
+		_invincible_sources.erase(source)
+
+# 回傳玩家現在是不是無敵（受傷、被打都沒事）
+func is_invincible() -> bool:
+	_drop_freed_sources(_invincible_sources)
+	return not _invincible_sources.is_empty()
+
+# 開關自由移動，作弊這類組件用這個：開著時不受重力、機制卡暫停，用上下左右鍵自由飛（speed 是每秒幾像素）；
+# pass_walls 勾著的話穿過地形，房間切換、撿東西、碰觸發區照常。好幾個組件同時開時，全部關掉才恢復
+func set_free_move(source: Node, on: bool, pass_walls: bool = false, speed: float = 250.0) -> void:
+	if on:
+		_free_move_sources[source] = [pass_walls, speed]
+	else:
+		_free_move_sources.erase(source)
+	_update_pass_walls()
+
+# 回傳玩家現在是不是在自由移動（飛行）
+func is_free_moving() -> bool:
+	if _free_move_sources.is_empty():
+		return false
+	var before := _free_move_sources.size()
+	_drop_freed_sources(_free_move_sources)
+	if _free_move_sources.size() != before:
+		_update_pass_walls()
+	return not _free_move_sources.is_empty()
+
+# 有人要穿牆就把碰撞遮罩清空（先記住原本的），沒人要了就還原
+func _update_pass_walls() -> void:
+	var want := false
+	for setting in _free_move_sources.values():
+		want = want or setting[0]
+	if want and _saved_collision_mask < 0:
+		_saved_collision_mask = collision_mask
+		collision_mask = 0
+	elif not want and _saved_collision_mask >= 0:
+		collision_mask = _saved_collision_mask
+		_saved_collision_mask = -1
+
+# 開關無限跳，作弊這類組件用這個：開著時在空中也算「可以從地面起跳」，一直按跳就一直往上跳。
+# 好幾個組件同時開時，全部關掉才恢復
+func set_infinite_jump(source: Node, on: bool) -> void:
+	if on:
+		_infinite_jump_sources[source] = true
+	else:
+		_infinite_jump_sources.erase(source)
+
+# 有沒有人開了「連死都不會死」
+func _has_no_death() -> bool:
+	_drop_freed_sources(_invincible_sources)
+	return _invincible_sources.values().has(true)
+
+# 把已經被刪掉的組件從開關名單拿掉，拔掉組件時效果跟著消失
+func _drop_freed_sources(sources: Dictionary) -> void:
+	for source in sources.keys():
+		if not is_instance_valid(source):
+			sources.erase(source)
 
 # 回傳玩家現在是不是死亡狀態（死掉之後、還沒被復活之前）
 func is_dead() -> bool:
@@ -447,6 +552,12 @@ func stop_motion() -> void:
 	velocity = Vector2.ZERO
 	_impulse_grace_left = 0.0
 
+# 把玩家瞬間移到指定位置、速度歸零（不算死亡也不算重生），作弊的「換房間」這類組件用這個
+func teleport(at_position: Vector2) -> void:
+	global_position = at_position
+	velocity = Vector2.ZERO
+	_impulse_grace_left = 0.0
+
 # 停在原地：不受重力、不能移動、不能跳，直到呼叫 unfreeze() 或死亡重生為止
 func freeze() -> void:
 	_frozen = true
@@ -464,6 +575,9 @@ func is_on_ground() -> bool:
 # 二段跳、蹬牆跳這類卡用這個判斷「現在算不算在地上」，才不會把土狼時間裡的跳躍當成空中跳
 func can_ground_jump() -> bool:
 	if is_on_floor():
+		return true
+	_drop_freed_sources(_infinite_jump_sources)
+	if not _infinite_jump_sources.is_empty():
 		return true
 	return late_jump_enabled and _late_jump_left > 0.0 and velocity.dot(up_direction) <= 0.0
 

@@ -1,0 +1,101 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/_scripts/UIRoot.gd" id="1"]
+[ext_resource type="PackedScene" path="res://ui/HudText.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://ui/MenuAction.tscn" id="3"]
+[ext_resource type="Texture2D" path="res://ui/templates/_art/KeyArtPlaceholder.png" id="4"]
+[ext_resource type="PackedScene" path="res://ui/SettingsPage.tscn" id="5"]
+
+[node name="TitleScreenTemplate" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1")
+kind = 3
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = -12.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Top" type="CenterContainer" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="GameName" parent="Layout/Top" instance=ExtResource("2")]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "我的遊戲"
+horizontal_alignment = 1
+
+[node name="KeyArt" type="TextureRect" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 2.0
+mouse_filter = 2
+texture = ExtResource("4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Bottom" type="VBoxContainer" parent="Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.4
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Buttons" type="VBoxContainer" parent="Layout/Bottom"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 4
+
+[node name="Start" parent="Layout/Bottom/Buttons" instance=ExtResource("3")]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+text = "開始遊戲"
+action = 3
+
+[node name="Settings" parent="Layout/Bottom/Buttons" instance=ExtResource("3")]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+text = "設定"
+action = 5
+
+[node name="Quit" parent="Layout/Bottom/Buttons" instance=ExtResource("3")]
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+text = "離開遊戲"
+action = 2
+
+[node name="Hook" parent="Layout/Bottom" instance=ExtResource("2")]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "一句話告訴玩家這是什麼遊戲"
+horizontal_alignment = 1
+
+[node name="SettingsPage" parent="." instance=ExtResource("5")]
+layout_mode = 1

@@ -50,13 +50,18 @@ const _COLORS := [
 const _CUSTOM_COLOR := 6
 const _DEFAULT_SIZE := Vector2(16, 32)
 const _MASS := 1.0
+# 被玩家推的時候，殼的速度是玩家走路速度的幾倍（跟輕的箱子一樣）
+const _PUSH := 0.8
+# 速度上限（像素／秒），跟箱子一樣：再快就可能一幀跳過整面牆（穿牆）
+const _MAX_SPEED := 960.0
 # 不受重力時推完會慢慢停下，不會一直飄走
 const _FLOAT_DAMP := 3.0
+# 頂端平台的厚度，以及跟殼本體之間留的空隙（玩家站在平台上時碰不到殼本體，才不會把殼往下壓）
+const _TOP_THICKNESS := 2.0
 
 var _size: Vector2 = _DEFAULT_SIZE
 var _is_broken: bool = false
-# 推得動的殼用的頂端平台（可以站上去）和貼牆擋板（推到牆邊就推不動），推不動的殼沒有
-var _push_block: PushBlock = null
+var _top: AnimatableBody2D = null
 var _ignored: Array[PhysicsBody2D] = []
 
 # 「顏色」沒選自訂時隱藏自訂顏色欄位
@@ -74,7 +79,7 @@ func _ready() -> void:
 	_make_own_shape()
 	_apply_physics()
 	if can_push:
-		_push_block = PushBlock.new(self, _size)
+		_make_top()
 	for child in get_children():
 		if child is ShellTrait:
 			child.setup(self)
@@ -85,8 +90,7 @@ func set_body_size(size: Vector2) -> void:
 	var col := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if col != null and col.shape is RectangleShape2D:
 		(col.shape as RectangleShape2D).size = size
-	if _push_block != null:
-		_push_block.set_size(size)
+	_update_top()
 	queue_redraw()
 
 # 取得殼的大小（像素）
@@ -111,6 +115,17 @@ func get_color() -> Color:
 func is_broken() -> bool:
 	return _is_broken
 
+# 每個物理幀把速度限制在上限以內，被推力器、彈射台推得再快也不會穿牆
+func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	state.linear_velocity = state.linear_velocity.limit_length(_MAX_SPEED)
+
+# 被玩家推（跟箱子一樣）：推得動的殼往 dir 的方向動，速度是玩家走路速度的 0.8 倍；推不動的殼不理
+func push(dir: int, speed: float) -> void:
+	if not can_push:
+		return
+	sleeping = false
+	linear_velocity.x = dir * speed * _PUSH
+
 # 暫時不跟某個東西互撞，等兩邊分開了才恢復；脫殼卡用這個讓剛脫下的殼不會把玩家擠開
 func ignore_until_apart(body: PhysicsBody2D) -> void:
 	if body == null or body in _ignored:
@@ -118,13 +133,9 @@ func ignore_until_apart(body: PhysicsBody2D) -> void:
 	_ignored.append(body)
 	add_collision_exception_with(body)
 	body.add_collision_exception_with(self)
-	for part in _parts():
-		part.add_collision_exception_with(body)
-		body.add_collision_exception_with(part)
-
-# 殼是不是正貼著牆、推不動（貼著牆時玩家會被殼擋住，不會把殼擠進牆裡），特性組件用這個
-func is_against_wall() -> bool:
-	return _push_block != null and _push_block.is_against_wall()
+	if _top != null:
+		_top.add_collision_exception_with(body)
+		body.add_collision_exception_with(_top)
 
 # 某個東西現在是不是暫時不跟殼互撞（剛脫殼、還沒鑽出來），特性組件用這個避免對它起作用
 func is_ignoring(body: Node) -> bool:
@@ -143,23 +154,9 @@ func _update_ignored() -> void:
 			continue
 		remove_collision_exception_with(body)
 		body.remove_collision_exception_with(self)
-		for part in _parts():
-			part.remove_collision_exception_with(body)
-			body.remove_collision_exception_with(part)
-
-# 殼自己附帶的碰撞（頂端平台、貼牆擋板），推得動的殼才有
-func _parts() -> Array[PhysicsBody2D]:
-	var result: Array[PhysicsBody2D] = []
-	if _push_block != null:
-		result = _push_block.parts()
-	return result
-
-# 查詢時要排除的碰撞：殼本體跟自己附帶的碰撞
-func _own_rids() -> Array[RID]:
-	var result: Array[RID] = [get_rid()]
-	if _push_block != null:
-		result = _push_block.rids()
-	return result
+		if _top != null:
+			_top.remove_collision_exception_with(body)
+			body.remove_collision_exception_with(_top)
 
 # 用殼本體的範圍查一次現在跟哪些東西重疊（稍微縮小一點，只是貼著邊、站在上面不算重疊）
 func _overlapping_bodies() -> Array[Node]:
@@ -170,7 +167,7 @@ func _overlapping_bodies() -> Array[Node]:
 	query.shape = shape
 	query.transform = Transform2D(0.0, global_position)
 	query.collision_mask = 0xFFFFFFFF
-	query.exclude = _own_rids()
+	query.exclude = [get_rid()] if _top == null else [get_rid(), _top.get_rid()]
 	for hit in get_world_2d().direct_space_state.intersect_shape(query, 16):
 		if hit.collider is Node:
 			result.append(hit.collider)
@@ -194,21 +191,51 @@ func _apply_physics() -> void:
 	linear_damp = 0.0 if use_gravity else _FLOAT_DAMP
 	if can_push:
 		freeze = false
+		continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
 		collision_layer = Layers.BOX
-		collision_mask = Layers.PLAYER | Layers.TERRAIN | Layers.BOX
+		collision_mask = Layers.PLAYER | Layers.TERRAIN | Layers.BOX | Layers.ENEMY
 	else:
 		freeze_mode = RigidBody2D.FREEZE_MODE_STATIC
 		freeze = true
 		collision_layer = Layers.TERRAIN
 		collision_mask = 0
 
-# 每幀讓頂端平台、貼牆擋板跟著殼走（平台會算出自己的速度，站在上面的玩家會被帶著走），
-# 檢查殼有沒有貼著牆，並檢查暫時不互撞的東西離開了沒
+# 推得動的殼頂端加一片只擋上面的薄平台，讓玩家可以站上去：
+# 玩家本來就不會被箱子類的東西擋住（是箱子被玩家推開），沒有這片平台的話，站上去會一直把殼往下壓
+func _make_top() -> void:
+	_top = AnimatableBody2D.new()
+	_top.name = "Top"
+	_top.collision_layer = Layers.TERRAIN
+	_top.collision_mask = 0
+	var col := CollisionShape2D.new()
+	col.shape = RectangleShape2D.new()
+	col.one_way_collision = true
+	_top.add_child(col)
+	# 殼被物理引擎移動時不會帶著子節點的碰撞一起動，所以平台自己獨立，每幀由殼擺到正確位置
+	_top.top_level = true
+	add_child(_top)
+	add_collision_exception_with(_top)
+	_update_top()
+
+# 依殼的大小調整頂端平台
+func _update_top() -> void:
+	if _top == null:
+		return
+	var col := _top.get_child(0) as CollisionShape2D
+	(col.shape as RectangleShape2D).size = Vector2(_size.x, _TOP_THICKNESS)
+	_move_top()
+
+# 把頂端平台擺到殼本體上緣再往上一點
+func _move_top() -> void:
+	_top.global_position = global_position + Vector2(0.0, -_size.y / 2.0 - _TOP_THICKNESS / 2.0)
+
+# 每幀讓頂端平台跟著殼走（平台會算出自己的速度，站在上面的玩家會被帶著走），
+# 並檢查暫時不互撞的東西離開了沒
 func _physics_process(_delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
-	if _push_block != null:
-		_push_block.update()
+	if _top != null:
+		_move_top()
 	_update_ignored()
 
 # 沒有自己的圖片時，畫一個預設顏色的方框

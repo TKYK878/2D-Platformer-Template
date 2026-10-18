@@ -117,6 +117,8 @@ func _run_all_steps() -> void:
 	# 10. W4：blocks/ 裡每個有色塊的零件輪流套 Skin／SkinAnimated，開關、打、重置一輪
 	await _test_skins()
 	await _assert_can_move("零件套皮測試")
+	await _test_skin_share()
+	await _assert_can_move("共用皮測試")
 
 	# 11. W4：三個 UI 範本跟 W4_SkinBox 的示範 UI 都接上去（直接放進場景、也放進 UISettings），數值變化一輪
 	await _test_ui_templates()
@@ -157,6 +159,10 @@ func _run_all_steps() -> void:
 	# 17. 瞇眼測試：開著的時候照常玩、暫停中開關、拔掉
 	await _test_squint()
 	await _assert_can_move("瞇眼測試")
+
+	# 18. 作弊：cheats/ 裡每個組件都放一次；兩個作弊開關類全開，跟機制卡一起掛、頓幀、被秒殺，開著的時候拔掉，效果要全部還原
+	await _test_cheats()
+	await _assert_can_move("作弊測試")
 
 	if _failed:
 		print("SMOKE TEST FAILED")
@@ -596,6 +602,65 @@ func _test_skins() -> void:
 	if not is_instance_valid(_player):
 		_fail("套皮測試時 Player 消失了")
 
+# 共用皮：每種零件放一個 SkinShare（Skin、SkinAnimated、沒放皮、重複的輪流），再放零件進來開關一輪；
+# 有一個零件自己掛皮（要用自己的）；不崩潰、Player 還在
+func _test_skin_share() -> void:
+	var tex: Texture2D = preload("res://art/white_block.png")
+	var frames := _make_frames(["平常", "啟動", "走路"])
+	var share_scene: PackedScene = load("res://skins/SkinShare.tscn")
+	var placed: Array[Node] = []
+	var index := 0
+	for path in SkinShare.KINDS:
+		var share: Node2D = share_scene.instantiate()
+		share.target = SkinShare.KINDS[path]
+		if index % 3 == 0:
+			var skin: Node = load("res://skins/Skin.tscn").instantiate()
+			skin.texture_normal = tex
+			skin.fill_style = index % 3
+			share.add_child(skin)
+		elif index % 3 == 1:
+			var anim: Node = load("res://skins/SkinAnimated.tscn").instantiate()
+			anim.sprite_frames = frames
+			share.add_child(anim)
+		add_child(share)
+		placed.append(share)
+		if index % 5 == 0:
+			var twin: Node2D = share_scene.instantiate()
+			twin.target = share.target
+			add_child(twin)
+			placed.append(twin)
+		index += 1
+	index = 0
+	for path in _scan_scenes("res://blocks"):
+		var block: Node = (load(path) as PackedScene).instantiate()
+		if SkinLink.block_visual(block) == null:
+			block.free()
+			continue
+		if index == 0:
+			var own: Node = load("res://skins/Skin.tscn").instantiate()
+			own.texture_normal = tex
+			block.add_child(own)
+		if block is Node2D:
+			block.position = Vector2(3000 + index * 40, 0)
+		add_child(block)
+		placed.append(block)
+		index += 1
+		await _wait_frames(3)
+		for method in ["deactivate", "activate", "toggle"]:
+			if block.has_method(method):
+				block.call(method)
+		if block.has_method("take_hit"):
+			block.take_hit(1, Vector2.ZERO, self)
+		if block.has_method("reset"):
+			block.reset()
+		await _wait_frames(3)
+	for n in placed:
+		if is_instance_valid(n):
+			n.queue_free()
+	await _wait_frames(3)
+	if not is_instance_valid(_player):
+		_fail("共用皮測試時 Player 消失了")
+
 # 三個 UI 範本跟 W4_SkinBox 的示範 UI：一輪直接放進場景（接法 B），一輪放進 UISettings（接法 A），
 # 中間讓數值變化（扣血、補血、撿金幣），HUD 的 hud_background 兩種輪一次，最後全部拿掉；不崩潰、Player 還在
 func _test_ui_templates() -> void:
@@ -808,6 +873,55 @@ func _test_squint() -> void:
 	squint.queue_free()
 	await _wait_frames(3)
 	Stats.add(Stats.HEALTH_KIND, 1)
+
+# 作弊組件：cheats/ 每個場景都放進來再拔掉；兩個開關類全開的作弊跟重力翻轉、子彈時間一起掛，
+# 頓幀、受傷、被秒殺、亂按跳躍，開著的時候直接拔掉，玩家的無敵、飛行、碰撞遮罩、遊戲速度都要還原
+func _test_cheats() -> void:
+	for path in _scan_scenes("res://cheats"):
+		var node: Node = load(path).instantiate()
+		add_child(node)
+		await _wait_frames(3)
+		node.queue_free()
+		await _wait_frames(2)
+	var mask := _player.collision_mask
+	var flip: Node = load("res://mechanics/Mechanic_GravityFlip.tscn").instantiate()
+	_mechanics_container.add_child(flip)
+	var cheats: Array[Node] = []
+	for i in 2:
+		var cheat: Node = load("res://cheats/Cheat.tscn").instantiate()
+		cheat.unlock_by = cheat.UNLOCK_SIGNAL
+		for key in ["no_death", "fly", "pass_walls", "infinite_jump", "change_speed", "freeze_enemies", "zoom_out", "add_value"]:
+			cheat.set(key, true)
+		add_child(cheat)
+		cheats.append(cheat)
+	await _wait_frames(2)
+	for cheat in cheats:
+		cheat.turn_on()
+	Events.hitstop_requested.emit(0.05)
+	_player.take_damage(1.0)
+	_player.kill()
+	if _player.is_dead():
+		_fail("作弊開了「不會死」，kill() 之後玩家還是死了")
+		_player.revive(Vector2.ZERO)
+	Input.action_press("jump")
+	Input.action_press("move_up")
+	await _wait_frames(10)
+	Input.action_release("jump")
+	Input.action_release("move_up")
+	cheats[0].toggle()
+	cheats[0].toggle()
+	await get_tree().create_timer(0.3, true, false, true).timeout
+	for cheat in cheats:
+		cheat.queue_free()
+	await _wait_frames(3)
+	if _player.is_invincible() or _player.is_free_moving() or _player.collision_mask != mask:
+		_fail("作弊拔掉之後，玩家的無敵、飛行、碰撞遮罩沒有還原")
+	if not is_equal_approx(Engine.time_scale, 1.0):
+		_fail("作弊拔掉之後 Engine.time_scale 應為 1.0，實際為 %s" % Engine.time_scale)
+		Engine.time_scale = 1.0
+	await _clear_container(_mechanics_container)
+	_player.up_direction = Vector2.UP
+	Stats.refill(Stats.HEALTH_KIND)
 
 # 讓 HUD 顯示的數值變化一輪：扣血、補血、撿金幣，中間各等幾幀
 func _ui_value_round() -> void:

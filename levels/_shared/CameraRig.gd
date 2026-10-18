@@ -55,6 +55,7 @@ var _zoom_style: int = _STYLE_LEAN
 var _base_zoom: Vector2 = Vector2.ONE
 var _follow_target: Node2D = null
 var _room: Node = null
+var _view_sources: Dictionary = {}   # 把鏡頭拉遠的組件(Node) -> 畫面看到幾倍大，好幾個同時拉取最大的
 
 var _fade_rect: ColorRect = null
 var _fade_tween: Tween = null
@@ -190,7 +191,7 @@ func _on_juice_switch_toggled(on: bool) -> void:
 func _stop_effects() -> void:
 	_shake_time_left = 0.0
 	_zoom_time_left = 0.0
-	zoom = _base_zoom
+	zoom = _view_zoom()
 	offset = Vector2.ZERO
 
 # 正在進行的震動現在剩下多強
@@ -215,7 +216,7 @@ func _current_zoom_amount() -> float:
 func _process(delta: float) -> void:
 	_zoom_time_left = maxf(_zoom_time_left - delta, 0.0)
 	var zoom_amount := _current_zoom_amount()
-	zoom = _base_zoom * (1.0 + zoom_amount)
+	zoom = _view_zoom() * (1.0 + zoom_amount)
 
 	if _slide_time_left > 0.0:
 		_update_slide(delta)
@@ -278,8 +279,25 @@ func _follow_position() -> Vector2:
 			return global_position
 	var target := _follow_target.global_position
 	if mode == _MODE_ROOM_FOLLOW and is_instance_valid(_room):
-		target = _clamp_to_room(target, _room.get_rect(), _base_zoom)
+		target = _clamp_to_room(target, _room.get_rect(), _view_zoom())
 	return target
+
+# 把鏡頭拉遠，作弊這類組件用這個：size 是畫面看到原本的幾倍大；on 傳 false 就把這個組件的拉遠拿掉
+func set_view_size(source: Node, on: bool, size: float = 2.0) -> void:
+	if on:
+		_view_sources[source] = maxf(size, 1.0)
+	else:
+		_view_sources.erase(source)
+
+# 現在不算推近的鏡頭縮放：原本的縮放，有人拉遠就照拉最遠的那個縮小
+func _view_zoom() -> Vector2:
+	var size := 1.0
+	for source in _view_sources.keys():
+		if is_instance_valid(source):
+			size = maxf(size, _view_sources[source])
+		else:
+			_view_sources.erase(source)
+	return _base_zoom / size
 
 # 把鏡頭中心限制在房間裡，讓畫面不超出房間（view_zoom 決定畫面多大：跟隨用原本大小，
 # 推近時往玩家偏移用放大後的大小）；房間比畫面小的那一軸固定在房間中心

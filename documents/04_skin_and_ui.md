@@ -163,8 +163,9 @@ const TIMELINE := "時間軸"
 
 | 零件 | 繼承 | 做什麼 |
 |---|---|---|
-| `MenuAction` | `Button` | `action` 下拉：繼續遊戲／整關重來／離開遊戲／開始遊戲／回標題（後兩個 U189）。按下去就執行，不用連 `pressed`。「離開遊戲」在 Web 版自動藏起來；「回標題」在主場景不是標題畫面、或現在就在標題上時自動藏起來；「開始遊戲」多一格 `level` 下拉（掃 `_my/`、`levels/_starts/` 的關卡，排除最上層是 `UIRoot` 的場景；存去掉 `res://` 的路徑，另外記 UID，改名搬家還找得到；沒選、找不到時黃色驚嘆號＋中文警告） |
+| `MenuAction` | `Button` | `action` 下拉：繼續遊戲／整關重來／離開遊戲／開始遊戲／回標題（後兩個 U189）。按下去就執行，不用連 `pressed`。「離開遊戲」在 Web 版自動藏起來；「回標題」在主場景不是標題畫面、或現在就在標題上時自動藏起來；「開始遊戲」多一格 `level` 下拉（掃 `_my/`、`levels/_starts/` 的關卡，排除最上層是 `UIRoot` 的場景；存去掉 `res://` 的路徑，另外記 UID，改名搬家還找得到；沒選、找不到時黃色驚嘆號＋中文警告）。U224：「音效」群組 `press_sound`／`select_sound`（跟畫面一樣／無／內建音效／自訂），選「跟畫面一樣」以外的自己播，`UIRoot` 就跳過它 |
 | `VolumeSlider` | `HSlider` | `bus` 下拉：主音量／音效／音樂。跟現在暫停選單的拉桿同一套存檔（`user://settings.cfg`） |
+| `SettingsPage`（U244） | `Control` | 設定頁：平常藏著（場景檔 `visible = false`，遊戲開始時也一律藏起來），底下有三條 `VolumeSlider`、`TouchSwitch`、`MenuAction` 返回。`MenuAction` 的「打開設定」打開同一個場景檔（`owner` 相同）裡的設定頁、選取跳到第一個能選的東西；「返回」關掉自己所在的設定頁、選取回到打開它的按鈕。開著時 Esc 先關設定頁（`set_input_as_handled`，暫停選單收不到）；所在的畫面被藏起來時自己也關。找不到設定頁、「返回」不在設定頁裡時黃色驚嘆號＋中文警告 |
 | `ClearStat` | `Label` | 過關畫面專用：`stat` 下拉：用了幾秒／死了幾次／製作者的話。照 `ClearScreen` 的勾選決定要不要顯示 |
 
 ### 4.3 整套換字型與配色（講師決定：做）
@@ -230,6 +231,23 @@ const TIMELINE := "時間軸"
 
 ---
 
+### 4.4 手機操控（講師決定，U226～U231）
+
+Input Map 沒有「觸控」可以加，所以手機操控做成畫面上的虛擬按鈕，**假裝按鍵**：角色移動、跳躍、能力、機制卡都是問「這個鍵有沒有按著」，其他程式都不用改。
+
+| 零件 | 繼承 | 做什麼 |
+|---|---|---|
+| `TouchButton` | `Control` | U226。`press` 下拉：左／右／上／下／跳／暫停／鍵盤按鍵（選了才出現 `key`）。左右上下跳用 `Input.action_press`，暫停送一下 Esc，鍵盤按鍵送假的 `InputEventKey`（能力、機制卡用 `bind_key` 綁的鍵也按得到）。`corner`、`distance_x`／`distance_y`、`button_size`、`opacity`、`texture`（空白畫圓角框＋箭頭或字）。在 `_input` 自己處理 `InputEventScreenTouch`／`ScreenDrag`，多指同時按、滑動換按；觸控模擬出來的滑鼠事件（`DEVICE_ID_EMULATION`）不重複算；暫停鈕 `PROCESS_MODE_ALWAYS`，其他按鈕暫停時放開；看不到就不收輸入 |
+| `TouchControls` | `Control` | U227。套件：Left、Right、Jump、Pause 四顆 `TouchButton` 擺好（子按鈕 `show_on` 一直顯示，由套件決定整組要不要顯示）；`show_on`、`opacity` 管整組 |
+| `TouchStick` | `Control` | U228。搖桿：左右用 `Input.action_press(動作, 力道)`（Player 用 `get_axis`，推一半半速）；上下推超過一半才算；`dead_zone`、`use_up_down`、`stick_size`；只放開自己按住的動作 |
+| `TouchSwitch` | `HBoxContainer` | U231。玩家選「自動／顯示／隱藏」；`style` 勾選框／下拉選單／不顯示（只當接口）；接口 `set_on`／`set_off`／`show_controls`／`hide_controls`／`auto_controls`／`toggle_controls` |
+
+`show_on`：只在觸控裝置（`DisplayServer.is_touchscreen_available()`）／一直顯示／摸到螢幕才出現（U230）。
+自動載入 `TouchSettings`：記住「現在是不是在用觸控」（碰螢幕算、按鍵盤或手把不算；手機按鈕送假按鍵前先 `expect_fake_key()`，收到時不算），
+以及玩家在 `TouchSwitch` 選的 `mode`（存 `user://settings.cfg` 的 `[touch] mode`）；狀態變了發 `changed`，三種零件都聽它更新顯示。
+學員自己把按鈕「可見」取消勾的，一直藏著（套件藏 Left、Right 換搖桿靠這個）。
+不用內建 `TouchScreenButton`：它的動作名稱要打字，而且是 Node2D 會跟著鏡頭跑。
+
 ## 5. 範本場景 `ui/templates/`
 
 | 範本 | `UIRoot.kind` | 內容（預設長相＝現在的樣子） |
@@ -237,7 +255,7 @@ const TIMELINE := "時間軸"
 | `HudTemplate.tscn` | HUD | 左上角血條（`HudBar` 血量）＋金幣（`HudNumber`） |
 | `PauseMenuTemplate.tscn` | 暫停選單 | 半透明底、標題、三條 `VolumeSlider`、`MenuAction` 繼續遊戲／整關重來／離開遊戲、「Esc／P 繼續」提示 |
 | `ClearScreenTemplate.tscn` | 過關畫面 | 「過關！」、`ClearStat` 時間／死亡次數／製作者的話、`MenuAction` 回標題、「按 R 再玩一次」提示 |
-| `TitleScreenTemplate.tscn` | 標題畫面 | 上中下 1：2：1.4，上遊戲名（`GameName`）、中主視覺（`KeyArt`）、下「開始遊戲」「離開遊戲」＋一行小字（`Hook`） |
+| `TitleScreenTemplate.tscn` | 標題畫面 | 上中下 1：2：1.4，上遊戲名（`GameName`）、中主視覺（`KeyArt`）、下「開始遊戲」「設定」「離開遊戲」＋一行小字（`Hook`）；最上層底下有藏著的 `SettingsPage`（U245，三個標題範本都有） |
 | `TitleScreenTemplate_Center.tscn` | 標題畫面 | 暗色；主視覺鋪滿當背景，遊戲名在上，按鈕和小字在置中的底框裡 |
 | `TitleScreenTemplate_Side.tscn` | 標題畫面 | 復古綠；左邊遊戲名、小字、按鈕，右邊主視覺 |
 
@@ -254,6 +272,11 @@ const TIMELINE := "時間軸"
   欄位有填但節點被刪掉時黃色驚嘆號。換場景由 `PauseMenu.change_scene()` 處理：關掉選單、解除暫停、`Engine.time_scale = 1`，
   先拿掉舊場景，再把 `Stats`、`HudData`、`RespawnMemory`、`StatsHud` 歸零，最後放進新場景（新場景的 `ValueSettings` 才套得上）。
   標題畫面上 Esc 不開暫停選單。`ConnectionValidator` 換場景後也檢查新場景。
+- 標題音樂（U223）：`UIRoot` 的 `music`、`music_volume` 只在標題畫面顯示；BGM 匯流排、淡入、播完重播。
+  `PauseMenu.change_scene()` 換場景前呼叫 `UIRoot.hand_off_music()`，播放器交給 `PauseMenu` 淡出後拿掉，跟新關卡的 `Juice_BGM` 交叉淡入淡出。
+- 按鈕音效（U224）：`UIRoot`「按鈕音效」群組（HUD 不顯示）往下找所有 `BaseButton` 接上按下、選到的音效；
+  播放器由 `UIRoot.play_ui_sound()` 放在場景樹最上層（SFX 匯流排、暫停中照播、播完拿掉），換場景不會被切掉。
+  畫面剛出現（`_ready`、`visibility_changed`）的 0.2 秒內、滑鼠點下去順便選到的不播「選到」。不從 `UIRoot` 呼叫 `PauseMenu`（會循環載入）。
 - 暫停選單、過關畫面的內容放在底框 `Center/Panel`（`PanelContainer`）裡（U188b）：底色跟著 `palette`，「預設」配色是深色半透明，
   遊戲畫面花的時候字也看得清楚。學員之前已經再製出去的場景不會跟著改。
 - 暫停、過關畫面的「暫停中也要能動」（`process_mode = ALWAYS`）由 `UIRoot` 自己設好，學員不用管。
@@ -311,6 +334,18 @@ const TIMELINE := "時間軸"
   順序是 `texture_normal` → `texture_active` → `more_textures`（動畫：平常 → 啟動 → 其他照名稱排，不含「受傷」「死亡」）；
   `signal_priority`（零件的狀態優先／訊號優先）、`loop_looks`（最後一張接回第一張）。
 
+### 6.2.1 共用皮 `SkinShare`（講師決定，U222）
+
+學員常常先擺好一堆同樣的零件（例如岩漿）才想換皮，一個一個掛 `Skin` 太慢。`skins/SkinShare.tscn` 拖進關卡任何地方：
+
+- `target`：下拉，只列出**關卡裡有的**零件種類（中文名稱；現在選的那個就算關卡裡沒有也留著）
+- 底下放**一個** `Skin` 或 `SkinAnimated` 當模板：關卡裡這種零件只要自己沒掛皮，遊戲開始時各複製一份掛上（零件開場時從 group `skin_share` 找）；
+  自己有掛皮的照舊用自己的。開關變暗、`texture_active`、`fill_style`、`SkinEvent` 都跟一般的皮一樣
+- 模板在 `SkinShare` 底下的位置＝對零件中心的位置；遊戲中模板本身藏起來
+- 編輯器裡在每個零件上放一份預覽（不設 owner，不存進場景檔、場景樹上看不到），模板改了半秒內重做；零件自己掛了皮就把預覽拿掉
+- 黃色驚嘆號＋執行時中文警告：沒選 `target`、關卡裡沒有這種零件（列出有的）、底下沒有皮或不只一個、同一種零件有兩個共用皮（用前面那個）；
+  模板不能用（沒放圖、缺動畫）時只警告一次，零件照舊顯示色塊
+
 ### 6.3 程式生出來的東西
 
 子彈、近戰揮擊是遊戲中才生出來的，學員沒辦法事先加子節點。改成在「生它的人」身上加資源欄位：
@@ -363,13 +398,14 @@ const TIMELINE := "時間軸"
 
 ## 8. 地形圖塊
 
-現在地形用 `art/default_tile.tres`（唯讀區），16×16 一格、`art/blocks.png`（128×64）。
+關卡預設地形用 `art/default_tile.tres`（唯讀區），16×16 一格、`art/blocks.png`（128×64，32 格純色塊，全部實心碰撞）。
+（講師決定，U220）U184 的圖塊另存成 `art/terrain_blocks.png`＋`art/terrain_tile.tres`，`default_tile.tres`／`blocks.png` 還原成純色塊，已經用純色塊畫的地圖不受影響。
 
-- 提供 `art/tile_template.png`：跟 `blocks.png` 同樣格子配置的範本圖，每一格標好用途（實心、平台頂、裝飾…）。
+- 提供 `art/tile_template.png`：跟 `terrain_blocks.png` 同樣格子配置的範本圖，每一格標好用途（實心、平台頂、裝飾…）。
   （講師決定，U184）格子重新規劃成地面 16 格（3×3 以 (3,1) 為中心＋柱子、橫條、單獨一格）、平台 4 格（單向碰撞）、裝飾 12 格（沒有碰撞），
   設好 Godot 內建 Terrain「地面」「平台」：學員在圖塊面板的「地形」分頁用筆刷刷，邊會自動接好。
   範本上紅線＝露在外面的邊、藍線＝平台站的那一面、淡黃＝裝飾；`art/tile_template_guide.png` 是放大 8 倍的中文說明圖。
-- 學員流程：再製 `default_tile.tres` 到 `_my/` → 把自己照範本畫好的圖拖進去取代 atlas 圖片 → 關卡的 `TileMapLayer` 換成自己的圖塊。
+- 學員流程：再製 `terrain_tile.tres` 到 `_my/` → 把自己照範本畫好的圖拖進去取代 atlas 圖片 → 關卡的 `TileMapLayer` 換成自己的圖塊。
   因為格子位置一樣，碰撞形狀不用重畫。
 - 背景圖：`skins/SkinBackground.tscn`（U190，講師決定改成做零件）。內部生 `Parallax2D`＋`Sprite2D`，自己 `z_index = -100`（不相對），永遠在最底下。
   `fill_style` 只放一張（在節點位置）／重複鋪滿（預設）／拉伸蓋滿；後兩種蓋住所有 `Room` 的範圍（沒有 Room 用 `TileMapLayer` 畫到的範圍），四周多留 2 格，

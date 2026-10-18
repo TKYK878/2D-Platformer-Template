@@ -55,11 +55,17 @@ func _init(owner: Node, color_rect: CanvasItem) -> void:
 			child.visible = false
 			continue
 		_skin = child
+	var share: Node = null
+	if _skin == null:
+		share = _shared_skin(owner)
 	if _skin == null:
 		return
 	var problem: String = _skin.skin_setup(is_enemy_host(owner))
 	if problem != "":
-		_warn("「%s」的皮「%s」：%s；先顯示原本的色塊" % [owner.name, _skin.name, problem])
+		if share != null:
+			share.report_problem(problem)
+		else:
+			_warn("「%s」的皮「%s」：%s；先顯示原本的色塊" % [owner.name, _skin.name, problem])
 		_skin.visible = false
 		_skin = null
 		return
@@ -68,6 +74,18 @@ func _init(owner: Node, color_rect: CanvasItem) -> void:
 		_skin.skin_bind(owner)
 	if _rect != null:
 		_rect.visible = false
+
+# 零件自己沒掛皮時，找關卡裡同種零件的共用皮（SkinShare），複製一份掛上去；回傳用到的共用皮，沒有回傳 null
+func _shared_skin(owner: Node) -> Node:
+	if Engine.is_editor_hint() or not owner.is_inside_tree():
+		return null
+	for share in owner.get_tree().get_nodes_in_group("skin_share"):
+		var copy: Node2D = share.make_skin_for(owner)
+		if copy != null:
+			owner.add_child(copy)
+			_skin = copy
+			return share
+	return null
 
 # 零件有沒有套上皮
 func has_skin() -> bool:
@@ -154,13 +172,13 @@ func reset_anim() -> void:
 
 # 這個節點是不是敵人（SkinAnimated 依此決定要檢查哪些動畫名稱）
 static func is_enemy_host(node: Node) -> bool:
-	var host_script: Script = node.get_script() if node != null else null
+	var host_script := _host_script(node)
 	return host_script != null and host_script.resource_path in _ENEMY_SCRIPTS
 
 # 這個零件有哪些事件可以讓 SkinEvent 播動畫：中文 → 訊號名稱（照零件定義的順序）
 static func event_signals(host: Node) -> Dictionary:
 	var result := {}
-	var host_script: Script = host.get_script() if host != null else null
+	var host_script := _host_script(host)
 	if host_script == null:
 		return result
 	for info in host_script.get_script_signal_list():
@@ -172,16 +190,32 @@ static func event_signals(host: Node) -> Dictionary:
 
 # 這個零件有沒有方向（風扇吹的方向），皮可以跟著轉
 static func is_directional_host(node: Node) -> bool:
-	var host_script: Script = node.get_script() if node != null else null
+	var host_script := _host_script(node)
 	return host_script != null and _DIRECTIONAL_SCRIPTS.has(host_script.resource_path)
 
 # 這個零件現在的方向要把皮轉幾度（弧度）；沒有方向的零件回傳 0
 static func host_angle(node: Node) -> float:
-	if not is_directional_host(node):
+	if not is_directional_host(node) or is_share(node):
 		return 0.0
 	var angles: Array = _DIRECTIONAL_SCRIPTS[node.get_script().resource_path]
 	var index := int(node.get("direction"))
 	return deg_to_rad(angles[index]) if index >= 0 and index < angles.size() else 0.0
+
+# 皮套在哪種零件上：一般是零件自己的腳本；放在共用皮底下時是共用皮選的那種零件
+static func _host_script(node: Node) -> Script:
+	if node == null:
+		return null
+	if is_share(node):
+		return node.share_target_script()
+	return node.get_script()
+
+# 這個節點是不是共用皮（SkinShare）
+static func is_share(node: Node) -> bool:
+	return node != null and node.has_method("make_skin_for")
+
+# 皮放在零件底下或共用皮底下（fill_style 這類「對齊零件」的設定才有意義）
+static func is_block_host(node: Node) -> bool:
+	return block_visual(node) != null or is_share(node)
 
 # 這個節點是不是 Player → Visual（皮放在這裡當角色的圖）
 static func is_player_visual(node: Node) -> bool:
@@ -204,10 +238,10 @@ static func placement_problem(skin: Node) -> String:
 	var host := skin.get_parent()
 	if host == null:
 		return ""
-	if block_visual(host) == null and not is_player_visual(host):
-		return "皮要放在零件（終點、門、敵人…）底下，或 Player → Visual 底下；放在「%s」底下不會有作用" % host.name
+	if block_visual(host) == null and not is_player_visual(host) and not is_share(host):
+		return "皮要放在零件（終點、門、敵人…）底下、共用皮 SkinShare 底下，或 Player → Visual 底下；放在「%s」底下不會有作用" % host.name
 	for sibling in host.get_children():
-		if sibling.has_method("skin_setup"):
+		if sibling.has_method("skin_setup") and not sibling.has_meta(&"skin_share_preview"):
 			if sibling != skin:
 				return "「%s」底下已經有一個皮「%s」，只會用那一個，這個可以刪掉" % [host.name, sibling.name]
 			break
