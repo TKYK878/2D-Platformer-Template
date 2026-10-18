@@ -1,6 +1,8 @@
 extends Node
 
-# 暫停選單：每一關都有，學員不用擺任何東西。按 Esc 或 P 暫停／繼續。
+# 暫停選單：每一關都有，學員不用擺任何東西。按 Esc、P 或手把 Start 暫停／繼續，選單開著時按手把 B 也是繼續。
+# 手把 A 確認、B 返回：開遊戲時補進 Godot 內建的 ui_accept／ui_cancel，所有選單按鈕都吃得到。
+# 單獨開的選單畫面（例如從標題換過來的設定畫面）按 Esc 或手把 B 回標題。
 # 畫面用 ui/templates/PauseMenuTemplate.tscn 範本；關卡裡有學員自己的暫停選單（UISettings 欄位或直接放進關卡）就改顯示那一個。
 # 標題畫面的「開始遊戲」、選單的「回標題」要換場景也由這裡處理（換之前把數值、重生記憶這些上一關的東西歸零）。
 # 這裡管什麼時候打開、關掉，還有三條匯流排的音量（記在 user:// 的設定檔，下次開遊戲還是一樣）；
@@ -11,6 +13,10 @@ const _SETTINGS_PATH := "user://settings.cfg"
 # [匯流排名稱, 預設音量]
 const _BUSES := [["Master", 0.8], ["SFX", 1.0], ["BGM", 0.8]]
 const _KEYS := [KEY_ESCAPE, KEY_P]
+# 手把：A 確認、B 返回（Xbox 的排法），Start（☰）暫停／繼續
+const _JOY_ACCEPT := JOY_BUTTON_A
+const _JOY_CANCEL := JOY_BUTTON_B
+const _JOY_PAUSE := JOY_BUTTON_START
 # 拉音效拉桿時播的試聽音效；拖著拉時最快隔這麼久才播一次（毫秒），免得疊成一團
 const _PREVIEW_SOUND := preload("res://sfx/pickup.wav")
 const _PREVIEW_GAP_MS := 120
@@ -24,13 +30,16 @@ var _preview: AudioStreamPlayer = null
 var _last_preview_ms: int = -_PREVIEW_GAP_MS
 var _changing_scene: bool = false
 var _title_cache: Dictionary = {}    # 場景路徑 -> 是不是標題畫面
+var _unpause_id: int = 0             # 每次關選單加一，晚一步解除暫停時用來認是不是最新的那一次
 
 # 測試場景用：「回標題」改回這個場景，不用改專案的主場景；空白就是主場景
 var title_scene_override: String = ""
 
-# 讀回上次的音量並套用；暫停時也要收得到按鍵
+# 讀回上次的音量並套用；把手把的確認、返回鍵補進內建動作；暫停時也要收得到按鍵
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_add_joy_button(&"ui_accept", _JOY_ACCEPT)
+	_add_joy_button(&"ui_cancel", _JOY_CANCEL)
 	_load_volumes()
 	for bus in _BUSES:
 		_apply_volume(bus[0])
@@ -39,8 +48,24 @@ func _ready() -> void:
 	_preview.bus = &"SFX"
 	add_child(_preview)
 
-# 按 Esc 或 P：開著就關、關著就開
+# 某個內建動作還沒有這顆手把按鍵的話補上（學員自己在 Input Map 加過就不重複加）
+func _add_joy_button(action: StringName, button: JoyButton) -> void:
+	if not InputMap.has_action(action):
+		return
+	for e in InputMap.action_get_events(action):
+		if e is InputEventJoypadButton and (e as InputEventJoypadButton).button_index == button:
+			return
+	var joy := InputEventJoypadButton.new()
+	joy.device = -1
+	joy.button_index = button
+	InputMap.action_add_event(action, joy)
+
+# 按 Esc、P 或手把 Start：開著就關、關著就開；選單開著時手把 B 也是關。
+# 在單獨開的選單畫面（設定畫面這類）上，Esc 或手把 B 是回標題
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		_on_joy_button(event as InputEventJoypadButton)
+		return
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
 	var key: Key = (event as InputEventKey).physical_keycode
@@ -49,16 +74,52 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key == KEY_P and _is_p_taken():
 		return
 	get_viewport().set_input_as_handled()
+	if is_menu_scene():
+		if key == KEY_ESCAPE:
+			back_from_menu_scene()
+		return
 	if _open:
 		close()
 	else:
 		open()
 
-# 打開暫停選單；過關畫面這類別人造成的暫停中就不開，免得關掉時把別人的暫停一起解除
+# 手把按鍵：Start 暫停／繼續；B 在選單開著時繼續、在單獨開的選單畫面上回標題（遊戲中按 B 不會打開選單）
+func _on_joy_button(event: InputEventJoypadButton) -> void:
+	if not event.pressed:
+		return
+	if event.button_index == _JOY_PAUSE:
+		get_viewport().set_input_as_handled()
+		if is_menu_scene():
+			return
+		if _open:
+			close()
+		else:
+			open()
+	elif event.button_index == _JOY_CANCEL:
+		if _open:
+			get_viewport().set_input_as_handled()
+			close()
+		elif is_menu_scene():
+			get_viewport().set_input_as_handled()
+			back_from_menu_scene()
+
+# 單獨開的選單畫面（設定畫面這類）按返回：回標題；本來就在標題畫面、或沒有標題畫面可回就不動。
+# 設定畫面上的「繼續遊戲」按鈕也用這個
+func back_from_menu_scene() -> void:
+	if is_title_scene():
+		return
+	if not can_go_to_title():
+		print("[暫停選單] 主場景不是標題畫面，按返回沒有地方可以回去")
+		return
+	go_to_title()
+
+# 打開暫停選單；過關畫面這類別人造成的暫停中就不開，免得關掉時把別人的暫停一起解除；
+# 標題畫面、單獨開的選單畫面上不開
 func open() -> void:
-	if _open or get_tree().paused or is_title_scene():
+	if _open or get_tree().paused or is_menu_scene():
 		return
 	_open = true
+	_unpause_id += 1
 	if not can_restart():
 		print("[暫停選單] 關卡裡沒有 RespawnHandler，選單裡不會有「整關重來」。想要的話把 blocks/RespawnHandler.tscn 拖進關卡")
 	_shown = _pick_screen()
@@ -69,7 +130,8 @@ func open() -> void:
 	if first != null:
 		first.grab_focus()
 
-# 關掉暫停選單，繼續遊戲
+# 關掉暫停選單，繼續遊戲。晚一個物理幀才解除暫停：手把 A、空白鍵同時是跳躍鍵，
+# 不然按「繼續遊戲」的那一下會被角色當成跳躍
 func close() -> void:
 	if not _open:
 		return
@@ -77,7 +139,17 @@ func close() -> void:
 	if is_instance_valid(_shown):
 		_shown.visible = false
 	_shown = null
-	get_tree().paused = false
+	_unpause_id += 1
+	var id := _unpause_id
+	# 等過一個物理幀，再到一般幀才解除（在物理步驟中途切換暫停，引擎會出錯）
+	await get_tree().physics_frame
+	await get_tree().process_frame
+	_unpause_if_latest(id)
+
+# 關選單之後晚一步解除暫停：中間又打開選單、或又關了一次，就交給最新的那一次
+func _unpause_if_latest(id: int) -> void:
+	if id == _unpause_id and not _open:
+		get_tree().paused = false
 
 # 回傳暫停選單現在是不是開著
 func is_open() -> bool:
@@ -134,6 +206,11 @@ func get_title_scene() -> String:
 func can_go_to_title() -> bool:
 	var path := get_title_scene()
 	return path != "" and not is_title_scene() and is_title_scene_file(path)
+
+# 現在的場景是不是選單畫面：標題畫面，或是單獨開的暫停選單、過關畫面這類（例如從標題換過來的設定畫面）
+func is_menu_scene() -> bool:
+	var scene := get_tree().current_scene
+	return scene is UIRoot and (scene as UIRoot).kind != UIRoot.KIND_HUD
 
 # 現在的場景是不是標題畫面（最上層是「標題畫面」的 UIRoot）
 func is_title_scene() -> bool:

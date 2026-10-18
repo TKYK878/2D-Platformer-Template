@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://cuttwk008q556"]
+
+[ext_resource type="Script" uid="uid://cw5umhekt16ip" path="res://_my/script/environment/script/Button.gd" id="1_md3ti"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(16, 8)
+
+[node name="Button_hold" type="Area2D" unique_id=53054235]
+script = ExtResource("1_md3ti")
+check_player_size = null
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=311795973]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="ColorRect" parent="." unique_id=1998804445]
+offset_left = -8.0
+offset_top = -4.0
+offset_right = 8.0
+offset_bottom = 4.0
+color = Color(0.79607844, 0.41960785, 0.45490196, 1)

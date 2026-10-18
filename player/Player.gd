@@ -63,6 +63,7 @@ var _base_collision_size: Vector2 = Vector2.ZERO
 var _cached_jump_scale: float = 1.0
 var _cached_input_locked: bool = false
 var _impulse_grace_left: float = 0.0
+var _move_lock_left: float = 0.0    # 被彈開這類效果暫時鎖住方向鍵，還剩幾秒
 var _frozen: bool = false
 var _juice_layer = null
 var _late_jump_left: float = 0.0    # 離開地面後還剩幾秒可以跳（土狼時間）
@@ -167,6 +168,9 @@ func _physics_process(delta: float) -> void:
 			m.apply(ctx)
 	if _frozen:
 		ctx.movement_frozen = true
+		ctx.input_locked = true
+	if _move_lock_left > 0.0:
+		_move_lock_left -= delta
 		ctx.input_locked = true
 	_damage_scale = ctx.damage_scale
 	_knockback_scale = ctx.knockback_scale
@@ -326,6 +330,10 @@ func add_impulse(v: Vector2, keep_friction: bool = false) -> void:
 	if not keep_friction:
 		_impulse_grace_left = _IMPULSE_GRACE_DURATION
 
+# 暫時鎖住方向鍵幾秒，被彈開、撞開這類效果用這個（不然按著方向鍵的話，彈開的速度馬上會被蓋掉）
+func lock_move_input(duration: float) -> void:
+	_move_lock_left = maxf(_move_lock_left, duration)
+
 # 縮放角色大小，變大變小卡用這個。不縮放整個物理節點（CharacterBody2D 的 scale
 # 對碰撞判定不可靠），只縮放視覺節點，碰撞形狀直接改尺寸；
 # 視覺節點原本的左右、上下翻面（自動奔跑、重力翻轉）保留不動
@@ -381,6 +389,7 @@ func revive(at_position: Vector2) -> void:
 	_was_on_ceiling = false
 	_last_direction = 0
 	_impulse_grace_left = 0.0
+	_move_lock_left = 0.0
 	_frozen = false
 	_late_jump_left = 0.0
 	_early_jump_left = 0.0

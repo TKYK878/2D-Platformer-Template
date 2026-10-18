@@ -200,3 +200,15 @@ func _draw() -> void:
 
 func _on_button_turned_off() -> void:
 	pass # Replace with function body.
+
+
+func _on_button_hold_turned_off() -> void:
+	pass # Replace with function body.
+
+
+func _on_area_trigger_entered() -> void:
+	pass # Replace with function body.
+
+
+func _on_button_hold_turned_on() -> void:
+	pass # Replace with function body.

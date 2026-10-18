@@ -126,11 +126,12 @@ func reset() -> void:
 	_shake_time_left = 0.0
 	_respawn()
 
-# 倒數期間讓外觀小幅度隨機抖動
+# 每幀檢查上方有沒有符合條件的物體（例如玩家站上來之後才變大）；倒數期間讓外觀小幅度隨機抖動
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		queue_redraw()
 		return
+	_check_overlapping()
 	if _shake_time_left <= 0.0:
 		return
 	_shake_time_left -= delta
@@ -162,7 +163,7 @@ func _respawn() -> void:
 	_visual.visible = true
 	_visual.position = _visual_origin
 
-# 計時器重生：長回來之後立刻檢查有沒有東西還站在上面
+# 計時器重生：長回來之後立刻檢查有沒有東西還站在上面（之後每幀也會持續檢查）
 func _respawn_and_check() -> void:
 	_respawn()
 	_check_overlapping()

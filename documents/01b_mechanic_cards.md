@@ -286,11 +286,12 @@ group 定義）。
 
 `size_affects_stats` 開啟時：
 
-- 大隻：`ctx.push_scale` 提高（推得動箱子）、`ctx.knockback_scale` 降低、`ctx.jump_scale` 降低
-- 小隻：`ctx.jump_scale` 提高、`ctx.knockback_scale` 提高（容易被敵人撞飛）
+- 大隻：`ctx.push_scale` 提高（推得動箱子）、`ctx.knockback_scale` 降低、`ctx.jump_scale` 降低、`ctx.speed_scale` 降低（走得比較慢）
+- 小隻：`ctx.jump_scale` 提高、`ctx.speed_scale` 提高（走得比較快）、`ctx.knockback_scale` 提高（容易被敵人撞飛）
 
 倍率放在 `@export_group("體型連動")` 的拉桿（U200）：`big_jump`（0.7）、`small_jump`（1.3）、`big_push`（1.6）、
-`big_knockback`（0.6）、`small_knockback`（1.6），括號內為預設值＝原本寫死的數字。體型在中間時從 1 線性變到拉桿的值。
+`big_knockback`（0.6）、`small_knockback`（1.6），括號內為預設值＝原本寫死的數字；
+走路速度 `big_speed`（0.8）、`small_speed`（1.2）是後來加的。體型在中間時從 1 線性變到拉桿的值。
 
 事件：`grew`、`shrank`、`grow_canceled`
 
@@ -475,13 +476,14 @@ group 定義）。
 | 殼 | 設定 |
 |---|---|
 | `Shell_Cicada` 蟬殼 | 什麼都不加（會掉、推得動、可以站上去） |
-| `Shell_Plastic` 塑膠殼 | 加 `Trait_Bouncy`：玩家、箱子、其他殼從上面落下來會被彈起，比一般跳躍高 |
+| `Shell_Plastic` 塑膠殼 | 加 `Trait_Bouncy`：玩家、箱子、其他殼從上面落下來會被彈起，比一般跳躍高；加 `Trait_SideBounce`：玩家從側面撞上來，玩家跟殼往相反方向彈開（`strength` 玩家彈回去的力道、`shell_strength` 殼彈出去的力道） |
 | `Shell_Spider` 蜘蛛殼 | `use_gravity`、`can_push` 都關：停在脫下來的地方、推不動、可以站上去 |
 
 **殼 `Shell` 的欄位**：`use_gravity` 會不會掉、`can_push` 推不推得動；`max_count` 同種殼最多幾顆、
 `count_scope` 每個房間／整個關卡（房間＝脫殼當下殼所在的房間）、`when_full` 最舊的碎掉／不能再脫、
 `max_uses` 總共可以脫幾次（0＝不限）；`color` 預設方框顏色（選「自訂」出現 `custom_color` 調色盤，可以貼色碼）。
 訊號 `broken`（碎掉時，碎掉就是直接消失，特效由學員之後自己接）。
+推得動的殼推到牆邊（地形、推不動的殼、同一邊已經貼牆的殼）就推不動，玩家會像撞到牆一樣被擋住，殼不會被擠進牆裡。
 
 **自己做一種殼（學員操作）**
 

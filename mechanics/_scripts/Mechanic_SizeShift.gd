@@ -5,10 +5,16 @@ extends MechanicBase
 # 拖進 Player → Mechanics 底下就能用，不用連任何線。
 
 ## 什麼時候切換大小
-@export_enum("按下按鍵", "隨時間") var trigger_timing: int = 0
+@export_enum("按下按鍵", "隨時間") var trigger_timing: int = 0:
+	set(v):
+		trigger_timing = v
+		notify_property_list_changed()
 
 ## 按下按鍵時用鍵盤按鍵、滑鼠按鍵，還是 Input Map 動作（可以綁手把）（只有「觸發時機」選按下按鍵時才會顯示這一欄）
-@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "Input Map 動作") var input_type: int = 0
+@export_enum("鍵盤按鍵", "滑鼠左鍵", "滑鼠右鍵", "滑鼠中鍵", "Input Map 動作") var input_type: int = 0:
+	set(v):
+		input_type = v
+		notify_property_list_changed()
 
 ## 按下按鍵時要按哪一鍵切換（「觸發時機」選按下按鍵、「按鍵種類」選鍵盤按鍵時才會顯示這一欄）
 @export var key: Key = KEY_SHIFT
@@ -23,7 +29,7 @@ extends MechanicBase
 @export_range(1.0, 2.5) var big_scale: float = 1.8
 
 @export_group("體型連動")
-## 體型是否連動推力、擊退、跳躍力（不勾的話，下面的拉桿都沒有作用）
+## 體型是否連動推力、擊退、跳躍力、走路速度（不勾的話，下面的拉桿都沒有作用）
 @export var size_affects_stats: bool = true
 
 ## 變大時的跳躍力倍率，1 是正常，小於 1 跳得比較低
@@ -31,6 +37,12 @@ extends MechanicBase
 
 ## 變小時的跳躍力倍率，1 是正常，大於 1 跳得比較高
 @export_range(0.2, 2.0, 0.05) var small_jump: float = 1.3
+
+## 變大時的走路速度倍率，1 是正常，小於 1 走得比較慢
+@export_range(0.2, 2.0, 0.05) var big_speed: float = 0.8
+
+## 變小時的走路速度倍率，1 是正常，大於 1 走得比較快
+@export_range(0.2, 2.0, 0.05) var small_speed: float = 1.2
 
 ## 變大時推箱子的力氣倍率，1 是正常，越大越推得動
 @export_range(0.5, 3.0, 0.05) var big_push: float = 1.6
@@ -154,8 +166,8 @@ func _would_overlap_terrain(target_factor: float) -> bool:
 	var space_state: PhysicsDirectSpaceState2D = player.get_world_2d().direct_space_state
 	return not space_state.intersect_shape(query, 1).is_empty()
 
-# 依目前體型調整推力、擊退、跳躍力倍率（數值照「體型連動」群組的拉桿）：預設大隻推得動箱子、比較不容易被擊退、跳得比較低；
-# 小隻跳得比較高、比較容易被敵人撞飛
+# 依目前體型調整推力、擊退、跳躍力、走路速度倍率（數值照「體型連動」群組的拉桿）：預設大隻推得動箱子、比較不容易被擊退、跳得比較低、走得比較慢；
+# 小隻跳得比較高、走得比較快、比較容易被敵人撞飛
 func _apply_stat_scales(ctx: MoveContext) -> void:
 	var f: float = player.size_factor
 	if f > 1.0 and big_scale > 1.0:
@@ -163,7 +175,9 @@ func _apply_stat_scales(ctx: MoveContext) -> void:
 		ctx.push_scale *= lerpf(1.0, big_push, t)
 		ctx.knockback_scale *= lerpf(1.0, big_knockback, t)
 		ctx.jump_scale *= lerpf(1.0, big_jump, t)
+		ctx.speed_scale *= lerpf(1.0, big_speed, t)
 	elif f < 1.0 and small_scale < 1.0:
 		var t := (1.0 - f) / (1.0 - small_scale)
 		ctx.jump_scale *= lerpf(1.0, small_jump, t)
+		ctx.speed_scale *= lerpf(1.0, small_speed, t)
 		ctx.knockback_scale *= lerpf(1.0, small_knockback, t)

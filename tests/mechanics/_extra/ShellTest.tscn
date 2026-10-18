@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://tests/mechanics/_extra/_scripts/ShellTest.gd" id="1"]
 [ext_resource type="PackedScene" path="res://player/Player.tscn" id="2"]
@@ -7,9 +7,13 @@
 [ext_resource type="Script" path="res://mechanics/_extra/_molt/_scripts/ShellTrait.gd" id="5"]
 [ext_resource type="PackedScene" path="res://blocks/Box.tscn" id="6"]
 [ext_resource type="Script" path="res://tests/mechanics/_scripts/MechanicSignalPrinter.gd" id="signal_printer"]
+[ext_resource type="PackedScene" path="res://mechanics/_extra/_molt/Shell_Plastic.tscn" id="7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
 size = Vector2(600, 16)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
+size = Vector2(16, 80)
 
 [node name="ShellTest" type="Node2D"]
 script = ExtResource("1")
@@ -28,6 +32,39 @@ offset_top = -8.0
 offset_right = 300.0
 offset_bottom = 8.0
 color = Color(0.4, 0.35, 0.3, 1)
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(-292, 55)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="Visual" type="ColorRect" parent="WallLeft"]
+offset_left = -8.0
+offset_top = -40.0
+offset_right = 8.0
+offset_bottom = 40.0
+color = Color(0.4, 0.35, 0.3, 1)
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(292, 55)
+collision_layer = 2
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+shape = SubResource("RectangleShape2D_wall")
+
+[node name="Visual" type="ColorRect" parent="WallRight"]
+offset_left = -8.0
+offset_top = -40.0
+offset_right = 8.0
+offset_bottom = 40.0
+color = Color(0.4, 0.35, 0.3, 1)
+
+[node name="Shell_Plastic" parent="." instance=ExtResource("7")]
+position = Vector2(30, 60)
 
 [node name="Box" parent="." instance=ExtResource("6")]
 position = Vector2(-220, 80)

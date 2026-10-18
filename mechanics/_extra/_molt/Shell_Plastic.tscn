@@ -2,8 +2,12 @@
 
 [ext_resource type="PackedScene" path="res://mechanics/_extra/_molt/Shell.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://mechanics/_extra/_molt/Trait_Bouncy.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://mechanics/_extra/_molt/Trait_SideBounce.tscn" id="3"]
 
 [node name="Shell_Plastic" instance=ExtResource("1")]
+can_sleep = false
 color = 1
 
 [node name="Trait_Bouncy" parent="." instance=ExtResource("2")]
+
+[node name="Trait_SideBounce" parent="." instance=ExtResource("3")]

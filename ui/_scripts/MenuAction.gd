@@ -3,6 +3,7 @@ extends Button
 
 # 選單按鈕：從下拉選單選這顆按鈕要做什麼，按下去就執行，不用連任何線。
 # 按鈕上的字用原生的 Text 改；換動作時如果字還是預設的，會自動換成新動作的名字。
+# 「繼續遊戲」放在單獨開的設定畫面上時改成回標題。
 # 「整關重來」在關卡裡沒有 RespawnHandler 時自動藏起來，「離開遊戲」在網頁版自動藏起來，
 # 「回標題」在主場景不是標題畫面（或現在就在標題畫面）時自動藏起來。
 # 「開始遊戲」在下拉選單選要去哪一關，按下去換到那個場景（標題畫面用）。
@@ -15,7 +16,8 @@ extends Button
 		action = value
 		notify_property_list_changed()
 		update_configuration_warnings()
-## 按下去要去哪一關（動作選「開始遊戲」才出現）：下拉選單列出 _my/ 和 levels/_starts/ 裡的關卡
+## 按下去要去哪一關（動作選「開始遊戲」才出現）：下拉選單列出 _my/ 和 levels/_starts/ 裡的關卡，
+## 另外 _my/ui/ 裡的 UI 畫面（例如設定畫面）也可以選
 @export var level: String = "":
 	set(value):
 		level = value
@@ -33,8 +35,10 @@ const ACTION_START := 3
 const ACTION_TITLE := 4
 
 const _NAMES := ["繼續遊戲", "整關重來", "離開遊戲", "開始遊戲", "回標題"]
-# 「開始遊戲」的下拉選單從這些資料夾找關卡
+# 「開始遊戲」的下拉選單從這些資料夾找關卡（會往下掃子資料夾，所以 _my/ui 不用另外列）
 const _LEVEL_DIRS := ["res://_my", "res://levels/_starts"]
+# 這些資料夾裡的 UI 畫面（最上層是 UIRoot）也放進下拉選單，例如設定畫面
+const _UI_SCENE_DIRS := ["res://_my/ui"]
 const _SCAN_GAP_MS := 2000
 
 # 測試場景用：假裝在網頁版上，檢查「離開遊戲」會不會藏起來
@@ -65,7 +69,11 @@ func refresh_menu_action() -> void:
 func _on_pressed() -> void:
 	match action:
 		ACTION_RESUME:
-			PauseMenu.close()
+			# 單獨開的設定畫面沒有遊戲可以繼續，改成回標題
+			if PauseMenu.is_menu_scene():
+				PauseMenu.back_from_menu_scene()
+			else:
+				PauseMenu.close()
 		ACTION_RESTART:
 			PauseMenu.restart_level()
 		ACTION_QUIT:
@@ -135,8 +143,8 @@ func _level_problem() -> String:
 		return "找不到關卡「%s」，可能被刪掉了：在 level 下拉選單重新選一個" % level
 	return ""
 
-# 掃 _my/ 和 levels/_starts/ 底下的場景檔，排除 UI 畫面（最上層是 UIRoot 的：標題、HUD、選單）；
-# 兩秒內重複問就用上次的結果（Inspector 會一直問）
+# 掃 _my/ 和 levels/_starts/ 底下的場景檔，排除 UI 畫面（最上層是 UIRoot 的：標題、HUD、選單），
+# 但 _my/ui/ 裡的 UI 畫面保留；兩秒內重複問就用上次的結果（Inspector 會一直問）
 static func find_levels() -> PackedStringArray:
 	var now := Time.get_ticks_msec()
 	if now - _scan_at_ms < _SCAN_GAP_MS:
@@ -149,7 +157,7 @@ static func find_levels() -> PackedStringArray:
 	_scan_cache = found
 	return found.duplicate()
 
-# 往下掃一個資料夾，把關卡場景（去掉 res://）加進 found
+# 往下掃一個資料夾，把關卡場景（去掉 res://）加進 found；同一個檔案只加一次
 static func _scan_dir(path: String, found: PackedStringArray) -> void:
 	var dir := DirAccess.open(path)
 	if dir == null:
@@ -160,8 +168,17 @@ static func _scan_dir(path: String, found: PackedStringArray) -> void:
 	for file in dir.get_files():
 		if file.get_extension() == "tscn":
 			var full := path.path_join(file)
-			if not _is_ui_scene(full):
-				found.append(full.trim_prefix("res://"))
+			if _allows_ui_scene(full) or not _is_ui_scene(full):
+				var short := full.trim_prefix("res://")
+				if short not in found:
+					found.append(short)
+
+# 這個場景在允許選 UI 畫面的資料夾（_UI_SCENE_DIRS）裡嗎
+static func _allows_ui_scene(path: String) -> bool:
+	for dir in _UI_SCENE_DIRS:
+		if path.begins_with(dir.trim_suffix("/") + "/"):
+			return true
+	return false
 
 # 場景檔最上層是不是 UIRoot（直接讀場景檔的文字，不把整個關卡載進來）
 static func _is_ui_scene(path: String) -> bool:

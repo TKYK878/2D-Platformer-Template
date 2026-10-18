@@ -112,6 +112,7 @@
 | 敵人射擊 | `EnemyShooter.tscn` | 無（掛在 Enemy 底下） | 「射擊」組：`aim_type`（朝玩家／朝面向方向／固定往左右上下）、`cooldown`（射擊間隔）、`detect_range_tiles`（偵測格數，0 不限）、`stop_to_shoot`（開槍前停一下）、`start_on`（一開始就會開槍）；可連接 `activate`、`deactivate`、`toggle`；「子彈」組：`bullet_speed`、`use_gravity`、`damage`、`hit_objects`（會不會打壞物件） | `shot` |
 
 - 箱子實作受擊介面，被攻擊時只受擊退。
+- 箱子可以站上去（頂端一片只擋上面的薄平台），推到牆邊（地形、推不動的殼、同一邊已經貼牆的箱子或殼）就推不動，一排、疊起來、放大的箱子都一樣，不會被擠進牆裡；跟殼共用 `blocks/_scripts/PushBlock.gd`。
 - 道具：血包加血量，但不超過上限。種類選「自訂」時可以打數值種類名稱（`CLAUDE.md` 鐵律 4 的打字欄位，用 `NameCheck`）：
   名稱空白、或跟場景裡現有名稱很像但不一樣（疑似打錯字）時，場景樹出現黃色驚嘆號、執行時印中文警告並建議近似名稱；
   全新的名稱不算錯（撿到就出現在 HUD），執行時只印一行提示列出現有名稱。現有名稱 = 場景裡有 `get_value_kind()` 的節點

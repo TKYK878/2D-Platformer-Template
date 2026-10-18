@@ -130,6 +130,8 @@ Player **不得**自己呼叫重生、不得知道處理者是誰。場景裡沒
    沒有房間時第一次死亡印中文提示。
 5. 發 `Events.respawn_requested`，呼叫 `player.revive(位置)`；勾了 `send_restart_signal` 再發 `Events.level_restarted`。
 
+**長按重來**：長按 Input Map 的 `restart` 動作（鍵盤 R、手把 Y）`hold_time` 秒（預設 0.6，0＝關掉），玩家沒死也照上面的流程馬上重來（`restart_now()`）；要在遊戲中按下才開始算（暫停、過關畫面中按下的不算），按滿一次後要放開再按才會再重來；`show_hold_bar` 在玩家頭上顯示進度條。
+
 **整關重來**（軟重置，不重載場景）：所有 Room 底下的零件 `rewind_values()` + `reset()`（不看分組）、清空 Checkpoint、玩家回到一開始的位置，
 Room 會重新發 `room_entered` 讓鏡頭切回第一個房間。
 

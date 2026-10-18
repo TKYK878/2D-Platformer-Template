@@ -210,7 +210,8 @@ const _PALETTES := [
 ]
 
 # 套用配色與字型、決定暫停時能不能動；學員的同一種畫面已經有一個的話自己刪掉並警告；
-# 暫停選單、過關畫面先藏起來，等暫停、過關時才出現；遊戲中不在 CanvasLayer 底下的話移進一個
+# 暫停選單、過關畫面先藏起來，等暫停、過關時才出現；遊戲中不在 CanvasLayer 底下的話移進一個；
+# 自己就是整個場景（例如從標題「開始遊戲」換過來的設定畫面）的話直接顯示
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_apply_process_mode()
@@ -228,6 +229,9 @@ func _ready() -> void:
 	_snap_containers(self)
 	if kind == KIND_TITLE:
 		_ready_title()
+		return
+	if kind != KIND_HUD and get_parent() == get_tree().root:
+		_ready_alone()
 		return
 	if kind != KIND_HUD:
 		visible = false
@@ -254,6 +258,15 @@ func _ready_title() -> void:
 	push_warning("[%s] %s" % [name, TITLE_NOT_ALONE])
 	printerr("⚠ [%s] %s" % [name, TITLE_NOT_ALONE])
 	queue_free()
+
+# 暫停選單、過關畫面自己就是整個場景（例如設定畫面）：不藏起來、不暫停，先選好第一個按鈕讓鍵盤、手把能直接操作；
+# 按返回（Esc、手把 B）回標題由 PauseMenu 處理
+func _ready_alone() -> void:
+	_focus_first_button.call_deferred(self)
+
+# 這個畫面是不是自己就是整個場景（標題畫面、單獨開的設定畫面這類），不是放進關卡裡的
+func is_alone() -> bool:
+	return is_inside_tree() and get_parent() == get_tree().root
 
 # theme 由欄位自動產生：不存進場景檔、Inspector 也不顯示，學員改字型配色用上面的欄位；
 # 標題畫面的欄位只在標題畫面顯示

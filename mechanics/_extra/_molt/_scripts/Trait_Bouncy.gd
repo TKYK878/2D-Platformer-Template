@@ -13,6 +13,8 @@ signal bounced
 const _SENSOR_THICKNESS := 6.0
 # 往上的速度超過這個值就當作正在往上穿過，不彈（例如玩家從殼裡鑽出來）
 const _RISING_SPEED := 10.0
+# 玩家的腳底要在殼頂端往下這麼多像素以內才算「落到殼上」，從側面擠進殼的範圍時不會被彈起來
+const _FEET_TOLERANCE := 6.0
 
 var _sensor: Area2D = null
 var _sensor_shape: RectangleShape2D = null
@@ -48,13 +50,19 @@ func _follow_shell() -> void:
 		_sensor_shape.size = Vector2(size.x, _SENSOR_THICKNESS)
 	_sensor.global_position = shell.global_position + Vector2(0.0, -size.y / 2.0 - _SENSOR_THICKNESS / 2.0)
 
-# 有東西落到殼上：往上彈起來（往上穿過的、自己這顆殼、剛脫殼還沒鑽出來的玩家不算）
+# 殼頂端（頂端平台上緣）的高度
+func _shell_top() -> float:
+	return shell.global_position.y - shell.get_body_size().y / 2.0 - PushBlock.TOP_THICKNESS
+
+# 有東西落到殼上：往上彈起來（往上穿過的、從側面撞進來的、自己這顆殼、剛脫殼還沒鑽出來的玩家不算）
 func _on_body_entered(body: Node) -> void:
 	if body == shell or shell.is_broken() or shell.is_ignoring(body):
 		return
 	if body is CharacterBody2D and body.has_method("add_impulse"):
 		var velocity: Vector2 = body.velocity
 		if velocity.y < -_RISING_SPEED:
+			return
+		if body.has_method("get_feet_position") and body.get_feet_position().y > _shell_top() + _FEET_TOLERANCE:
 			return
 		body.add_impulse(Vector2.UP * (strength + velocity.y))
 	elif body is RigidBody2D and not (body as RigidBody2D).freeze:
